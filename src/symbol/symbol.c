@@ -67,9 +67,11 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
 
     //Then we find table root node of our desired item hash
     SYMBOL* current_node = t->table[pos];
+    SYMBOL* parent_node = NULL;
 
     //Traverse until we find empty next
     while (current_node != NULL) {
+        parent_node = current_node;
         current_node = current_node->next;
     }
 
@@ -78,6 +80,11 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
     current_node->next = NULL;
     current_node->name = name;
     current_node->value = value;
+    
+    //If parent node is not NULL we have to adjust the parent's next
+    if (parent_node != NULL) {
+        parent_node = current_node;
+    }
 
     //Node created and inited, we are done
     return current_node;
