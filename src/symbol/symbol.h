@@ -1,5 +1,11 @@
 
 #define HashSize 317
+#define NULL 0
+
+#include <stdio.h>
+#include <string.h>
+
+#include "memory.h"
 
 /* SYMBOL will be extended later.
    Function calls will take more parameters later.
