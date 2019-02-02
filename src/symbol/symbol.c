@@ -52,8 +52,9 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     }
 
     //New table and put old table in new tables next
-    SymbolTable* htable = NEW(SymbolTable);
+    SymbolTable* htable = initSymbolTable();
     htable->next = t;
+    return htable;
 }
 
 SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
@@ -78,12 +79,18 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
     //Node has been found, init it
     current_node = NEW(SYMBOL);
     current_node->next = NULL;
-    current_node->name = name;
+
+    //Allocate new space for the name (the given name is an R-value
+    current_node->name = (char*)malloc(sizeof(char) * strlen(name));
+    strcpy(current_node->name, name);
+
     current_node->value = value;
     
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {
-        parent_node = current_node;
+        parent_node->next = current_node;
+    } else {
+        t->table[pos] = current_node;
     }
 
     //Node created and inited, we are done
@@ -96,46 +103,44 @@ SYMBOL *getSymbol(SymbolTable *t, char *name) {
         return NULL;
     }
 
-    //Which table we are currently looking at
-    SymbolTable *current_table = t;
-
     //We hash name to find a matching bucket
     int bucketIndex = Hash(name);
 
-    //We use a found variable for code clearness
-    short found = 0;
+    //Get the bucket
+    SYMBOL *bucket = (t->table)[bucketIndex];
 
-    while (found == 0) {
-        //Get the bucket
-        SYMBOL *bucket = (current_table->table)[bucketIndex];
-
-        //We traverse the linked list for a match
-        while (strcmp(name, bucket->name) != 0) {
-            //If the bucket is unallocated, we cannot find what we seek in this scope
-            //Thus we must continue in the next scope
-            if (bucket == NULL) {
-                break;
-            }
-
-            //If there is not a match we continue looking in the linked list
-            bucket = bucket->next;
-        }
-
-        //Here we actually check if we found an entry
-        if (bucket == NULL) {
-            //We also check if the next table even exists
-            if (current_table->next == NULL) {
-                //If it doesn't exist, we are done. No result found
-                return NULL;
-            } else {
-                //There is a next table, so we continue in the next scope.
-                current_table = current_table->next;
-                continue;
-            }
+    //If bucket is NULL, we continue looking in next table
+    if (bucket == NULL) {
+        //We check if this is the root node, if yes we return NULL
+        if (t->next == NULL) {
+            return NULL;
         } else {
-            //We actually found a bucket, so we return it!
-            return bucket;
+            //Recurse if we still have parents to look in
+            return getSymbol(t->next, name);
         }
+    }
+
+    //We traverse the linked list for a match if a bucket is found
+    while (strcmp(name, bucket->name) != 0) {
+        //If the bucket is unallocated, we cannot find what we seek in this scope
+        //Thus we must continue in the next scope
+        if (bucket->next == NULL) {
+            break;
+        }
+
+        //If there is not a match we continue looking in the linked list
+        bucket = bucket->next;
+    }
+
+    //A bit of boilerplate, but if the name is not found in this scope, we look upwards again
+    //We check if this is the root node, if yes we return NULL
+    if (strcmp(name, bucket->name) == 0) {
+        return bucket;
+    } else if (t->next == NULL) {
+        return NULL;
+    } else {
+        //Recurse if we still have parents to look in
+        return getSymbol(t->next, name);
     }
 }
 
@@ -154,10 +159,12 @@ void dumpSymbolTable(SymbolTable *t) {
         printf("We are looking at table %i:\n", tableNum);
         //We print our while whole table bucket wise
         for (int i = 0; i < HashSize; i++) {
-            printf("At bucket %i we have the values:\n", i);
-
             //This is the i'th symbol root node
             SYMBOL *current_symbol = (current_table->table)[i];
+
+            if (current_symbol != NULL) {
+                printf("At bucket %i we have the values:\n", i);
+            }
 
             //We keep printing the contents of the linked list elements as long as they exist
             while (current_symbol != NULL) {
