@@ -45,10 +45,14 @@ void runTaks(Queue *q) {
         Task *t = (Task*)dequeue(q);
 
         printf("[%i/%i] %s -> ", max_size - q->remaining_elements, max_size, t->taskName);
+        evaluateTest(2);
+        fflush(stdout);
 
         int o = t->f(t->arg);
 
+        printf("[%i/%i] %s -> ", max_size - q->remaining_elements, max_size, t->taskName);
         evaluateTest(o);
+        fflush(stdout);
     }
 }
 
