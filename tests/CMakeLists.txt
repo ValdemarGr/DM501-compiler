@@ -17,4 +17,4 @@ file(GLOB SYMBOL_SRC
         "../src/symbol/*.h"
         )
 
-add_executable(symbol symbol/main.c ${SYMBOL_TESTS} ${SYMBOL_SRC} ${SRC})
+add_executable(tests main.c ${SYMBOL_TESTS} ${SYMBOL_SRC} ${SRC})

@@ -10,7 +10,7 @@ int Hash(char *str){
         return -1;
     }
 
-    int len = strlen(str);
+    size_t len = strlen(str);
 
     //If no chars, no need to run though
     if (len == 0) {
