@@ -72,6 +72,12 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
 
     //Traverse until we find empty next
     while (current_node != NULL) {
+        //Abort if we encounter a duplicate
+        if (strcmp(name, current_node->name) == 0) {
+            fprintf(stderr, "Error: variable %s already declared in scope", name);
+            exit(-1);
+        }
+        
         parent_node = current_node;
         current_node = current_node->next;
     }
