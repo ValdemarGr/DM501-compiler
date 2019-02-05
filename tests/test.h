@@ -12,15 +12,6 @@
 #include "queue.h"
 
 typedef struct {
-    int testCnt;
-    int completed;
-} TestBlock;
-
-TestBlock *initTestBlock(int tasks);
-void testFor(TestBlock* tb, char *str);
-void evaluateTest(int result);
-
-typedef struct {
     char* taskName;
     int (*f)(void*);
     void *arg;
