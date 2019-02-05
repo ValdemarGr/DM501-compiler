@@ -4,18 +4,6 @@
 
 #include "test.h"
 
-TestBlock *initTestBlock(int tasks) {
-    TestBlock* tb = (TestBlock *)malloc(sizeof(TestBlock));
-
-    tb->testCnt = tasks;
-    tb->completed = 1;
-
-    return tb;
-}
-
-void testFor(TestBlock* tb, char *str) {
-    printf("[%i/%i] %s ->", tb->completed, tb->testCnt, str);
-}
 
 void evaluateTest(int result) {
     if (result == 0) {
