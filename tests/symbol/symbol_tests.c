@@ -61,8 +61,9 @@ int putCollision(void *arg) {
     //We put an item into arg
     SymbolTable *table = (SymbolTable*)arg;
 
-    SYMBOL *s1 = putSymbol(table, "3432", 3432);
-    SYMBOL *s2 = putSymbol(table, "3432", 3432);
+    char *name = "3432";
+    SYMBOL *s1 = putSymbol(table, name, 3432);
+    SYMBOL *s2 = putSymbol(table, name, 54);
 
     if (s2 == NULL) {
         return 1;
