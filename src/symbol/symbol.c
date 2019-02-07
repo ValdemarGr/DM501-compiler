@@ -75,7 +75,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
         //Abort if we encounter a duplicate
         if (strcmp(name, current_node->name) == 0) {
             fprintf(stderr, "Error: variable %s already declared in scope", name);
-            exit(-1);
+            return NULL;
         }
         
         parent_node = current_node;

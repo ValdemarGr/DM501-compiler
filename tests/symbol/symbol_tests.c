@@ -57,6 +57,20 @@ int getRootFromChildTest(void *arg) {
     }
 }
 
+int putCollision(void *arg) {
+    //We put an item into arg
+    SymbolTable *table = (SymbolTable*)arg;
+
+    SYMBOL *s1 = putSymbol(table, "3432", 3432);
+    SYMBOL *s2 = putSymbol(table, "3432", 3432);
+
+    if (s2 == NULL) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 int dumpTest(void *arg) {
     SymbolTable *scoped_table = (SymbolTable*)arg;
     dumpSymbolTable(scoped_table);
@@ -73,6 +87,7 @@ void symbol_tests() {
     appendTask(q, putRootTest, "Putting item into root node", (void*)st);
     appendTask(q, getRootFromChildTest, "Finding the newly root item using the scoped table", (void*)scopedTable);
     appendTask(q, dumpTest, "Dumping the table", (void*)scopedTable);
+    appendTask(q, putCollision, "Checking put collision", (void*)st);
 
     runTaks(q);
 
