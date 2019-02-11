@@ -8,7 +8,11 @@
 #define DefaultQueueSize 16
 
 #include <stdio.h>
+#if !__APPLE__
 #include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 
 typedef struct {
     size_t remaining_elements;

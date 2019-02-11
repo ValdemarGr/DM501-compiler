@@ -10,6 +10,7 @@ Queue *initQueue() {
     q->allocated_size = 0;
     q->elements = (void*)malloc(sizeof(void*) * DefaultQueueSize);
     q->allocated_size = DefaultQueueSize;
+    q->remaining_elements = 0;
 
     return q;
 }

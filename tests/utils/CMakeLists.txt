@@ -1,0 +1,1 @@
+add_library(TestsUtil test.c queue.c)

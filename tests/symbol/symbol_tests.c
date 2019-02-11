@@ -4,8 +4,8 @@
 
 #include <stdio.h>
 #include "../../src/symbol/symbol.h"
-#include "../test.h"
-#include "../queue.h"
+#include "../utils/test.h"
+#include "../utils/queue.h"
 
 int addItemsTest(void *arg) {
     SymbolTable *scoped_table = (SymbolTable*)arg;
@@ -91,6 +91,4 @@ void symbol_tests() {
     appendTask(q, putCollision, "Checking put collision", (void*)st);
 
     runTaks(q);
-
-    return;
 }

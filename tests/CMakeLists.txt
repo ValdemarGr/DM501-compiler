@@ -1,20 +1,8 @@
-cmake_minimum_required(VERSION 2.8.9)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests/symbol)
+add_subdirectory(${PROJECT_SOURCE_DIR}/tests/utils)
 
-project(tests)
+add_executable(tests main.c)
 
-file(GLOB SRC
-        "*.c"
-        "*.h"
-        )
-
-file(GLOB SYMBOL_TESTS
-        "symbol/*.c"
-        "symbol/*.h"
-        )
-
-file(GLOB SYMBOL_SRC
-        "../src/symbol/*.c"
-        "../src/symbol/*.h"
-        )
-
-add_executable(tests main.c ${SYMBOL_TESTS} ${SYMBOL_SRC} ${SRC})
+target_link_libraries(tests Symbol)
+target_link_libraries(tests Utilities)
+target_link_libraries(tests TestsSymbol)

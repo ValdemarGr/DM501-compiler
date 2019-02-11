@@ -2,7 +2,7 @@
 To use these files, include the header files first:
 
 #include "symbol.h"
-#include "memory.h"
+#include "../utilities/memory.h"
 
 You can use
 

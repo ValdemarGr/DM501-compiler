@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#if !__APPLE__
 #include <malloc.h>
+#endif
 
-#include "memory.h"
+#include "../utils/memory.h"
 
 /* SYMBOL will be extended later.
    Function calls will take more parameters later.

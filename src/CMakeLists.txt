@@ -1,12 +1,6 @@
-cmake_minimum_required(VERSION 2.8.9)
+add_subdirectory(symbol)
+add_subdirectory(utils)
 
-project(compiler)
+add_executable(compiler main.c ${SOURCES})
 
-file(GLOB SOURCES
-        "*.h"
-        "*.c"
-        "symbol/*.c"
-        "symbol/*.h"
-        )
-
-add_executable(symbol main.c ${SOURCES})
+target_link_libraries(compiler Symbol)

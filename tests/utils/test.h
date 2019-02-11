@@ -6,7 +6,11 @@
 #define TESTS_TEST_H
 
 #include <stdio.h>
+#if !__APPLE__
 #include <malloc.h>
+#else
+#include <stdlib.h>
+#endif
 #include <string.h>
 
 #include "queue.h"

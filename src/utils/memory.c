@@ -1,6 +1,8 @@
 #include <stdio.h>
-#include <malloc.h>
 #include <stdlib.h>
+#if !__APPLE__
+#include <malloc.h>
+#endif
 
 void *Malloc(unsigned n)
 {
