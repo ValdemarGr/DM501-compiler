@@ -1,4 +1,6 @@
 #import "scan_parse.h"
+#import "pretty.h"
+#include <stdio.h>
 
 int lineno;
 EXP *theexpression;
@@ -6,13 +8,7 @@ EXP *theexpression;
 int main() {
     lineno = 1;
     yyparse();
-    // prettyEXP(theexpression);
+    prettyEXP(theexpression);
+    printf("\n");
     return 0;
-}
-
-EXP *parse(char *code) {
-    lineno = 1;
-    yy_scan_buffer(code);
-    yyparse();
-    return theexpression;
 }

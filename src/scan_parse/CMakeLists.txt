@@ -7,7 +7,7 @@ ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_executable(ScanParse
-        scan_parse.c
+        scan_parse.c pretty.c
         ${BISON_Parser_OUTPUTS}
         ${FLEX_Scanner_OUTPUTS}
         )
