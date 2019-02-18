@@ -22,6 +22,11 @@ void yyerror() {
    struct Function *function;
    struct FunctionHead *functionHead;
    struct FunctionTail *functionTail;
+   struct ReturnStatement *returnStatement;
+   struct WriteStatement *writeStatement;
+   struct AllocateStatement *allocateStatement;
+   struct IfStatement *ifStatement;
+   struct WhileStatement *whileStatement;
 }
 
 %token <intconst> tINTCONST
@@ -32,6 +37,11 @@ void yyerror() {
 %token tVAR
 %token tINT
 %token tBOOL
+%token tRETURN
+%token tWRITE
+%token tALLOCATE
+%token tIF
+%token tWHILE
 
 %type <exp> exp
 %type <body> program body
@@ -42,6 +52,11 @@ void yyerror() {
 %type <function> function
 %type <functionHead> head
 %type <functionTail> tail
+%type <returnStatement> returnStm
+%type <writeStatement> writeStm
+%type <allocateStatement> allocateStm
+%type <ifStatement> ifStm
+%type <whileStatement> whileStm
 
 %start program
 
@@ -116,4 +131,19 @@ exp : tIDENTIFIER
     |
 ;
 
+returnStm : tRETURN exp
+        {$$ = makeReturnStatement($2);}
+;
+
+writeStm : tWRITE exp
+        {$$ = makeWriteStatement($2);}
+;
+
+ifStm : tIF exp
+        {$$ = printf("Hello\n");}
+;
+
+whileStm : tWHILE exp
+        {$$ = makeWhileStatement($2);}
+;
 %%

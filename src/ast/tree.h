@@ -51,7 +51,7 @@ typedef struct DeclarationList {
 typedef struct EXP {
     int lineno;
     enum {
-        idK, intconstK, timesK, divK, plusK, minusK, functionK
+        idK, intconstK, timesK, divK, plusK, minusK//, functionK
     } kind;
     union {
         char *idE;
@@ -79,9 +79,28 @@ typedef struct EXP {
     } val;
 } EXP;
 
+typedef struct Statement {
+    int lineno;
+    enum { returnK, writeK, allocateK, ifK, whileK } kind;
+    union {
+        struct { EXP* exp; } returnD;
+        struct { EXP* exp; } writeD;
+        struct { EXP* exp; } allocateD;
+        struct { EXP* exp; } ifD;
+        struct { EXP* exp; } whileD;
+    } val;
+} Statement;
+
+typedef struct StatementList {
+    int loneno;
+    Statement *statement;
+    struct StatementList *next;
+} StatementList;
+
 typedef struct Body {
     DeclarationList *declarationList;
 } Body;
+
 
 EXP *makeEXPid(char *id);
 
@@ -100,6 +119,10 @@ DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *
 Declaration *makeDeclaration(char* id, Type* type);
 
 Declaration *makeVarDeclarations(VarDelList* vars);
+
+StatementList *makeStatementList(Statement *statement, Statement *next);
+
+Statement *makeReturnStatement(EXP *exp);
 
 Type *makeIntType();
 

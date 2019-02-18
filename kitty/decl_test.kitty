@@ -1,2 +1,6 @@
 var a : int, b : bool;
 var c : int;
+
+var q : int;
+
+if

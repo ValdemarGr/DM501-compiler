@@ -115,6 +115,23 @@ Declaration *makeVarDeclaration(char *id, Type *type) {
     return result;
 }
 
+StatementList *makeStatementList(Statement *statement, Statement *next) {
+    StatementList *stmList = NEW(StatementList);
+    stmList->statement = statement;
+    stmList->next = next;
+
+    return stmList;
+}
+
+Statement *makeReturnStatement(EXP *exp) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = returnK;
+    statement->val.returnD.exp = exp;
+    return statement;
+}
+
 Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
     Declaration *result;
     result = NEW(Declaration);
@@ -164,3 +181,6 @@ Declaration *makeFunctionDecleration(Function *function) {
 
     return declaration;
 }
+
+
+

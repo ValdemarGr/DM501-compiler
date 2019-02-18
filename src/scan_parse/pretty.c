@@ -79,11 +79,11 @@ void prettyEXP(EXP *e) {
             prettyEXP(e->val.minusE.right);
             printf(")");
             break;
-        case functionK:
+        /*case functionK:
             printf("func ");
             printf("%s", e->val.functionE.identifier);
             printf("\n");
             prettyEXP(e->val.functionE.body);
-            break;
+            break;*/
     }
 }
