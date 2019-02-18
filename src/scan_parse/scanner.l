@@ -18,6 +18,8 @@ extern int fileno();
 "-"             return '-';
 "("             return '(';
 ")"             return ')';
+"{"             return '{';
+"}"             return '}';
 ","             return ',';
 ";"             return ';';
 "="             return '=';
@@ -28,6 +30,8 @@ extern int fileno();
 "bool"          return tBOOL;
 "var"           return tVAR;
 "end"           return tEND;
+"array of"      return tARRAY_OF;
+"record of"      return tRECORD_OF;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

@@ -2,18 +2,24 @@
 #define __tree_h
 
 typedef struct Body Body;
-
-typedef struct Type {
-    enum {
-        intT, boolT
-    } kind;
-} Type;
+typedef struct Type Type;
 
 typedef struct VarDelList {
     char *identifier;
     Type *type;
     struct VarDelList *next;
 } VarDelList;
+
+typedef struct Type {
+    enum {
+        idT, intT, boolT, arrayT, recordT
+    } kind;
+    union {
+        struct { char *id; } idType;
+        struct { struct Type *type; } arrayType;
+        struct { VarDelList *types; } recordType;
+    } val;
+} Type;
 
 typedef struct FunctionHead {
     char *indentifier;
@@ -103,9 +109,15 @@ Declaration *makeTypeDeclaration(char* id, Type* type);
 
 Declaration *makeVarDeclarations(VarDelList* vars);
 
+Type *makeIdType(char* id);
+
 Type *makeIntType();
 
 Type *makeBoolType();
+
+Type *makeArrayType(Type *type);
+
+Type *makeRecordType(VarDelList *record);
 
 EXP *makeEXPfunction(char *identifier, EXP *body);
 

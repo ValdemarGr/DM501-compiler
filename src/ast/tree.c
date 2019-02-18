@@ -174,3 +174,33 @@ Declaration *makeTypeDeclaration(char *id, Type *type) {
     result->val.typeD.type = type;
     return result;
 }
+
+Type *makeIdType(char *id) {
+    Type *type;
+    type = NEW(Type);
+
+    type->kind = idT;
+    type->val.idType.id = id;
+
+    return type;
+}
+
+Type *makeArrayType(Type *type) {
+    Type *t;
+    t = NEW(Type);
+
+    t->kind = arrayT;
+    t->val.arrayType.type = type;
+
+    return t;
+}
+
+Type *makeRecordType(VarDelList *record) {
+    Type *t;
+    t = NEW(Type);
+
+    t->kind = recordT;
+    t->val.recordType.types = record;
+
+    return t;
+}

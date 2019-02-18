@@ -9,7 +9,30 @@ void prettyKeyword(char *keyword) {
 }
 
 void prettyType(Type *type) {
-    printf("\033[0;36m%s\033[0m", getTypeName(type));
+    switch(type->kind) {
+        case idT:
+            printf("\033[0;36m%s\033[0m", type->val.idType.id);
+            break;
+        case arrayT:
+            printf("\033[0;32marray of \033[0m");
+            prettyType(type->val.arrayType.type);
+            break;
+        case recordT:
+            printf("\033[0;32mrecord of\033[0m {");
+            VarDelList *dels = type->val.recordType.types;
+
+            while (dels != NULL) {
+                printf("%s : ", dels->identifier);
+                prettyType(dels->type);
+                printf(", ");
+                dels = dels->next;
+            }
+            printf("\b\b}");
+            break;
+        default:
+            printf("\033[0;36m%s\033[0m", getTypeName(type));
+            break;
+    }
 }
 
 void prettyArgument(char *id) {
@@ -62,7 +85,7 @@ void prettyDeclaration(Declaration *decl) {
             prettyKeyword("type");
             printf(" %s = ", decl->val.typeD.id);
             prettyType(decl->val.typeD.type);
-            printf(";");
+            printf(";\n");
             break;
         case functionK:
             prettyFunction(decl->val.functionD.function);
@@ -78,6 +101,8 @@ char *getTypeName(Type *type) {
             return "int";
         case boolT:
             return "bool";
+        default:
+            return "other type";
     }
 }
 
