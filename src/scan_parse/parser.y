@@ -22,11 +22,8 @@ void yyerror() {
    struct Function *function;
    struct FunctionHead *functionHead;
    struct FunctionTail *functionTail;
-   struct ReturnStatement *returnStatement;
-   struct WriteStatement *writeStatement;
-   struct AllocateStatement *allocateStatement;
-   struct IfStatement *ifStatement;
-   struct WhileStatement *whileStatement;
+   struct StatementList *statementList;
+   struct Statement *statement;
 }
 
 %token <intconst> tINTCONST
@@ -44,6 +41,10 @@ void yyerror() {
 %token tWHILE
 %token tARRAY_OF
 %token tRECORD_OF
+%token tTHEN
+%token tDO
+%token tOF_LEN
+%token tELSE
 
 %type <exp> exp
 %type <body> program body
@@ -54,11 +55,8 @@ void yyerror() {
 %type <function> function
 %type <functionHead> head
 %type <functionTail> tail
-%type <returnStatement> returnStm
-%type <writeStatement> writeStm
-%type <allocateStatement> allocateStm
-%type <ifStatement> ifStm
-%type <whileStatement> whileStm
+%type <statementList> stm_list
+%type <statement> statement
 
 %start program
 
@@ -70,8 +68,8 @@ program: body
          { theexpression = $1;}
 ;
 
-body : decl_list
-       {$$ = makeBody($1);}
+body : decl_list stm_list
+       {$$ = makeBody($1, $2);}
 ;
 
 decl_list :
@@ -80,12 +78,36 @@ decl_list :
             {$$ = makeDeclarationList($1, $2);}
 ;
 
+stm_list :
+            {$$ = NULL;}
+            | statement stm_list
+            {$$ = makeStatementList($1, $2);}
+;
+
 declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
               | tTYPE tIDENTIFIER '=' type ';'
               {$$ = makeTypeDeclaration($2, $4); }
+;
+
+statement : tRETURN exp ';'
+        {$$ = makeReturnStatement($2);}
+        | tIF exp tTHEN statement tELSE statement
+        {$$ = makeIfElseStatement($2, $4, $6);}
+        | tIF exp tTHEN statement
+        {$$ = makeIfStatement($2, $4);}
+        | tALLOCATE exp ';'
+        {$$ = makeAllocateStatement($2);}
+        | tALLOCATE exp tOF_LEN exp ';'
+        {$$ = makeAllocateOfLenStatement($2, $4);}
+        | tWRITE exp ';'
+        {$$ = makeWriteStatement($2);}
+        | tWHILE exp tDO '{' body '}'
+        {$$ = makeWhileStatement($2, $5);}
+        | tWHILE exp tDO statement
+        {$$ = makeWhileSingleStatement($2, $4);}
 ;
 
 type :  tIDENTIFIER
@@ -141,19 +163,4 @@ exp : tIDENTIFIER
     |
 ;
 
-returnStm : tRETURN exp
-        {$$ = makeReturnStatement($2);}
-;
-
-writeStm : tWRITE exp
-        {$$ = makeWriteStatement($2);}
-;
-
-ifStm : tIF exp
-        {$$ = printf("Hello\n");}
-;
-
-whileStm : tWHILE exp
-        {$$ = makeWhileStatement($2);}
-;
 %%

@@ -36,7 +36,11 @@ extern int fileno();
 "if"            return tIF;
 "while"         return tWHILE;
 "array of"      return tARRAY_OF;
-"record of"      return tRECORD_OF;
+"record of"     return tRECORD_OF;
+"then"          return tTHEN;
+"do"            return tDO;
+"of length"     return tOF_LEN;
+"else"          return tELSE;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

@@ -87,13 +87,16 @@ typedef struct EXP {
 
 typedef struct Statement {
     int lineno;
-    enum { returnK, writeK, allocateK, ifK, whileK } kind;
+    enum { returnK, writeK, allocateK, allocateLenK, ifK, ifElK, whileK, whileSSK } kind;
     union {
         struct { EXP* exp; } returnD;
         struct { EXP* exp; } writeD;
         struct { EXP* exp; } allocateD;
-        struct { EXP* exp; } ifD;
-        struct { EXP* exp; } whileD;
+        struct { EXP* exp; EXP* len; } allocateLenD;
+        struct { EXP* exp; struct Statement *statement; } ifD;
+        struct { EXP* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
+        struct { EXP* exp; Body* localBody; } whileD;
+        struct { EXP* exp; struct Statement* statement; } whileSSD;
     } val;
 } Statement;
 
@@ -105,6 +108,7 @@ typedef struct StatementList {
 
 typedef struct Body {
     DeclarationList *declarationList;
+    StatementList *statementList;
 } Body;
 
 
@@ -132,6 +136,20 @@ StatementList *makeStatementList(Statement *statement, Statement *next);
 
 Statement *makeReturnStatement(EXP *exp);
 
+Statement *makeIfStatement(EXP *exp, Statement *statement);
+
+Statement *makeIfElseStatement(EXP *exp, Statement *statement, Statement *elseStatement);
+
+Statement *makeAllocateStatement(EXP *exp);
+
+Statement *makeAllocateOfLenStatement(EXP *exp, EXP *len);
+
+Statement *makeWriteStatement(EXP *exp);
+
+Statement *makeWhileStatement(EXP *exp, Body *localBody);
+
+Statement *makeWhileSingleStatement(EXP *exp, Statement *statement);
+
 Type *makeIdType(char* id);
 
 Type *makeIntType();
@@ -152,7 +170,7 @@ FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Ty
 
 FunctionTail *makeFunctionTail(char *identifier);
 
-Body *makeBody(DeclarationList *declarationList);
+Body *makeBody(DeclarationList *declarationList, StatementList *statementList);
 
 Declaration *makeFunctionDecleration(Function *function);
 

@@ -9,3 +9,25 @@ func hallo(times:int):bool
 var d : int,
 c: bool;
 end hallo
+
+if asd then
+return a;
+else
+return b;
+
+if dsa then
+return q;
+
+allocate asd;
+
+allocate asd of length dsa;
+
+write asd;
+
+while asd do {
+    return stm;
+}
+
+while asd do
+    return stm;
+return dsa;

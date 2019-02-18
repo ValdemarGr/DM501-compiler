@@ -2,6 +2,14 @@
 #include "pretty.h"
 #include "scan_parse.h"
 
+static int indentation = 0;
+
+void printCurrentIndent() {
+    for (int i = 0; i < indentation; i++) {
+        printf("\t");
+    }
+}
+
 char *getTypeName(Type *type);
 
 void prettyKeyword(char *keyword) {
@@ -64,9 +72,12 @@ void prettyFunction(Function *f) {
     prettyBody(f->body);
     prettyKeyword("end ");
     prettyFunctionName(f->tail->indentifier);
+    printf("\n");
 }
 
 void prettyDeclaration(Declaration *decl) {
+    printCurrentIndent();
+
     switch (decl->kind) {
         case varsK:
             prettyKeyword("var ");
@@ -88,9 +99,80 @@ void prettyDeclaration(Declaration *decl) {
             printf(";\n");
             break;
         case functionK:
+            indentation++;
             prettyFunction(decl->val.functionD.function);
+            indentation--;
             break;
         default:
+            break;
+    }
+}
+
+void prettyStatement(Statement *statement) {
+    printCurrentIndent();
+
+    switch (statement->kind) {
+        case returnK:
+            prettyKeyword("return ");
+            prettyEXP(statement->val.returnD.exp);
+            printf(";\n");
+            break;
+        case writeK:
+            prettyKeyword("write ");
+            prettyEXP(statement->val.writeD.exp);
+            printf(";\n");
+            break;
+        case allocateK:
+            prettyKeyword("allocate ");
+            prettyEXP(statement->val.allocateD.exp);
+            printf(";\n");
+            break;
+        case allocateLenK:
+            prettyKeyword("allocate ");
+            prettyEXP(statement->val.allocateLenD.exp);
+            prettyKeyword(" of length ");
+            prettyEXP(statement->val.allocateLenD.len);
+            printf(";\n");
+            break;
+        case ifK:
+            prettyKeyword("if ");
+            prettyEXP(statement->val.ifD.exp);
+            prettyKeyword(" then\n");
+            indentation++;
+            prettyStatement(statement->val.ifD.statement);
+            indentation--;
+            printf("\n");
+            break;
+        case ifElK:
+            prettyKeyword("if ");
+            prettyEXP(statement->val.ifElD.exp);
+            prettyKeyword(" then\n");
+            indentation++;
+            prettyStatement(statement->val.ifElD.statement);
+            indentation--;
+            prettyKeyword("else\n");
+            indentation++;
+            prettyStatement(statement->val.ifElD.elseStatement);
+            indentation--;
+            printf("\n");
+            break;
+        case whileK:
+            prettyKeyword("while ");
+            prettyEXP(statement->val.whileD.exp);
+            prettyKeyword(" do ");
+            printf("{\n");
+            indentation++;
+            prettyBody(statement->val.whileD.localBody);
+            indentation--;
+            printf("}\n");
+            break;
+        case whileSSK:
+            prettyKeyword("while ");
+            prettyEXP(statement->val.whileSSD.exp);
+            prettyKeyword(" do \n");
+            indentation++;
+            prettyStatement(statement->val.whileSSD.statement);
+            indentation--;
             break;
     }
 }
@@ -106,15 +188,30 @@ char *getTypeName(Type *type) {
     }
 }
 
-void prettyDeclarationList(DeclarationList *list) {
-    while(list != NULL) {
-        prettyDeclaration(list->declaration);
-        list = list->next;
-    }
-}
-
 void prettyBody(Body *body) {
-    prettyDeclarationList(body->declarationList);
+    DeclarationList *delc_lst = body->declarationList;
+    StatementList *stm_lst = body->statementList;
+
+    //Now we traverse them until they both exhaust and while we're doing it we print the smallest line number first
+    while (delc_lst != NULL || stm_lst != NULL) {
+        //Check if we only need delc list or stm list or both of them
+        if (stm_lst == NULL) {
+            prettyDeclaration(delc_lst->declaration);
+            delc_lst = delc_lst->next;
+        } else if (delc_lst == NULL) {
+            prettyStatement(stm_lst->statement);
+            stm_lst = stm_lst->next;
+        } else {
+            //Here we check the ordering on lineno
+            if (stm_lst->statement->lineno > delc_lst->declaration->lineno) {
+                prettyDeclaration(delc_lst->declaration);
+                delc_lst = delc_lst->next;
+            } else {
+                prettyStatement(stm_lst->statement);
+                stm_lst = stm_lst->next;
+            }
+        }
+    }
 }
 
 void prettyEXP(EXP *e) {

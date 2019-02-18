@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <stdio.h>
 #include "../utils/memory.h"
 #include "tree.h"
 
@@ -132,6 +133,75 @@ Statement *makeReturnStatement(EXP *exp) {
     return statement;
 }
 
+Statement *makeIfStatement(EXP *exp, Statement *statement) {
+    Statement *returning = NEW(Statement);
+
+    returning->lineno = lineno;
+    returning->kind = ifK;
+    returning->val.ifElD.exp = exp;
+    returning->val.ifElD.statement = statement;
+    return returning;
+}
+
+Statement *makeIfElseStatement(EXP *exp, Statement *statement, Statement *elseStatement) {
+    Statement *returning = NEW(Statement);
+
+    returning->lineno = lineno;
+    returning->kind = ifElK;
+    returning->val.ifElD.exp = exp;
+    returning->val.ifElD.statement = statement;
+    returning->val.ifElD.elseStatement = elseStatement;
+    return returning;
+}
+
+Statement *makeAllocateStatement(EXP *exp) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = allocateK;
+    statement->val.allocateD.exp = exp;
+    return statement;
+}
+
+Statement *makeAllocateOfLenStatement(EXP *exp, EXP *len) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = allocateLenK;
+    statement->val.allocateLenD.exp = exp;
+    statement->val.allocateLenD.len = len;
+    return statement;
+}
+
+Statement *makeWriteStatement(EXP *exp) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = writeK;
+    statement->val.writeD.exp = exp;
+    return statement;
+}
+
+Statement *makeWhileStatement(EXP *exp, Body *localBody) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = whileK;
+    statement->val.whileD.exp = exp;
+    statement->val.whileD.localBody = localBody;
+    return statement;
+}
+
+Statement *makeWhileSingleStatement(EXP *exp, Statement *statement) {
+    Statement *returning = NEW(Statement);
+
+    returning->lineno = lineno;
+    returning->kind = whileSSK;
+    returning->val.whileSSD.exp = exp;
+    returning->val.whileSSD.statement = statement;
+    return returning;
+}
+
 Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
     Declaration *result;
     result = NEW(Declaration);
@@ -165,9 +235,10 @@ Declaration *makeVarDeclarations(VarDelList *vars) {
     return result;
 }
 
-Body *makeBody(DeclarationList *declarationList) {
+Body *makeBody(DeclarationList *declarationList, StatementList *statementList) {
     Body *body = NEW(Body);
     body->declarationList = declarationList;
+    body->statementList = statementList;
 
     return body;
 }
@@ -221,3 +292,4 @@ Type *makeRecordType(VarDelList *record) {
 
     return t;
 }
+
