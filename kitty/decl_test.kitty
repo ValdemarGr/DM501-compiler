@@ -1,2 +1,6 @@
 var a : int, b : bool;
 var c : int;
+func hallo(times:int):bool
+var d : int,
+c: bool;
+end hallo
