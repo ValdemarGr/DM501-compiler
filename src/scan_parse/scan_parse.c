@@ -8,7 +8,7 @@ EXP *theexpression;
 int main() {
     lineno = 1;
     yyparse();
-    prettyEXP(theexpression);
+    prettyBody(theexpression);
     printf("\n");
     return 0;
 }

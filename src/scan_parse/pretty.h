@@ -7,6 +7,7 @@
 
 #include "../ast/tree.h"
 
+void prettyBody(Body *body);
 void prettyEXP(EXP *e);
 
 #endif //HELLO_PRETTY_H
