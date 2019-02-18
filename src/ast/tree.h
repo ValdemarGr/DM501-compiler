@@ -99,6 +99,8 @@ DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *
 
 Declaration *makeDeclaration(char* id, Type* type);
 
+Declaration *makeTypeDeclaration(char* id, Type* type);
+
 Declaration *makeVarDeclarations(VarDelList* vars);
 
 Type *makeIntType();

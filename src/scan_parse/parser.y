@@ -67,6 +67,8 @@ declaration : tVAR var_del_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
+              | tTYPE tIDENTIFIER '=' type ';'
+              {$$ = makeTypeDeclaration($2, $4); }
 ;
 
 type :  tINT

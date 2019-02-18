@@ -1,5 +1,6 @@
 var a : int, b : bool;
 var c : int;
+type A = bool;
 func hallo(times:int):bool
 var d : int,
 c: bool;

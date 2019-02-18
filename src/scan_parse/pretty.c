@@ -60,10 +60,14 @@ void prettyDeclaration(Declaration *decl) {
             break;
         case typeK:
             prettyKeyword("type");
-            printf(" %s : %s;", decl->val.typeD.id, getTypeName(decl->val.typeD.type));
+            printf(" %s = ", decl->val.typeD.id);
+            prettyType(decl->val.typeD.type);
+            printf(";");
             break;
         case functionK:
             prettyFunction(decl->val.functionD.function);
+            break;
+        default:
             break;
     }
 }

@@ -97,7 +97,7 @@ VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next) {
     return list;
 }
 
-DeclarationList *makeDeclarationList(Declaration* declaration, DeclarationList* next) {
+DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next) {
     DeclarationList *result;
     result = NEW(DeclarationList);
     result->declaration = declaration;
@@ -144,7 +144,7 @@ Declaration *makeVarDeclarations(VarDelList *vars) {
 
     Declaration *result;
     result = makeVarsDeclaration(vars->identifier, vars->type,
-                                  makeVarDeclarations(vars->next));
+                                 makeVarDeclarations(vars->next));
     return result;
 }
 
@@ -163,4 +163,14 @@ Declaration *makeFunctionDecleration(Function *function) {
     declaration->val.functionD.function = function;
 
     return declaration;
+}
+
+Declaration *makeTypeDeclaration(char *id, Type *type) {
+    Declaration *result;
+    result = NEW(Declaration);
+    result->lineno = lineno;
+    result->kind = typeK;
+    result->val.typeD.id = id;
+    result->val.typeD.type = type;
+    return result;
 }
