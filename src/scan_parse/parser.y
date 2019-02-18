@@ -42,11 +42,13 @@ void yyerror() {
 %token tALLOCATE
 %token tIF
 %token tWHILE
+%token tARRAY_OF
+%token tRECORD_OF
 
 %type <exp> exp
 %type <body> program body
 %type <declarationList> decl_list
-%type <varDelList> var_del_list par_decl_list
+%type <varDelList> var_decl_list par_decl_list
 %type <declaration> declaration
 %type <type> type
 %type <function> function
@@ -78,16 +80,24 @@ decl_list :
             {$$ = makeDeclarationList($1, $2);}
 ;
 
-declaration : tVAR var_del_list ';'
+declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
+              | tTYPE tIDENTIFIER '=' type ';'
+              {$$ = makeTypeDeclaration($2, $4); }
 ;
 
-type :  tINT
+type :  tIDENTIFIER
+        {$$ = makeIdType($1); }
+        | tINT
         {$$ = makeIntType(); }
         | tBOOL
         {$$ = makeBoolType(); }
+        | tARRAY_OF type
+        {$$ = makeArrayType($2); }
+        | tRECORD_OF '{' var_decl_list '}'
+        {$$ = makeRecordType($3); }
 ;
 
 function :  head body tail
@@ -102,13 +112,13 @@ tail :  tEND tIDENTIFIER
         {$$ = makeFunctionTail($2);}
 ;
 
-par_decl_list : var_del_list
+par_decl_list : var_decl_list
                 {$$=$1;}
                 |
                 {$$=NULL;}
 ;
 
-var_del_list :  tIDENTIFIER ':' type ',' par_decl_list
+var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
                     {$$ = makeVarDelList($1, $3, $5);}
                 | tIDENTIFIER ':' type
                     {$$ = makeVarDelList($1, $3, NULL); }

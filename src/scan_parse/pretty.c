@@ -4,21 +4,93 @@
 
 char *getTypeName(Type *type);
 
+void prettyKeyword(char *keyword) {
+    printf("\033[1;34m%s\033[0m", keyword);
+}
+
+void prettyType(Type *type) {
+    switch(type->kind) {
+        case idT:
+            printf("\033[0;36m%s\033[0m", type->val.idType.id);
+            break;
+        case arrayT:
+            printf("\033[0;32marray of \033[0m");
+            prettyType(type->val.arrayType.type);
+            break;
+        case recordT:
+            printf("\033[0;32mrecord of\033[0m {");
+            VarDelList *dels = type->val.recordType.types;
+
+            while (dels != NULL) {
+                printf("%s : ", dels->identifier);
+                prettyType(dels->type);
+                printf(", ");
+                dels = dels->next;
+            }
+            printf("\b\b}");
+            break;
+        default:
+            printf("\033[0;36m%s\033[0m", getTypeName(type));
+            break;
+    }
+}
+
+void prettyArgument(char *id) {
+    printf("\033[0;35m%s\033[0m", id);
+}
+
+void prettyFunctionName(char *id) {
+    printf("\033[0;31m%s\033[0m", id);
+}
+
+void prettyFunction(Function *f) {
+    prettyKeyword("\nfunc");
+    printf(" ");
+    prettyFunctionName(f->head->indentifier);
+    printf("(");
+    VarDelList *dels = f->head->declarationList;
+
+    while (dels != NULL) {
+        prettyArgument(dels->identifier);
+        printf(" : ");
+        prettyType(dels->type);
+        printf(", ");
+        dels = dels->next;
+    }
+
+    printf("\b\b) : ");
+    prettyType(f->head->returnType);
+    printf("\n");
+    prettyBody(f->body);
+    prettyKeyword("end ");
+    prettyFunctionName(f->tail->indentifier);
+}
+
 void prettyDeclaration(Declaration *decl) {
     switch (decl->kind) {
         case varsK:
-            printf("var ");
+            prettyKeyword("var ");
             Declaration *p = decl;
             Declaration *d;
             while (p != NULL) {
                 d = p->val.varsD.var;
-                printf("\t%s : %s\n", d->val.varD.id, getTypeName(d->val.varD.type));
+                printf("%s : ", d->val.varD.id);
+                prettyType(d->val.varD.type);
+                printf(", ");
                 p = p->val.varsD.next;
             }
-            printf(";\n");
+            printf("\b\b;\n");
             break;
         case typeK:
-            printf("type %s : %s;", decl->val.typeD.id, getTypeName(decl->val.typeD.type));
+            prettyKeyword("type");
+            printf(" %s = ", decl->val.typeD.id);
+            prettyType(decl->val.typeD.type);
+            printf(";\n");
+            break;
+        case functionK:
+            prettyFunction(decl->val.functionD.function);
+            break;
+        default:
             break;
     }
 }
@@ -29,6 +101,8 @@ char *getTypeName(Type *type) {
             return "int";
         case boolT:
             return "bool";
+        default:
+            return "other type";
     }
 }
 

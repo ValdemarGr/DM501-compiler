@@ -1,6 +1,11 @@
 var a : int, b : bool;
 var c : int;
 
-var q : int;
+type A = array of bool;
 
-if
+type B = record of { a: int, b: int };
+
+func hallo(times:int):bool
+var d : int,
+c: bool;
+end hallo
