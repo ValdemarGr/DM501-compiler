@@ -63,6 +63,62 @@ EXP *makeEXPminus(EXP *left, EXP *right) {
     return e;
 }
 
+//OPERATORS START
+Operator *makeMultOp() {
+    Operator *op = NEW(Operator);
+
+    op->lineno = lineno;
+    op->kind = multK;
+
+    return op;
+}
+
+Operator *makeDivOp() {
+
+}
+
+Operator *makePlusOp() {
+
+}
+
+Operator *makeMinusOp() {
+
+}
+
+Operator *makeEqualityOp() {
+
+}
+
+Operator *makeInequalityOp() {
+
+}
+
+Operator *makeGreaterOp() {
+
+}
+
+Operator *makeLessOp() {
+
+}
+
+Operator *makeGeqOp() {
+
+}
+
+Operator *makeLeqOp() {
+
+}
+
+Operator *makeAndOp() {
+
+}
+
+Operator *makeOrOp() {
+
+}
+
+//OPERATORS END
+
 FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type) {
     FunctionHead *head;
     head = NEW(FunctionHead);

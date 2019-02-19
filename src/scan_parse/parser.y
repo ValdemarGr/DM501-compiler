@@ -163,4 +163,30 @@ exp : tIDENTIFIER
     |
 ;
 
+op : '*'
+        {$$ = makeMultOp();}
+        '/'
+        {$$ = makeDivOp();}
+        '+'
+        {$$ = makePlusOp();}
+        '-'
+        {$$ = makeMinusOp();}
+        '=='
+        {$$ = makeEqualityOp();}
+        '!='
+        {$$ = makeInequalityOp();}
+        '>'
+        {$$ = makeGreaterOp();}
+        '<'
+        {$$ = makeLessOp();}
+        '>='
+        {$$ = makeGeqOp();}
+        '<='
+        {$$ = makeLeqOp();}
+        '&&'
+        {$$ = makeAndOp();}
+        '||'
+        {$$ = makeOrOp();}
+;
+
 %%

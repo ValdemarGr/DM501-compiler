@@ -106,6 +106,25 @@ typedef struct StatementList {
     struct StatementList *next;
 } StatementList;
 
+typedef struct Operator {
+    int lineno;
+    enum { multK, divK, plusK, minusK, equalityK, inequalityK, greaterK, lessK, geqK, leqK, andK, orK } kind;
+    union {
+        struct { EXP* lhs; EXP* rhs; } multD;
+        struct { EXP* lhs; EXP* rhs; } divD;
+        struct { EXP* lhs; EXP* rhs; } plusD;
+        struct { EXP* lhs; EXP* rhs; } minusD;
+        struct { EXP* lhs; EXP* rhs; } equalityD;
+        struct { EXP* lhs; EXP* rhs; } inequalityD;
+        struct { EXP* lhs; EXP* rhs; } greaterD;
+        struct { EXP* lhs; EXP* rhs; } lessD;
+        struct { EXP* lhs; EXP* rhs; } geqD;
+        struct { EXP* lhs; EXP* rhs; } leqD;
+        struct { EXP* lhs; EXP* rhs; } andD;
+        struct { EXP* lhs; EXP* rhs; } orD;
+    } val;
+} Operator;
+
 typedef struct Body {
     DeclarationList *declarationList;
     StatementList *statementList;
@@ -123,6 +142,32 @@ EXP *makeEXPdiv(EXP *left, EXP *right);
 EXP *makeEXPplus(EXP *left, EXP *right);
 
 EXP *makeEXPminus(EXP *left, EXP *right);
+
+//OPERATORS START
+Operator *makeMultOp();
+
+Operator *makeDivOp();
+
+Operator *makePlusOp();
+
+Operator *makeMinusOp();
+
+Operator *makeEqualityOp();
+
+Operator *makeInequalityOp();
+
+Operator *makeGreaterOp();
+
+Operator *makeLessOp();
+
+Operator *makeGeqOp();
+
+Operator *makeLeqOp();
+
+Operator *makeAndOp();
+
+Operator *makeOrOp();
+//OPERATORS END
 
 DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next);
 
