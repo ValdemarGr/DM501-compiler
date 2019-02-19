@@ -12,7 +12,7 @@ typedef struct VarDelList {
 
 typedef struct Type {
     enum {
-        idT, intT, boolT, arrayT, recordT
+        typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK
     } kind;
     union {
         struct { char *id; } idType;
@@ -39,7 +39,7 @@ typedef struct Function {
 
 typedef struct Declaration {
     int lineno;
-    enum { varK, varsK, typeK, functionK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
@@ -54,49 +54,45 @@ typedef struct DeclarationList {
     struct DeclarationList *next;
 } DeclarationList;
 
-typedef struct EXP {
+typedef struct Expression {
     int lineno;
     enum {
-        idK, intconstK, timesK, divK, plusK, minusK//, functionK
+        expIdK, expNumK, expMultK, expDivK, expPlusK, expMinusK
     } kind;
     union {
         char *idE;
         int intconstE;
         struct {
-            struct EXP *left;
-            struct EXP *right;
+            struct Expression *left;
+            struct Expression *right;
         } timesE;
         struct {
-            struct EXP *left;
-            struct EXP *right;
+            struct Expression *left;
+            struct Expression *right;
         } divE;
         struct {
-            struct EXP *left;
-            struct EXP *right;
+            struct Expression *left;
+            struct Expression *right;
         } plusE;
         struct {
-            struct EXP *left;
-            struct EXP *right;
+            struct Expression *left;
+            struct Expression *right;
         } minusE;
-        struct {
-            char *identifier;
-            struct EXP *body;
-        } functionE;
     } val;
-} EXP;
+} Expression;
 
 typedef struct Statement {
     int lineno;
-    enum { returnK, writeK, allocateK, allocateLenK, ifK, ifElK, whileK, whileSSK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, statWhileSSK } kind;
     union {
-        struct { EXP* exp; } returnD;
-        struct { EXP* exp; } writeD;
-        struct { EXP* exp; } allocateD;
-        struct { EXP* exp; EXP* len; } allocateLenD;
-        struct { EXP* exp; struct Statement *statement; } ifD;
-        struct { EXP* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
-        struct { EXP* exp; Body* localBody; } whileD;
-        struct { EXP* exp; struct Statement* statement; } whileSSD;
+        struct { Expression* exp; } returnD;
+        struct { Expression* exp; } writeD;
+        struct { Expression* exp; } allocateD;
+        struct { Expression* exp; Expression* len; } allocateLenD;
+        struct { Expression* exp; struct Statement *statement; } ifD;
+        struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
+        struct { Expression* exp; Body* localBody; } whileD;
+        struct { Expression* exp; struct Statement* statement; } whileSSD;
     } val;
 } Statement;
 
@@ -108,20 +104,20 @@ typedef struct StatementList {
 
 typedef struct Operator {
     int lineno;
-    enum { multK, divK, plusK, minusK, equalityK, inequalityK, greaterK, lessK, geqK, leqK, andK, orK } kind;
+    enum { opMultK, opDivK, opPlusK, opMinusK, opEqualityK, opInequalityK, opGreaterK, opLessK, opGeqK, opLeqK, opAndK, opOrK } kind;
     union {
-        struct { EXP* lhs; EXP* rhs; } multD;
-        struct { EXP* lhs; EXP* rhs; } divD;
-        struct { EXP* lhs; EXP* rhs; } plusD;
-        struct { EXP* lhs; EXP* rhs; } minusD;
-        struct { EXP* lhs; EXP* rhs; } equalityD;
-        struct { EXP* lhs; EXP* rhs; } inequalityD;
-        struct { EXP* lhs; EXP* rhs; } greaterD;
-        struct { EXP* lhs; EXP* rhs; } lessD;
-        struct { EXP* lhs; EXP* rhs; } geqD;
-        struct { EXP* lhs; EXP* rhs; } leqD;
-        struct { EXP* lhs; EXP* rhs; } andD;
-        struct { EXP* lhs; EXP* rhs; } orD;
+        struct { struct Expression* lhs; struct Expression* rhs; } multD;
+        struct { struct Expression* lhs; struct Expression* rhs; } divD;
+        struct { struct Expression* lhs; struct Expression* rhs; } plusD;
+        struct { struct Expression* lhs; struct Expression* rhs; } minusD;
+        struct { struct Expression* lhs; struct Expression* rhs; } equalityD;
+        struct { struct Expression* lhs; struct Expression* rhs; } inequalityD;
+        struct { struct Expression* lhs; struct Expression* rhs; } greaterD;
+        struct { struct Expression* lhs; struct Expression* rhs; } lessD;
+        struct { struct Expression* lhs; struct Expression* rhs; } geqD;
+        struct { struct Expression* lhs; struct Expression* rhs; } leqD;
+        struct { struct Expression* lhs; struct Expression* rhs; } andD;
+        struct { struct Expression* lhs; struct Expression* rhs; } orD;
     } val;
 } Operator;
 
@@ -131,17 +127,17 @@ typedef struct Body {
 } Body;
 
 
-EXP *makeEXPid(char *id);
+Expression *makeEXPid(char *id);
 
-EXP *makeEXPintconst(int intconst);
+Expression *makeEXPintconst(int intconst);
 
-EXP *makeEXPtimes(EXP *left, EXP *right);
+Expression *makeEXPtimes(Expression *left, Expression *right);
 
-EXP *makeEXPdiv(EXP *left, EXP *right);
+Expression *makeEXPdiv(Expression *left, Expression *right);
 
-EXP *makeEXPplus(EXP *left, EXP *right);
+Expression *makeEXPplus(Expression *left, Expression *right);
 
-EXP *makeEXPminus(EXP *left, EXP *right);
+Expression *makeEXPminus(Expression *left, Expression *right);
 
 //OPERATORS START
 Operator *makeMultOp();
@@ -177,23 +173,23 @@ Declaration *makeTypeDeclaration(char* id, Type* type);
 
 Declaration *makeVarDeclarations(VarDelList* vars);
 
-StatementList *makeStatementList(Statement *statement, Statement *next);
+StatementList *makeStatementList(Statement *statement, StatementList *next);
 
-Statement *makeReturnStatement(EXP *exp);
+Statement *makeReturnStatement(Expression *exp);
 
-Statement *makeIfStatement(EXP *exp, Statement *statement);
+Statement *makeIfStatement(Expression *exp, Statement *statement);
 
-Statement *makeIfElseStatement(EXP *exp, Statement *statement, Statement *elseStatement);
+Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement);
 
-Statement *makeAllocateStatement(EXP *exp);
+Statement *makeAllocateStatement(Expression *exp);
 
-Statement *makeAllocateOfLenStatement(EXP *exp, EXP *len);
+Statement *makeAllocateOfLenStatement(Expression *exp, Expression *len);
 
-Statement *makeWriteStatement(EXP *exp);
+Statement *makeWriteStatement(Expression *exp);
 
-Statement *makeWhileStatement(EXP *exp, Body *localBody);
+Statement *makeWhileStatement(Expression *exp, Body *localBody);
 
-Statement *makeWhileSingleStatement(EXP *exp, Statement *statement);
+Statement *makeWhileSingleStatement(Expression *exp, Statement *statement);
 
 Type *makeIdType(char* id);
 
@@ -205,7 +201,7 @@ Type *makeArrayType(Type *type);
 
 Type *makeRecordType(VarDelList *record);
 
-EXP *makeEXPfunction(char *identifier, EXP *body);
+Expression *makeEXPfunction(char *identifier, Expression *body);
 
 VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next);
 

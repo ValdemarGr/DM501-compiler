@@ -13,7 +13,7 @@ void yyerror() {
 %union {
    int intconst;
    char *stringconst;
-   struct EXP *exp;
+   struct Expression *exp;
    struct Body *body;
    struct DeclarationList *declarationList;
    struct VarDelList *varDelList;
@@ -45,6 +45,13 @@ void yyerror() {
 %token tDO
 %token tOF_LEN
 %token tELSE
+
+%token tLEQ
+%token tGEQ
+%token tEQUAL
+%token tNEQ
+%token tAND
+%token tOR
 
 %type <exp> exp
 %type <body> program body
@@ -162,31 +169,31 @@ exp : tIDENTIFIER
       {$$ = $2;}
     |
 ;
-
+/*
 op : '*'
         {$$ = makeMultOp();}
-        '/'
+        | '/'
         {$$ = makeDivOp();}
-        '+'
+        | '+'
         {$$ = makePlusOp();}
-        '-'
+        | '-'
         {$$ = makeMinusOp();}
-        '=='
+        | tEQUAL
         {$$ = makeEqualityOp();}
-        '!='
+        | '!='
         {$$ = makeInequalityOp();}
-        '>'
+        | '>'
         {$$ = makeGreaterOp();}
-        '<'
+        | '<'
         {$$ = makeLessOp();}
-        '>='
+        | tGREATER_EQUAL
         {$$ = makeGeqOp();}
-        '<='
+        | tLESS_EQUAL
         {$$ = makeLeqOp();}
-        '&&'
+        | '&&'
         {$$ = makeAndOp();}
-        '||'
+        | '||'
         {$$ = makeOrOp();}
 ;
-
+*/
 %%

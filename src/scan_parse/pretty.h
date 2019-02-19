@@ -8,6 +8,6 @@
 #include "../ast/tree.h"
 
 void prettyBody(Body *body);
-void prettyEXP(EXP *e);
+void prettyEXP(Expression *e);
 
 #endif //HELLO_PRETTY_H
