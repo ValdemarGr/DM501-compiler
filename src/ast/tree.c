@@ -5,11 +5,21 @@
 
 extern int lineno;
 
+Expression *makeEXPFromTerm(Term *term) {
+    Expression *returning = NEW(Expression);
+
+    returning->lineno = lineno;
+    returning->kind = termK;
+    returning->val.termD.term = term;
+
+    return returning;
+}
+
 Variable* makeVariable(char *id) {
     Variable* returning = NEW(Variable);
 
     returning->lineno = lineno;
-    returning->kind = variableK;
+    returning->kind = varIdK;
     returning->val.idD.id = id;
 
     return returning;
@@ -58,11 +68,11 @@ Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList) {
     return returning;
 }
 
-Term *makeNegatedTerm(Expression *expression) {
+Term *makeNegatedTerm(Term *term) {
     Term* returning = NEW(Term);
 
     returning->lineno = lineno;
-    returning->val.negateD.expression = expression;
+    returning->val.negateD.term = term;
     returning->kind = negateK;
 
     return returning;
@@ -72,7 +82,7 @@ Term *makeAbsTerm(Expression *expression) {
     Term* returning = NEW(Term);
 
     returning->lineno = lineno;
-    returning->val.negateD.expression = expression;
+    returning->val.absD.expression = expression;
     returning->kind = absK;
 
     return returning;

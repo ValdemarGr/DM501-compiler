@@ -3,6 +3,7 @@
 
 typedef struct Body Body;
 typedef struct Type Type;
+typedef struct Term Term;
 
 typedef struct VarDelList {
     char *identifier;
@@ -57,7 +58,7 @@ typedef struct DeclarationList {
 typedef struct Expression {
     int lineno;
     enum {
-        idK, intconstK, opK//, functionK
+        idK, intconstK, opK, termK//, functionK
     } kind;
     union {
         char *idE;
@@ -71,6 +72,9 @@ typedef struct Expression {
             char *identifier;
             struct Expression *body;
         } functionE;
+        struct {
+            Term *term;
+        } termD;
     } val;
 } Expression;
 
@@ -108,7 +112,7 @@ typedef struct ExpressionList {
 
 typedef struct Variable {
     int lineno;
-    enum { idK, arrayIndexK, recordLookupK } kind;
+    enum { varIdK, arrayIndexK, recordLookupK } kind;
     union {
         struct { char* id; } idD;
         struct { struct Variable *var; struct Expression *idx; } arrayIndexD;
@@ -122,7 +126,7 @@ typedef struct Term {
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
-        struct { Expression* expression; } negateD;
+        struct { Term* term; } negateD;
         struct { Expression* expression; } absD;
     } val;
 } Term;
@@ -131,6 +135,8 @@ typedef struct Body {
     DeclarationList *declarationList;
     StatementList *statementList;
 } Body;
+
+Expression *makeEXPFromTerm(Term *term);
 
 Variable *makeVariable(char *id);
 
@@ -142,7 +148,7 @@ Term *makeTermFromVariable(Variable *variable);
 
 Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList);
 
-Term *makeNegatedTerm(Expression *expression);
+Term *makeNegatedTerm(Term *term);
 
 Term *makeAbsTerm(Expression *expression);
 

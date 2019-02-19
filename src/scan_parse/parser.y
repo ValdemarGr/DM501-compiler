@@ -176,13 +176,13 @@ expression : tINTCONST
 expression : expression operator expression
         {$$ = makeEXPOpEXP($1, $2, $3);}
         | term
-        {$$ = makeTerm($1);}
+        {$$ = makeEXPFromTerm($1);}
 ;
 
 act_list :  exp_list
-            {$$ = $1}
+            {$$ = $1;}
             |
-            {$$ = NULL}
+            {$$ = NULL;}
 ;
 
 exp_list :  expression
@@ -224,7 +224,7 @@ variable : tIDENTIFIER
 ;
 
 term : variable
-        {$$ = makeTermFromVariable($1)};
+        {$$ = makeTermFromVariable($1);};
         | tIDENTIFIER '(' act_list ')'
         {$$ = makeFunctionCallTerm($1, $3);}
         | '(' expression ')'
@@ -234,7 +234,7 @@ term : variable
         | '|' expression '|'
         {$$ = makeAbsTerm($2);}
         | tINTCONST
-        {$$ = makeExpintconst($1);}
+        {$$ = makeEXPintconst($1);}
         | tTRUE
         {$$ = makeTrueTerm();}
         | tFALSE
