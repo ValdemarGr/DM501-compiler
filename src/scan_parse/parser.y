@@ -24,6 +24,7 @@ void yyerror() {
    struct FunctionTail *functionTail;
    struct StatementList *statementList;
    struct Statement *statement;
+   struct Operator *operator;
 }
 
 %token <intconst> tINTCONST
@@ -45,6 +46,14 @@ void yyerror() {
 %token tDO
 %token tOF_LEN
 %token tELSE
+%token tEQ
+%token tINEQ
+%token tGREATER
+%token tLESS
+%token tGEQ
+%token tLEQ
+%token tAND
+%token tOR
 
 %type <exp> exp
 %type <body> program body
@@ -57,6 +66,7 @@ void yyerror() {
 %type <functionTail> tail
 %type <statementList> stm_list
 %type <statement> statement
+%type <operator> operator
 
 %start program
 
@@ -146,46 +156,41 @@ var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
                     {$$ = makeVarDelList($1, $3, NULL); }
 ;
 
-exp : tIDENTIFIER
-      {$$ = makeEXPid($1);}
-    | tINTCONST
-      {$$ = makeEXPintconst($1);}
-    | exp '*' exp
-      {$$ = makeEXPtimes($1,$3);}
-    | exp '/' exp
-      {$$ = makeEXPdiv($1,$3);}
-    | exp '+' exp
-      {$$ = makeEXPplus($1,$3);}
-    | exp '-' exp
-      {$$ = makeEXPminus($1,$3);}
-    | '(' exp ')'
-      {$$ = $2;}
-    |
+exp : tINTCONST
+        {$$ = makeEXPintconst($1);}
+        | tIDENTIFIER
+        {$$ = makeEXPid($1);}
+        | '(' exp ')'
+        {$$ = $2;}
 ;
 
-op : '*'
+exp : exp operator exp
+        {$$ = makeEXPOpEXP($1, $2, $3);}
+;
+
+operator : '*'
         {$$ = makeMultOp();}
-        '/'
+        | '/'
         {$$ = makeDivOp();}
-        '+'
+        | '+'
         {$$ = makePlusOp();}
-        '-'
+        | '-'
         {$$ = makeMinusOp();}
-        '=='
+        | tEQ
         {$$ = makeEqualityOp();}
-        '!='
+        | tINEQ
         {$$ = makeInequalityOp();}
-        '>'
+        | tGREATER
         {$$ = makeGreaterOp();}
-        '<'
+        | tLESS
         {$$ = makeLessOp();}
-        '>='
+        | tGEQ
         {$$ = makeGeqOp();}
-        '<='
+        | tLEQ
         {$$ = makeLeqOp();}
-        '&&'
+        | tAND
         {$$ = makeAndOp();}
-        '||'
+        | tOR
         {$$ = makeOrOp();}
 ;
 

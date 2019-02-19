@@ -10,6 +10,8 @@ var d : int,
 c: bool;
 end hallo
 
+return 1+1;
+
 if asd then
 return a;
 else

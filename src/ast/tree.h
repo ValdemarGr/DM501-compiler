@@ -57,27 +57,16 @@ typedef struct DeclarationList {
 typedef struct EXP {
     int lineno;
     enum {
-        idK, intconstK, timesK, divK, plusK, minusK//, functionK
+        idK, intconstK, opK//, functionK
     } kind;
     union {
         char *idE;
         int intconstE;
         struct {
             struct EXP *left;
+            struct Operator *operator;
             struct EXP *right;
-        } timesE;
-        struct {
-            struct EXP *left;
-            struct EXP *right;
-        } divE;
-        struct {
-            struct EXP *left;
-            struct EXP *right;
-        } plusE;
-        struct {
-            struct EXP *left;
-            struct EXP *right;
-        } minusE;
+        } op;
         struct {
             char *identifier;
             struct EXP *body;
@@ -109,20 +98,6 @@ typedef struct StatementList {
 typedef struct Operator {
     int lineno;
     enum { multK, divK, plusK, minusK, equalityK, inequalityK, greaterK, lessK, geqK, leqK, andK, orK } kind;
-    union {
-        struct { EXP* lhs; EXP* rhs; } multD;
-        struct { EXP* lhs; EXP* rhs; } divD;
-        struct { EXP* lhs; EXP* rhs; } plusD;
-        struct { EXP* lhs; EXP* rhs; } minusD;
-        struct { EXP* lhs; EXP* rhs; } equalityD;
-        struct { EXP* lhs; EXP* rhs; } inequalityD;
-        struct { EXP* lhs; EXP* rhs; } greaterD;
-        struct { EXP* lhs; EXP* rhs; } lessD;
-        struct { EXP* lhs; EXP* rhs; } geqD;
-        struct { EXP* lhs; EXP* rhs; } leqD;
-        struct { EXP* lhs; EXP* rhs; } andD;
-        struct { EXP* lhs; EXP* rhs; } orD;
-    } val;
 } Operator;
 
 typedef struct Body {
@@ -130,18 +105,19 @@ typedef struct Body {
     StatementList *statementList;
 } Body;
 
-
 EXP *makeEXPid(char *id);
 
 EXP *makeEXPintconst(int intconst);
-
+/*
 EXP *makeEXPtimes(EXP *left, EXP *right);
 
 EXP *makeEXPdiv(EXP *left, EXP *right);
 
 EXP *makeEXPplus(EXP *left, EXP *right);
 
-EXP *makeEXPminus(EXP *left, EXP *right);
+EXP *makeEXPminus(EXP *left, EXP *right);*/
+
+EXP *makeEXPOpEXP(EXP *lhs, Operator *op, EXP *rhs);
 
 //OPERATORS START
 Operator *makeMultOp();

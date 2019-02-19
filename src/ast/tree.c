@@ -22,7 +22,7 @@ EXP *makeEXPintconst(int intconst) {
     e->val.intconstE = intconst;
     return e;
 }
-
+/*
 EXP *makeEXPtimes(EXP *left, EXP *right) {
     EXP *e;
     e = NEW(EXP);
@@ -60,6 +60,19 @@ EXP *makeEXPminus(EXP *left, EXP *right) {
     e->kind = minusK;
     e->val.minusE.left = left;
     e->val.minusE.right = right;
+    return e;
+}
+*/
+
+EXP *makeEXPOpEXP(EXP *lhs, Operator *op, EXP *rhs) {
+    EXP *e = NEW(EXP);
+
+    e->lineno = lhs->lineno;
+    e->kind = opK;
+    e->val.op.left = lhs;
+    e->val.op.operator = op;
+    e->val.op.right = rhs;
+
     return e;
 }
 
