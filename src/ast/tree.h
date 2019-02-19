@@ -63,13 +63,13 @@ typedef struct Expression {
         char *idE;
         int intconstE;
         struct {
-            struct EXP *left;
+            struct Expression *left;
             struct Operator *operator;
-            struct EXP *right;
+            struct Expression *right;
         } op;
         struct {
             char *identifier;
-            struct EXP *body;
+            struct Expression *body;
         } functionE;
     } val;
 } Expression;
