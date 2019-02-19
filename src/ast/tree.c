@@ -74,47 +74,103 @@ Operator *makeMultOp() {
 }
 
 Operator *makeDivOp() {
+    Operator *op = NEW(Operator);
+
+    op->lineno = lineno;
+    op->kind = divK;
+
+    return op;
 
 }
 
 Operator *makePlusOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = plusK;
+
+    return op;
 }
 
 Operator *makeMinusOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = minusK;
+
+    return op;
 }
 
 Operator *makeEqualityOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = equalityK;
+
+    return op;
 }
 
 Operator *makeInequalityOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = inequalityK;
+
+    return op;
 }
 
 Operator *makeGreaterOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = greaterK;
+
+    return op;
 }
 
 Operator *makeLessOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = lessK;
+
+    return op;
 }
 
 Operator *makeGeqOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = geqK;
+
+    return op;
 }
 
 Operator *makeLeqOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = leqK;
+
+    return op;
 }
 
 Operator *makeAndOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = andK;
+
+    return op;
 }
 
 Operator *makeOrOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = orK;
+
+    return op;
 }
 
 //OPERATORS END
