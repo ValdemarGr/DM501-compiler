@@ -18,14 +18,14 @@ void prettyKeyword(char *keyword) {
 
 void prettyType(Type *type) {
     switch(type->kind) {
-        case idT:
+        case typeIdK:
             printf("\033[0;36m%s\033[0m", type->val.idType.id);
             break;
-        case arrayT:
+        case typeArrayK:
             printf("\033[0;32marray of \033[0m");
             prettyType(type->val.arrayType.type);
             break;
-        case recordT:
+        case typeRecordK:
             printf("\033[0;32mrecord of\033[0m {");
             VarDelList *dels = type->val.recordType.types;
 
@@ -79,7 +79,7 @@ void prettyDeclaration(Declaration *decl) {
     printCurrentIndent();
 
     switch (decl->kind) {
-        case varsK:
+        case declVarsK:
             prettyKeyword("var ");
             Declaration *p = decl;
             Declaration *d;
@@ -92,13 +92,13 @@ void prettyDeclaration(Declaration *decl) {
             }
             printf("\b\b;\n");
             break;
-        case typeK:
+        case declTypeK:
             prettyKeyword("type");
             printf(" %s = ", decl->val.typeD.id);
             prettyType(decl->val.typeD.type);
             printf(";\n");
             break;
-        case functionK:
+        case declFuncK:
             indentation++;
             prettyFunction(decl->val.functionD.function);
             indentation--;
@@ -112,29 +112,29 @@ void prettyStatement(Statement *statement) {
     printCurrentIndent();
 
     switch (statement->kind) {
-        case returnK:
+        case statReturnK:
             prettyKeyword("return ");
             prettyEXP(statement->val.returnD.exp);
             printf(";\n");
             break;
-        case writeK:
+        case statWriteK:
             prettyKeyword("write ");
             prettyEXP(statement->val.writeD.exp);
             printf(";\n");
             break;
-        case allocateK:
+        case statAllocateK:
             prettyKeyword("allocate ");
             prettyEXP(statement->val.allocateD.exp);
             printf(";\n");
             break;
-        case allocateLenK:
+        case statAllocateLenK:
             prettyKeyword("allocate ");
             prettyEXP(statement->val.allocateLenD.exp);
             prettyKeyword(" of length ");
             prettyEXP(statement->val.allocateLenD.len);
             printf(";\n");
             break;
-        case ifK:
+        case statIfK:
             prettyKeyword("if ");
             prettyEXP(statement->val.ifD.exp);
             prettyKeyword(" then\n");
@@ -143,7 +143,7 @@ void prettyStatement(Statement *statement) {
             indentation--;
             printf("\n");
             break;
-        case ifElK:
+        case statIfElK:
             prettyKeyword("if ");
             prettyEXP(statement->val.ifElD.exp);
             prettyKeyword(" then\n");
@@ -156,7 +156,7 @@ void prettyStatement(Statement *statement) {
             indentation--;
             printf("\n");
             break;
-        case whileK:
+        case statWhileK:
             prettyKeyword("while ");
             prettyEXP(statement->val.whileD.exp);
             prettyKeyword(" do ");
@@ -166,7 +166,7 @@ void prettyStatement(Statement *statement) {
             indentation--;
             printf("}\n");
             break;
-        case whileSSK:
+        case statWhileSSK:
             prettyKeyword("while ");
             prettyEXP(statement->val.whileSSD.exp);
             prettyKeyword(" do \n");
@@ -179,9 +179,9 @@ void prettyStatement(Statement *statement) {
 
 char *getTypeName(Type *type) {
     switch (type->kind) {
-        case intT:
+        case typeIntK:
             return "int";
-        case boolT:
+        case typeBoolK:
             return "bool";
         default:
             return "other type";
@@ -214,7 +214,7 @@ void prettyBody(Body *body) {
     }
 }
 
-void prettyEXP(EXP *e) {
+void prettyEXP(Expression *e) {
     switch (e->kind) {
         case idK:
             printf("%s", e->val.idE);

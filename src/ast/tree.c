@@ -5,18 +5,18 @@
 
 extern int lineno;
 
-EXP *makeEXPid(char *id) {
-    EXP *e;
-    e = NEW(EXP);
+Expression *makeEXPid(char *id) {
+    Expression *e;
+    e = NEW(Expression);
     e->lineno = lineno;
     e->kind = idK;
     e->val.idE = id;
     return e;
 }
 
-EXP *makeEXPintconst(int intconst) {
-    EXP *e;
-    e = NEW(EXP);
+Expression *makeEXPintconst(int intconst) {
+    Expression *e;
+    e = NEW(Expression);
     e->lineno = lineno;
     e->kind = intconstK;
     e->val.intconstE = intconst;
@@ -26,46 +26,52 @@ EXP *makeEXPintconst(int intconst) {
 EXP *makeEXPtimes(EXP *left, EXP *right) {
     EXP *e;
     e = NEW(EXP);
+=======
+
+Expression *makeEXPtimes(Expression *left, Expression *right) {
+    Expression *e;
+    e = NEW(Expression);
+>>>>>>> f5afe80b98e9f432e79a4d82d73ab1a47128ab01
     e->lineno = lineno;
-    e->kind = timesK;
+    e->kind = expMultK;
     e->val.timesE.left = left;
     e->val.timesE.right = right;
     return e;
 }
 
-EXP *makeEXPdiv(EXP *left, EXP *right) {
-    EXP *e;
-    e = NEW(EXP);
+Expression *makeEXPdiv(Expression *left, Expression *right) {
+    Expression *e;
+    e = NEW(Expression);
     e->lineno = lineno;
-    e->kind = divK;
+    e->kind = expDivK;
     e->val.divE.left = left;
     e->val.divE.right = right;
     return e;
 }
 
-EXP *makeEXPplus(EXP *left, EXP *right) {
-    EXP *e;
-    e = NEW(EXP);
+Expression *makeEXPplus(Expression *left, Expression *right) {
+    Expression *e;
+    e = NEW(Expression);
     e->lineno = lineno;
-    e->kind = plusK;
+    e->kind = expPlusK;
     e->val.plusE.left = left;
     e->val.plusE.right = right;
     return e;
 }
 
-EXP *makeEXPminus(EXP *left, EXP *right) {
-    EXP *e;
-    e = NEW(EXP);
+Expression *makeEXPminus(Expression *left, Expression *right) {
+    Expression *e;
+    e = NEW(Expression);
     e->lineno = lineno;
-    e->kind = minusK;
+    e->kind = expMinusK;
     e->val.minusE.left = left;
     e->val.minusE.right = right;
     return e;
 }
 */
 
-EXP *makeEXPOpEXP(EXP *lhs, Operator *op, EXP *rhs) {
-    EXP *e = NEW(EXP);
+Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
+    Expression *e = NEW(Expression);
 
     e->lineno = lhs->lineno;
     e->kind = opK;
@@ -81,53 +87,109 @@ Operator *makeMultOp() {
     Operator *op = NEW(Operator);
 
     op->lineno = lineno;
-    op->kind = multK;
+    op->kind = opMultK;
 
     return op;
 }
 
 Operator *makeDivOp() {
+    Operator *op = NEW(Operator);
+
+    op->lineno = lineno;
+    op->kind = opDivK;
+
+    return op;
 
 }
 
 Operator *makePlusOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opPlusK;
+
+    return op;
 }
 
 Operator *makeMinusOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opMinusK;
+
+    return op;
 }
 
 Operator *makeEqualityOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opEqualityK;
+
+    return op;
 }
 
 Operator *makeInequalityOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opInequalityK;
+
+    return op;
 }
 
 Operator *makeGreaterOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opGreaterK;
+
+    return op;
 }
 
 Operator *makeLessOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opLessK;
+
+    return op;
 }
 
 Operator *makeGeqOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opGeqK;
+
+    return op;
 }
 
 Operator *makeLeqOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opLeqK;
+
+    return op;
 }
 
 Operator *makeAndOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opAndK;
+
+    return op;
 }
 
 Operator *makeOrOp() {
+    Operator *op = NEW(Operator);
 
+    op->lineno = lineno;
+    op->kind = opOrK;
+
+    return op;
 }
 
 //OPERATORS END
@@ -179,13 +241,13 @@ Declaration *makeVarDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
     result->lineno = lineno;
-    result->kind = varK;
+    result->kind = declVarK;
     result->val.varD.id = id;
     result->val.varD.type = type;
     return result;
 }
 
-StatementList *makeStatementList(Statement *statement, Statement *next) {
+StatementList *makeStatementList(Statement *statement, StatementList *next) {
     StatementList *stmList = NEW(StatementList);
     stmList->statement = statement;
     stmList->next = next;
@@ -193,79 +255,79 @@ StatementList *makeStatementList(Statement *statement, Statement *next) {
     return stmList;
 }
 
-Statement *makeReturnStatement(EXP *exp) {
+Statement *makeReturnStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
-    statement->kind = returnK;
+    statement->kind = statReturnK;
     statement->val.returnD.exp = exp;
     return statement;
 }
 
-Statement *makeIfStatement(EXP *exp, Statement *statement) {
+Statement *makeIfStatement(Expression *exp, Statement *statement) {
     Statement *returning = NEW(Statement);
 
     returning->lineno = lineno;
-    returning->kind = ifK;
+    returning->kind = statIfK;
     returning->val.ifElD.exp = exp;
     returning->val.ifElD.statement = statement;
     return returning;
 }
 
-Statement *makeIfElseStatement(EXP *exp, Statement *statement, Statement *elseStatement) {
+Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement) {
     Statement *returning = NEW(Statement);
 
     returning->lineno = lineno;
-    returning->kind = ifElK;
+    returning->kind = statIfElK;
     returning->val.ifElD.exp = exp;
     returning->val.ifElD.statement = statement;
     returning->val.ifElD.elseStatement = elseStatement;
     return returning;
 }
 
-Statement *makeAllocateStatement(EXP *exp) {
+Statement *makeAllocateStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
-    statement->kind = allocateK;
+    statement->kind = statAllocateK;
     statement->val.allocateD.exp = exp;
     return statement;
 }
 
-Statement *makeAllocateOfLenStatement(EXP *exp, EXP *len) {
+Statement *makeAllocateOfLenStatement(Expression *exp, Expression *len) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
-    statement->kind = allocateLenK;
+    statement->kind = statAllocateLenK;
     statement->val.allocateLenD.exp = exp;
     statement->val.allocateLenD.len = len;
     return statement;
 }
 
-Statement *makeWriteStatement(EXP *exp) {
+Statement *makeWriteStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
-    statement->kind = writeK;
+    statement->kind = statWriteK;
     statement->val.writeD.exp = exp;
     return statement;
 }
 
-Statement *makeWhileStatement(EXP *exp, Body *localBody) {
+Statement *makeWhileStatement(Expression *exp, Body *localBody) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
-    statement->kind = whileK;
+    statement->kind = statWhileK;
     statement->val.whileD.exp = exp;
     statement->val.whileD.localBody = localBody;
     return statement;
 }
 
-Statement *makeWhileSingleStatement(EXP *exp, Statement *statement) {
+Statement *makeWhileSingleStatement(Expression *exp, Statement *statement) {
     Statement *returning = NEW(Statement);
 
     returning->lineno = lineno;
-    returning->kind = whileSSK;
+    returning->kind = statWhileSSK;
     returning->val.whileSSD.exp = exp;
     returning->val.whileSSD.statement = statement;
     return returning;
@@ -275,7 +337,7 @@ Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
     Declaration *result;
     result = NEW(Declaration);
     result->lineno = lineno;
-    result->kind = varsK;
+    result->kind = declVarsK;
     result->val.varsD.var = makeVarDeclaration(id, type);
     result->val.varsD.next = next;
     return result;
@@ -283,13 +345,13 @@ Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
 
 Type *makeIntType() {
     Type *result = NEW(Type);
-    result->kind = intT;
+    result->kind = typeIntK;
     return result;
 }
 
 Type *makeBoolType() {
     Type *result = NEW(Type);
-    result->kind = boolT;
+    result->kind = typeBoolK;
     return result;
 }
 
@@ -316,7 +378,7 @@ Declaration *makeFunctionDecleration(Function *function) {
     Declaration *declaration = NEW(Declaration);
 
     declaration->lineno = lineno;
-    declaration->kind = functionK;
+    declaration->kind = declFuncK;
     declaration->val.functionD.function = function;
 
     return declaration;
@@ -326,7 +388,7 @@ Declaration *makeTypeDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
     result->lineno = lineno;
-    result->kind = typeK;
+    result->kind = declTypeK;
     result->val.typeD.id = id;
     result->val.typeD.type = type;
     return result;
@@ -336,7 +398,7 @@ Type *makeIdType(char *id) {
     Type *type;
     type = NEW(Type);
 
-    type->kind = idT;
+    type->kind = typeIdK;
     type->val.idType.id = id;
 
     return type;
@@ -346,7 +408,7 @@ Type *makeArrayType(Type *type) {
     Type *t;
     t = NEW(Type);
 
-    t->kind = arrayT;
+    t->kind = typeArrayK;
     t->val.arrayType.type = type;
 
     return t;
@@ -356,7 +418,7 @@ Type *makeRecordType(VarDelList *record) {
     Type *t;
     t = NEW(Type);
 
-    t->kind = recordT;
+    t->kind = typeRecordK;
     t->val.recordType.types = record;
 
     return t;

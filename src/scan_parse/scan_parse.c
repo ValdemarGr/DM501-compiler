@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 int lineno;
-EXP *theexpression;
+Expression *theexpression;
 
 int main() {
     lineno = 1;

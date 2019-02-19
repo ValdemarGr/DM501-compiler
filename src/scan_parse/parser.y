@@ -13,7 +13,7 @@ void yyerror() {
 %union {
    int intconst;
    char *stringconst;
-   struct EXP *exp;
+   struct Expression *exp;
    struct Body *body;
    struct DeclarationList *declarationList;
    struct VarDelList *varDelList;
@@ -52,6 +52,13 @@ void yyerror() {
 %token tLESS
 %token tGEQ
 %token tLEQ
+%token tAND
+%token tOR
+
+%token tLEQ
+%token tGEQ
+%token tEQUAL
+%token tNEQ
 %token tAND
 %token tOR
 
@@ -190,8 +197,6 @@ operator : '*'
         {$$ = makeLeqOp();}
         | tAND
         {$$ = makeAndOp();}
-        | tOR
-        {$$ = makeOrOp();}
 ;
 
 %%
