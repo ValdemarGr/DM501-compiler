@@ -478,3 +478,10 @@ Type *makeRecordType(VarDelList *record) {
     return t;
 }
 
+ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
+    ExpressionList *list = NEW(ExpressionList);
+    list->lineno = lineno;
+    list->expression = exp;
+    list->next = next;
+    return list;
+}

@@ -26,6 +26,8 @@ void yyerror() {
    struct Statement *statement;
    struct Operator *operator;
    struct Variable *variable;
+   struct ExpressionList *expressionList;
+   struct Term *term;
 }
 
 %token <intconst> tINTCONST
@@ -72,6 +74,8 @@ void yyerror() {
 %type <statement> statement
 %type <operator> operator
 %type <variable> variable
+%type <expressionList> act_list exp_list
+%type <term> term
 
 %start program
 
@@ -175,6 +179,18 @@ expression : expression operator expression
         {$$ = makeTerm($1);}
 ;
 
+act_list :  exp_list
+            {$$ = $1}
+            |
+            {$$ = NULL}
+;
+
+exp_list :  expression
+            {$$ = makeExpList($1, NULL); }
+            | expression ',' exp_list
+            {$$ = makeExpList($1, $3); }
+;
+
 operator : '*'
         {$$ = makeMultOp();}
         | '/'
@@ -200,7 +216,7 @@ operator : '*'
 ;
 
 variable : tIDENTIFIER
-        {$$ = makeVariable($1};}
+        {$$ = makeVariable($1);}
         | variable '[' expression ']'
         {$$ = makeArraySubscript($1, $3);}
         | variable '.' tIDENTIFIER

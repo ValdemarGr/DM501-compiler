@@ -100,6 +100,12 @@ typedef struct Operator {
     enum { opMultK, opDivK, opPlusK, opMinusK, opEqualityK, opInequalityK, opGreaterK, opLessK, opGeqK, opLeqK, opAndK, opOrK } kind;
 } Operator;
 
+typedef struct ExpressionList {
+    int lineno;
+    Expression *expression;
+    struct ExpressionList *next;
+} ExpressionList;
+
 typedef struct Variable {
     int lineno;
     enum { idK, arrayIndexK, recordLookupK } kind;
@@ -149,25 +155,6 @@ Term *makeNullTerm();
 Expression *makeEXPid(char *id);
 
 Expression *makeEXPintconst(int intconst);
-/*
-EXP *makeEXPtimes(EXP *left, EXP *right);
-=======
-
-Expression *makeEXPid(char *id);
-
-Expression *makeEXPintconst(int intconst);
-
-Expression *makeEXPtimes(Expression *left, Expression *right);
->>>>>>> f5afe80b98e9f432e79a4d82d73ab1a47128ab01
-
-Expression *makeEXPdiv(Expression *left, Expression *right);
-
-Expression *makeEXPplus(Expression *left, Expression *right);
-
-<<<<<<< HEAD
-EXP *makeEXPminus(EXP *left, EXP *right);
-
-Expression *makeEXPminus(Expression *left, Expression *right);*/
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -197,6 +184,8 @@ Operator *makeAndOp();
 
 Operator *makeOrOp();
 //OPERATORS END
+
+ExpressionList *makeExpList(Expression *exp, ExpressionList *next);
 
 DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next);
 
