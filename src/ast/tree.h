@@ -100,10 +100,51 @@ typedef struct Operator {
     enum { opMultK, opDivK, opPlusK, opMinusK, opEqualityK, opInequalityK, opGreaterK, opLessK, opGeqK, opLeqK, opAndK, opOrK } kind;
 } Operator;
 
+typedef struct Variable {
+    int lineno;
+    enum { idK, arrayIndexK, recordLookupK } kind;
+    union {
+        struct { char* id; } idD;
+        struct { struct Variable *var; struct Expression *idx; } arrayIndexD;
+        struct { struct Variable *var; char *id; } recordLookupD;
+    } val;
+} Variable;
+
+typedef struct Term {
+    int lineno;
+    enum { variableK, functionCallK, negateK, absK, trueK, falseK, nullK } kind;
+    union {
+        struct { struct Variable *var; } variableD;
+        struct { char *functionId; ExpressionList *expressionList; } functionCallD;
+        struct { Expression* expression; } negateD;
+        struct { Expression* expression; } absD;
+    } val;
+} Term;
+
 typedef struct Body {
     DeclarationList *declarationList;
     StatementList *statementList;
 } Body;
+
+Variable *makeVariable(char *id);
+
+Variable *makeArraySubscript(Variable *variable, Expression *expression);
+
+Variable *makeRecordSubscript(Variable* variable, char *id);
+
+Term *makeTermFromVariable(Variable *variable);
+
+Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList);
+
+Term *makeNegatedTerm(Expression *expression);
+
+Term *makeAbsTerm(Expression *expression);
+
+Term *makeTrueTerm();
+
+Term *makeFalseTerm();
+
+Term *makeNullTerm();
 
 Expression *makeEXPid(char *id);
 

@@ -5,6 +5,107 @@
 
 extern int lineno;
 
+Variable* makeVariable(char *id) {
+    Variable* returning = NEW(Variable);
+
+    returning->lineno = lineno;
+    returning->kind = variableK;
+    returning->val.idD.id = id;
+
+    return returning;
+}
+
+Variable* makeArraySubscript(Variable *variable, Expression *expression) {
+    Variable* returning = NEW(Variable);
+
+    returning->lineno = lineno;
+    returning->kind = variableK;
+    returning->val.arrayIndexD.var = variable;
+    returning->val.arrayIndexD.idx = expression;
+
+    return returning;
+}
+
+Variable* makeRecordSubscript(Variable* variable, char *id) {
+    Variable* returning = NEW(Variable);
+
+    returning->lineno = lineno;
+    returning->kind = variableK;
+    returning->val.recordLookupD.var = variable;
+    returning->val.recordLookupD.id = id;
+
+    return returning;
+}
+
+Term *makeTermFromVariable(Variable *variable) {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->val.variableD.var = variable;
+    returning->kind = variableK;
+
+    return returning;
+}
+
+Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList) {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->val.functionCallD.expressionList = expressionList;
+    returning->val.functionCallD.functionId = functionId;
+    returning->kind = functionCallK;
+
+    return returning;
+}
+
+Term *makeNegatedTerm(Expression *expression) {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->val.negateD.expression = expression;
+    returning->kind = negateK;
+
+    return returning;
+}
+
+Term *makeAbsTerm(Expression *expression) {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->val.negateD.expression = expression;
+    returning->kind = absK;
+
+    return returning;
+}
+
+Term *makeTrueTerm() {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->kind = trueK;
+
+    return returning;
+}
+
+Term *makeFalseTerm() {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->kind = falseK;
+
+    return returning;
+}
+
+Term *makeNullTerm() {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->kind = nullK;
+
+    return returning;
+}
+
+
 Expression *makeEXPid(char *id) {
     Expression *e;
     e = NEW(Expression);
@@ -22,53 +123,6 @@ Expression *makeEXPintconst(int intconst) {
     e->val.intconstE = intconst;
     return e;
 }
-/*
-EXP *makeEXPtimes(EXP *left, EXP *right) {
-    EXP *e;
-    e = NEW(EXP);
-=======
-
-Expression *makeEXPtimes(Expression *left, Expression *right) {
-    Expression *e;
-    e = NEW(Expression);
->>>>>>> f5afe80b98e9f432e79a4d82d73ab1a47128ab01
-    e->lineno = lineno;
-    e->kind = expMultK;
-    e->val.timesE.left = left;
-    e->val.timesE.right = right;
-    return e;
-}
-
-Expression *makeEXPdiv(Expression *left, Expression *right) {
-    Expression *e;
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = expDivK;
-    e->val.divE.left = left;
-    e->val.divE.right = right;
-    return e;
-}
-
-Expression *makeEXPplus(Expression *left, Expression *right) {
-    Expression *e;
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = expPlusK;
-    e->val.plusE.left = left;
-    e->val.plusE.right = right;
-    return e;
-}
-
-Expression *makeEXPminus(Expression *left, Expression *right) {
-    Expression *e;
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = expMinusK;
-    e->val.minusE.left = left;
-    e->val.minusE.right = right;
-    return e;
-}
-*/
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     Expression *e = NEW(Expression);

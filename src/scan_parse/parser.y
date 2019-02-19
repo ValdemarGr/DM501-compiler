@@ -13,7 +13,7 @@ void yyerror() {
 %union {
    int intconst;
    char *stringconst;
-   struct Expression *exp;
+   struct Expression *expression;
    struct Body *body;
    struct DeclarationList *declarationList;
    struct VarDelList *varDelList;
@@ -25,6 +25,7 @@ void yyerror() {
    struct StatementList *statementList;
    struct Statement *statement;
    struct Operator *operator;
+   struct Variable *variable;
 }
 
 %token <intconst> tINTCONST
@@ -54,15 +55,11 @@ void yyerror() {
 %token tLEQ
 %token tAND
 %token tOR
+%token tTRUE
+%token tFALSE
+%token tNULL
 
-%token tLEQ
-%token tGEQ
-%token tEQUAL
-%token tNEQ
-%token tAND
-%token tOR
-
-%type <exp> exp
+%type <expression> expression
 %type <body> program body
 %type <declarationList> decl_list
 %type <varDelList> var_decl_list par_decl_list
@@ -74,6 +71,7 @@ void yyerror() {
 %type <statementList> stm_list
 %type <statement> statement
 %type <operator> operator
+%type <variable> variable
 
 %start program
 
@@ -109,21 +107,21 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeTypeDeclaration($2, $4); }
 ;
 
-statement : tRETURN exp ';'
+statement : tRETURN expression ';'
         {$$ = makeReturnStatement($2);}
-        | tIF exp tTHEN statement tELSE statement
+        | tIF expression tTHEN statement tELSE statement
         {$$ = makeIfElseStatement($2, $4, $6);}
-        | tIF exp tTHEN statement
+        | tIF expression tTHEN statement
         {$$ = makeIfStatement($2, $4);}
-        | tALLOCATE exp ';'
+        | tALLOCATE expression ';'
         {$$ = makeAllocateStatement($2);}
-        | tALLOCATE exp tOF_LEN exp ';'
+        | tALLOCATE expression tOF_LEN expression ';'
         {$$ = makeAllocateOfLenStatement($2, $4);}
-        | tWRITE exp ';'
+        | tWRITE expression ';'
         {$$ = makeWriteStatement($2);}
-        | tWHILE exp tDO '{' body '}'
+        | tWHILE expression tDO '{' body '}'
         {$$ = makeWhileStatement($2, $5);}
-        | tWHILE exp tDO statement
+        | tWHILE expression tDO statement
         {$$ = makeWhileSingleStatement($2, $4);}
 ;
 
@@ -163,16 +161,18 @@ var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
                     {$$ = makeVarDelList($1, $3, NULL); }
 ;
 
-exp : tINTCONST
+expression : tINTCONST
         {$$ = makeEXPintconst($1);}
         | tIDENTIFIER
         {$$ = makeEXPid($1);}
-        | '(' exp ')'
+        | '(' expression ')'
         {$$ = $2;}
 ;
 
-exp : exp operator exp
+expression : expression operator expression
         {$$ = makeEXPOpEXP($1, $2, $3);}
+        | term
+        {$$ = makeTerm($1);}
 ;
 
 operator : '*'
@@ -197,6 +197,34 @@ operator : '*'
         {$$ = makeLeqOp();}
         | tAND
         {$$ = makeAndOp();}
+;
+
+variable : tIDENTIFIER
+        {$$ = makeVariable($1};}
+        | variable '[' expression ']'
+        {$$ = makeArraySubscript($1, $3);}
+        | variable '.' tIDENTIFIER
+        {$$ = makeRecordSubscript($1, $3);}
+;
+
+term : variable
+        {$$ = makeTermFromVariable($1)};
+        | tIDENTIFIER '(' act_list ')'
+        {$$ = makeFunctionCallTerm($1, $3);}
+        | '(' expression ')'
+        {$$ = $2;}
+        | '!' term
+        {$$ = makeNegatedTerm($2);}
+        | '|' expression '|'
+        {$$ = makeAbsTerm($2);}
+        | tINTCONST
+        {$$ = makeExpintconst($1);}
+        | tTRUE
+        {$$ = makeTrueTerm();}
+        | tFALSE
+        {$$ = makeFalseTerm();}
+        | tNULL
+        {$$ = makeNullTerm();}
 ;
 
 %%
