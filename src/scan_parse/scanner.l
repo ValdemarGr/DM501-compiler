@@ -14,6 +14,7 @@ extern int fileno();
 [ \t]+        /* ignore */;
 \n              lineno++;
 
+#.*             ;
 "(*"            { comment_depth = 1; BEGIN(comment); }
 <comment>[^*\n]*         ;
 <comment>"*"+[^*\)\n]*   ;
