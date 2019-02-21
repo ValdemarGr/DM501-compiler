@@ -4,6 +4,7 @@
 typedef struct Body Body;
 typedef struct Type Type;
 typedef struct Term Term;
+typedef struct Variable Variable;
 
 typedef struct VarDelList {
     char *identifier;
@@ -80,12 +81,13 @@ typedef struct Expression {
 
 typedef struct Statement {
     int lineno;
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
     union {
         struct { Expression* exp; } returnD;
         struct { Expression* exp; } writeD;
         struct { Expression* exp; } allocateD;
         struct { Expression* exp; Expression* len; } allocateLenD;
+        struct { Variable* var; Expression* exp; } assignmentD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
         struct { Expression* exp; struct Statement* statement; } whileD;
@@ -213,6 +215,8 @@ Statement *makeReturnStatement(Expression *exp);
 Statement *makeIfStatement(Expression *exp, Statement *statement);
 
 Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement);
+
+Statement *makeAssignment(Variable* variable, Expression *exp);
 
 Statement *makeAllocateStatement(Expression *exp);
 

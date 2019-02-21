@@ -1,5 +1,6 @@
 (* Declarations *)
 var a : int;
+
 var i : int, bar : bool;
 
 type A = array of bool;
@@ -11,12 +12,6 @@ var origin : Coordinate;
 func sum(a: int, b: int): int
   return a + b;
 end sum
-
-(*
-    Test (* of (* Nested (* Comments *) *) *)
-*)
-
-# Statements and more
 
 bar = true;
 

@@ -121,6 +121,8 @@ statement : tRETURN expression ';'
         {$$ = makeAllocateStatement($2);}
         | tALLOCATE expression tOF_LEN expression ';'
         {$$ = makeAllocateOfLenStatement($2, $4);}
+        | variable '=' expression ';'
+        {$$ = makeAssignment($1, $3);}
         | tWRITE expression ';'
         {$$ = makeWriteStatement($2);}
         | tWHILE expression tDO statement

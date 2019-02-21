@@ -231,6 +231,12 @@ void prettyStatement(Statement *statement) {
             prettyEXP(statement->val.writeD.exp);
             printf(";\n");
             break;
+        case assignmentK:
+            prettyVariable(statement->val.assignmentD.var);
+            prettyKeyword(" = ");
+            prettyEXP(statement->val.assignmentD.exp);
+            printf(";\n");
+            break;
         case statAllocateK:
             prettyKeyword("allocate ");
             prettyEXP(statement->val.allocateD.exp);

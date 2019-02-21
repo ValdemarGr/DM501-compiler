@@ -370,6 +370,16 @@ Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement 
     return returning;
 }
 
+Statement *makeAssignment(Variable* variable, Expression *exp) {
+    Statement *statement = NEW(Statement);
+
+    statement->lineno = lineno;
+    statement->kind = assignmentK;
+    statement->val.assignmentD.exp = exp;
+    statement->val.assignmentD.var = variable;
+    return statement;
+}
+
 Statement *makeAllocateStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
 
