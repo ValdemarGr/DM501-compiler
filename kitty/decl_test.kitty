@@ -1,5 +1,11 @@
+(*
+var should_behidden : int;
+(*
 var a : int, b : bool;
+*)
 var c : int;
+
+*)
 
 
 type A = array of bool;

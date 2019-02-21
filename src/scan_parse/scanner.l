@@ -7,10 +7,19 @@ extern int fileno();
 %}
 
 %option noyywrap nounput noinput
+%x comment
 
 %%
+    int comment_depth = 0;
 [ \t]+        /* ignore */;
 \n              lineno++;
+
+"(*"            { comment_depth = 1; BEGIN(comment); }
+<comment>[^*\n]*         ;
+<comment>"*"+[^*\)\n]*   ;
+<comment>\n              lineno++;
+<comment>"("+"*"         { comment_depth++; }
+<comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);} }
 
 "*"             return '*';
 "/"             return '/';
