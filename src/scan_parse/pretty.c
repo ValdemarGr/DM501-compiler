@@ -246,38 +246,45 @@ void prettyStatement(Statement *statement) {
         case statIfK:
             prettyKeyword("if ");
             prettyEXP(statement->val.ifD.exp);
-            prettyKeyword(" then\n");
+            prettyKeyword(" then ");
+            printf("{\n");
             indentation++;
             prettyStatement(statement->val.ifD.statement);
             indentation--;
-            printf("\n");
+            printCurrentIndent();
+            printf("}\n");
             break;
         case statIfElK:
             prettyKeyword("if ");
             prettyEXP(statement->val.ifElD.exp);
-            prettyKeyword(" then\n");
+            prettyKeyword(" then ");
+            printf("{\n");
             indentation++;
             prettyStatement(statement->val.ifElD.statement);
             indentation--;
-            prettyKeyword("else\n");
+            printf("}");
+            prettyKeyword(" else ");
+            printf("{\n");
             indentation++;
             prettyStatement(statement->val.ifElD.elseStatement);
             indentation--;
-            printf("\n");
+            printCurrentIndent();
+            printf("}\n");
             break;
         case statWhileK:
             prettyKeyword("while ");
             prettyEXP(statement->val.whileD.exp);
-            prettyKeyword(" do \n");
+            prettyKeyword(" do ");
+            printf("{\n");
             indentation++;
             prettyStatement(statement->val.whileD.statement);
             indentation--;
-            printf("\n");
+            printCurrentIndent();
+            printf("}\n");
             break;
         case stmListK:
-            printf("\n{\n");
+            printf("\b");
             prettyStatementList(statement->val.stmListD.statementList);
-            printf("}\n");
             break;
     }
 }
