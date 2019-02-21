@@ -14,7 +14,7 @@ func sum(a: int, b: int): int
 end sum
 
 (*
-    Test (* of (* Nested (* Comments *) *) *)
+   ()  ** Test (* of (* Nested (* Comments *) *) *)
 *)
 
 # Statements and more
