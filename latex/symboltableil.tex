@@ -1,0 +1,37 @@
+\begin{tikzpicture}[]
+    \node (root table) at (0,0) [draw,ultra thick,minimum width=2cm,minimum height=2.4cm] {};
+    
+    \node[below=2cm of root table.west, xshift=-0.3cm] (1 table) [draw,ultra thick,minimum width=2cm,minimum height=2cm] {};
+    
+    \node[below=2cm of root table.east, xshift=0.3cm] (2 table) [draw,thick,minimum width=2cm,minimum height=2cm] {};
+    
+    \draw[-Latex, thick] (1 table.north) -- (root table.south) {};
+    \draw[-Latex] (2 table.north) --  (root table.south) {};
+    
+    \node[below=2cm of 1 table.west, xshift=-0.3cm] (1-1 table) [draw,thick,minimum width=2cm,minimum height=2cm] {};
+    \node[below=2cm of 1 table.east, xshift=0.3cm] (1-2 table) [draw,ultra thick,minimum width=2cm,minimum height=2cm] {};
+    
+    \draw[-Latex] (1-1 table.north) -- (1 table.south) {};
+    \draw[-Latex, thick] (1-2 table.north) -- (1 table.south) {};
+    
+    \node[below=.2cm of 1-2 table] {\large \sffamily Current scope};
+    \node[above=.2cm of root table] {\large \sffamily Root table};
+    
+    \node[xshift=.2cm, below=.2cm of root table.north west, anchor=north west] (a) {a: 1};
+    \node[below=.2cm of a.west, anchor=north west] (b) {b: 3};
+    \node[below=.2cm of b.west, anchor=north west] (c) {c: 3};
+    \node[below=.2cm of c.west, anchor=north west] (d) {d: 3};
+    
+    \node[xshift=.2cm, below=.2cm of 1 table.north west, anchor=north west] (e1) {e: 4};
+    \node[below=.2cm of e1.west, anchor=north west] (f1) {f: 7};
+    \node[below=.2cm of f1.west, anchor=north west] (g1) {g: 42};
+    
+    \node[xshift=.2cm, below=.2cm of 2 table.north west, anchor=north west] (e1) {e: 4};
+    \node[below=.2cm of e1.west, anchor=north west] (f1) {f: 32};
+    \node[below=.2cm of f1.west, anchor=north west] {i: 0};
+    
+    \node[xshift=.2cm, below=.2cm of 1-2 table.north west, anchor=north west] (h1-2) {h: 46};
+    \node[below=.2cm of h1-2.west, anchor=north west] {i: 4};
+    
+    \node[xshift=.2cm, below=.2cm of 1-1 table.north west, anchor=north west] (h1-1) {i: 2};
+\end{tikzpicture}

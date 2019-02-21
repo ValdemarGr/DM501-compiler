@@ -1,0 +1,104 @@
+\documentclass[a4paper]{article}
+\input{common.tex}
+\usepackage{array}
+\usepackage{listings}
+
+\let\tt\texttt
+
+\title{Bachelor Assignment 2 \\ Group 5}
+
+\date{February 2019}
+
+
+\definecolor{dkgreen}{rgb}{0,0.45,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.30,0,0.30}
+
+% Default settings for code listings
+% Default settings for code listings
+\lstset{frame=tb,
+  language=C,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=left,
+  numberstyle=\footnotesize,
+  keywordstyle=\color{dkgreen}\bfseries,
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=false
+  tabsize=1
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+In this project we were tasked with creating a scanner using Flex and a parser using Bison based on a grammar specified in the project description. This scanner and parser will later be used as part of the front-end of our compiler.
+
+The purpose of the scanner and parser is to transform source code (some text input) to an abstract syntax tree. The scanner works on the raw text, removing unneeded text characters (like comments) and transforming the rest to tokens. The parser then takes tokens and creates an abstract syntax tree given a grammar. The abstract syntax tree is used by the later parts of the compiler.
+
+\section{Design}
+
+\input{grammar.tex}
+
+The language we are working with is shown on figure \ref{grammar}. Our parser 
+
+\section{Testing}
+For this project we have not creating many different tests. Instead we have written a KITTY program (See Appendix, section 4.1), which contains most of the functionality our parser should be able to detect. We then run this program through our scanner and parser and checks if the prettyprinter returns the expected output
+
+\section{Appendix}
+
+\subsection{KITTY Program}
+\begin{minted}{kitty}
+(*
+var should_behidden : int;
+(*
+var a : int, b : bool;
+*)
+var c : int;
+
+*)
+
+
+type A = array of bool;
+
+type B = record of { a: int, b: int };
+
+func hallo(times:int):bool
+var d : int,
+c: bool;
+end hallo
+
+return 1+1;
+
+if asd then {
+return a;
+}
+else
+return b;
+
+if dsa then
+return q;
+
+allocate asd;
+
+allocate asd of length dsa;
+
+write asd;
+
+while asd do {
+    return stm;
+}
+
+while asd do
+    return stm;
+return dsa;
+\end{minted}
+
+\end{document}
