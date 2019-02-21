@@ -1,0 +1,71 @@
+\newcommand{\IS}{:}
+\newcommand{\OR}{$|$}
+\newcommand{\T}[1]{{\bf #1}}
+\newcommand{\NT}[1]{$\langle$#1$\rangle$}
+
+\begin{figure}[htp]
+\begin{center}
+\begin{tabbing}
+\NT{statement\_list} \=: \=\kill
+\NT{function}        \> \IS \> \NT{head} \NT{body} \NT{tail} \\
+\NT{head}            \> \IS \> \T{func} \T{id} \T{(} \NT{par\_decl\_list}
+                               \T{)} \T{:} \NT{type} \\
+\NT{tail}            \> \IS \> \T{end} \T{id} \\
+\NT{type}            \> \IS \> \T{id} \\
+                     \> \OR \> \T{int} \\
+                     \> \OR \> \T{bool} \\
+                     \> \OR \> \T{array of} \NT{type} \\
+                     \> \OR \> \T{record of} \T{$\mathbf{\{}$}
+                               \NT{var\_decl\_list} \T{$\mathbf{\}}$} \\
+\NT{par\_decl\_list} \> \IS \> \NT{var\_decl\_list} \\
+                     \> \OR \> $\varepsilon$ \\
+\NT{var\_decl\_list} \> \IS \> \NT{var\_type} \T{,}
+                               \NT{var\_decl\_list} \\
+                     \> \OR \> \NT{var\_type} \\
+\NT{var\_type}       \> \IS \> \T{id} \T{:} \NT{type} \\
+\NT{body}            \> \IS \> \NT{decl\_list} \NT{statement\_list} \\
+\NT{decl\_list}      \> \IS \> \NT{declaration} \NT{decl\_list} \\
+                     \> \OR \> $\varepsilon$ \\
+\NT{declaration}     \> \IS \> \T{type} \T{id} \T{=} \NT{type} \T{;} \\
+                     \> \OR \> \NT{function} \\
+                     \> \OR \> \T{var} \NT{var\_decl\_list} \T{;} \\
+\NT{statement\_list} \> \IS \> \NT{statement} \\
+                     \> \OR \> \NT{statement} \NT{statement\_list} \\
+\NT{statement}       \> \IS \> \T{return} \NT{expression} \T{;} \\
+                     \> \OR \> \T{write} \NT{expression} \T{;} \\
+                     \> \OR \> \T{allocate} \NT{variable} \T{;} \\
+                     \> \OR \> \T{allocate} \NT{variable}
+                               \T{of length} \NT{expression} \T{;} \\
+                     \> \OR \> \NT{variable} \T{=} \NT{expression} \T{;} \\
+                     \> \OR \> \T{if} \NT{expression} \T{then}
+                               \NT{statement} \\
+                     \> \OR \> \T{if} \NT{expression} \T{then}
+                               \NT{statement} \T{else} \NT{statement} \\
+                     \> \OR \> \T{while} \NT{expression} \T{do}
+                               \NT{statement} \\
+                     \> \OR \> \T{$\mathbf{\{}$} \NT{statement\_list}
+                               \T{$\mathbf{\}}$} \\
+\NT{variable}        \> \IS \> \T{id} \\
+                     \> \OR \> \NT{variable} \T{[} \NT{expression} \T{]} \\
+                     \> \OR \> \NT{variable} \T{.} \T{id} \\
+\NT{statement\_list} \=: \=\kill
+\NT{expression}      \> \IS \> \NT{expression} \T{op} \NT{expression} \\
+                    \> \OR \> \NT{term} \\
+\NT{term}            \> \IS \> \NT{variable} \\
+                    \> \OR \> \T{id} \T{(} \NT{act\_list} \T{)} \\
+                    \> \OR \> \T{(} \NT{expression} \T{)} \\
+                    \> \OR \> \T{!} \NT{term} \\
+                    \> \OR \> \verb'|' \NT{expression} \verb'|' \\
+                    \> \OR \> \T{num} \\
+                    \> \OR \> \T{true} \\
+                    \> \OR \> \T{false} \\
+                    \> \OR \> \T{null} \\
+\NT{act\_list}       \> \IS \> \NT{exp\_list} \\
+                    \> \OR \> $\varepsilon$ \\
+\NT{exp\_list}       \> \IS \> \NT{expression} \\
+                    \> \OR \> \NT{expression} \T{,} \NT{exp\_list}
+\end{tabbing}
+\end{center}
+\caption{The given grammar}
+\label{grammar}
+\end{figure}

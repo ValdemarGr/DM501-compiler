@@ -1,0 +1,36 @@
+\begin{tikzpicture}[]
+  \node[minimum width=3cm] (test 1) {Test 1};
+  \node[above=.1cm of test 1, minimum width=3cm] (test 2) {Test 2};
+  \node[above=.1cm of test 2, minimum width=3cm] (test 3) {Test 3};
+  \node[above=3cm of test 2, minimum width=3cm] (test n) {Test n};
+  
+  \node [draw=black, very thick, fit=(test 1) (test n)] (stack) {};
+  
+  \draw(test 1.north west)--(test 1.north east);
+  \draw(test 2.north west)--(test 2.north east);
+  \draw(test 3.north west)--(test 3.north east);
+  \draw(test n.south west)--(test n.south east);
+  
+  \node[above=.8cm of test 3] [circle,fill,inner sep=1pt]{}; 
+  \node[above=1.15cm of test 3] [circle,fill,inner sep=1pt]{}; 
+  \node[below=.8cm of test n] [circle,fill,inner sep=1pt]{};
+  
+  \node[above=1cm of test n.west] (new test) {New test};
+  
+  \draw[->, to path={-| (\tikztotarget)}]
+    (new test) edge (stack.north);
+    
+  \node [left=of stack] {\large Test queue};
+  
+  \node[below=of stack] (test description) {Write test description to standard output};
+  \node[below=of test description] (test run) {Run test function};
+  \node[below=of test run] (test result) {Write test result to standard output};
+  
+  \draw[->] (stack.south) -- (test description) node[midway, anchor=west] {Dequeue};
+  \draw[->] (test description.south) -- (test run);
+  \draw[->] (test run.south) -- (test result);
+  
+  \node[right=of test result.east, inner sep=0, outer sep=0] (help) {};
+  
+  \draw[->] (test result.east) -- (help) |- (stack.east) node[pos=0.25, anchor=west] {Check for another test};
+\end{tikzpicture}
