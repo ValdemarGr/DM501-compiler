@@ -11,7 +11,7 @@ class CustomLexer(RegexLexer):
                 'func', 'return', 'allocate', 'length', 'of', 'end']
     declaration_keywords = ['var', 'type']
     types = ['int', 'bool', 'array', 'record']
-    operators = ["=", ":", "!", "|", "+", "-", "*", "/"]
+    operators = ["=", ":", "!", "|", "+", "-", "*", "/", "<", ">", ">=", "<=", "=="]
     punctuation = ["(", ")", "{", "}", "[", "]", ".", ",", ";"]
 
     tokens = {
