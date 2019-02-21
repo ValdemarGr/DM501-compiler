@@ -14,12 +14,15 @@ extern int fileno();
 [ \t]+        /* ignore */;
 \n              lineno++;
 
+#.*             ;
 "(*"            { comment_depth = 1; BEGIN(comment); }
-<comment>[^*\n]*         ;
-<comment>"*"+[^*\)\n]*   ;
+<comment>[^*()\n]*       ;
+<comment>"*"+[^*()\n]*   ;
+<comment>"("+[^*(\n]*    ;
+<comment>[^*\n]+")"      ;
 <comment>\n              lineno++;
-<comment>"("+"*"         { comment_depth++; }
-<comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);} }
+<comment>"("+"*"         { comment_depth++;}
+<comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);}}
 
 "*"             return '*';
 "/"             return '/';
