@@ -80,7 +80,7 @@ typedef struct Expression {
 
 typedef struct Statement {
     int lineno;
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, statWhileSSK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK } kind;
     union {
         struct { Expression* exp; } returnD;
         struct { Expression* exp; } writeD;
@@ -88,8 +88,8 @@ typedef struct Statement {
         struct { Expression* exp; Expression* len; } allocateLenD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
-        struct { Expression* exp; Body* localBody; } whileD;
-        struct { Expression* exp; struct Statement* statement; } whileSSD;
+        struct { Expression* exp; struct Statement* statement; } whileD;
+        struct { struct StatementList* statementList; } stmListD;
     } val;
 } Statement;
 
@@ -122,12 +122,14 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, negateK, absK, trueK, falseK, nullK } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
+        struct { Expression *expression; } parenthesesD;
         struct { Term* term; } negateD;
         struct { Expression* expression; } absD;
+        struct { int num; } numD;
     } val;
 } Term;
 
@@ -148,9 +150,13 @@ Term *makeTermFromVariable(Variable *variable);
 
 Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList);
 
+Term *makeParentheses(Expression *expression);
+
 Term *makeNegatedTerm(Term *term);
 
 Term *makeAbsTerm(Expression *expression);
+
+Term *makeNumTerm(int n);
 
 Term *makeTrueTerm();
 
@@ -163,7 +169,6 @@ Expression *makeEXPid(char *id);
 Expression *makeEXPintconst(int intconst);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
-
 
 //OPERATORS START
 Operator *makeMultOp();
@@ -215,9 +220,9 @@ Statement *makeAllocateOfLenStatement(Expression *exp, Expression *len);
 
 Statement *makeWriteStatement(Expression *exp);
 
-Statement *makeWhileStatement(Expression *exp, Body *localBody);
+Statement *makeWhileStatement(Expression *exp, Statement *stm);
 
-Statement *makeWhileSingleStatement(Expression *exp, Statement *statement);
+Statement *makeStatementFromList(StatementList *statementList);
 
 Type *makeIdType(char* id);
 
