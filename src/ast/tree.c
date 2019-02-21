@@ -29,7 +29,7 @@ Variable* makeArraySubscript(Variable *variable, Expression *expression) {
     Variable* returning = NEW(Variable);
 
     returning->lineno = lineno;
-    returning->kind = variableK;
+    returning->kind = arrayIndexK;
     returning->val.arrayIndexD.var = variable;
     returning->val.arrayIndexD.idx = expression;
 
@@ -40,7 +40,7 @@ Variable* makeRecordSubscript(Variable* variable, char *id) {
     Variable* returning = NEW(Variable);
 
     returning->lineno = lineno;
-    returning->kind = variableK;
+    returning->kind = recordLookupK;
     returning->val.recordLookupD.var = variable;
     returning->val.recordLookupD.id = id;
 
@@ -68,6 +68,16 @@ Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList) {
     return returning;
 }
 
+Term *makeParentheses(Expression *expression) {
+    Term* returning = NEW(Term);
+
+    returning->lineno = lineno;
+    returning->val.parenthesesD.expression = expression;
+    returning->kind = parenthesesK;
+
+    return returning;
+}
+
 Term *makeNegatedTerm(Term *term) {
     Term* returning = NEW(Term);
 
@@ -86,6 +96,16 @@ Term *makeAbsTerm(Expression *expression) {
     returning->kind = absK;
 
     return returning;
+}
+
+Term *makeNumTerm(int n) {
+    Term* term = NEW(Term);
+
+    term->lineno = lineno;
+    term->val.numD.num = n;
+    term->kind = numK;
+
+    return term;
 }
 
 Term *makeTrueTerm() {
@@ -118,6 +138,7 @@ Term *makeNullTerm() {
 
 Expression *makeEXPid(char *id) {
     Expression *e;
+
     e = NEW(Expression);
     e->lineno = lineno;
     e->kind = idK;
@@ -377,23 +398,22 @@ Statement *makeWriteStatement(Expression *exp) {
     return statement;
 }
 
-Statement *makeWhileStatement(Expression *exp, Body *localBody) {
+Statement *makeWhileStatement(Expression *exp, Statement *stm) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
     statement->kind = statWhileK;
     statement->val.whileD.exp = exp;
-    statement->val.whileD.localBody = localBody;
+    statement->val.whileD.statement = stm;
     return statement;
 }
 
-Statement *makeWhileSingleStatement(Expression *exp, Statement *statement) {
+Statement *makeStatementFromList(StatementList *statementList) {
     Statement *returning = NEW(Statement);
 
     returning->lineno = lineno;
-    returning->kind = statWhileSSK;
-    returning->val.whileSSD.exp = exp;
-    returning->val.whileSSD.statement = statement;
+    returning->kind = stmListK;
+    returning->val.stmListD.statementList = statementList;
     return returning;
 }
 

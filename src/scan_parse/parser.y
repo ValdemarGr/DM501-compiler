@@ -123,10 +123,10 @@ statement : tRETURN expression ';'
         {$$ = makeAllocateOfLenStatement($2, $4);}
         | tWRITE expression ';'
         {$$ = makeWriteStatement($2);}
-        | tWHILE expression tDO '{' body '}'
-        {$$ = makeWhileStatement($2, $5);}
         | tWHILE expression tDO statement
-        {$$ = makeWhileSingleStatement($2, $4);}
+        {$$ = makeWhileStatement($2, $4);}
+        | '{' stm_list '}'
+        {$$ = makeStatementFromList($2);}
 ;
 
 type :  tIDENTIFIER
@@ -167,8 +167,6 @@ var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
 
 expression : tINTCONST
         {$$ = makeEXPintconst($1);}
-        | tIDENTIFIER
-        {$$ = makeEXPid($1);}
         | '(' expression ')'
         {$$ = $2;}
 ;
@@ -213,6 +211,8 @@ operator : '*'
         {$$ = makeLeqOp();}
         | tAND
         {$$ = makeAndOp();}
+        | tOR
+        {$$ = makeOrOp();}
 ;
 
 variable : tIDENTIFIER
@@ -228,13 +228,13 @@ term : variable
         | tIDENTIFIER '(' act_list ')'
         {$$ = makeFunctionCallTerm($1, $3);}
         | '(' expression ')'
-        {$$ = $2;}
+        {$$ = makeParentheses($2);}
         | '!' term
         {$$ = makeNegatedTerm($2);}
         | '|' expression '|'
         {$$ = makeAbsTerm($2);}
         | tINTCONST
-        {$$ = makeEXPintconst($1);}
+        {$$ = makeNumTerm($1);}
         | tTRUE
         {$$ = makeTrueTerm();}
         | tFALSE

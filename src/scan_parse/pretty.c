@@ -4,9 +4,73 @@
 
 static int indentation = 0;
 
+void prettyStatementList(StatementList *statementList);
+
 void printCurrentIndent() {
     for (int i = 0; i < indentation; i++) {
         printf("\t");
+    }
+}
+
+void prettyTwoExpOperation(Expression *lhs, Operator *operator, Expression *rhs) {
+    prettyEXP(lhs);
+
+    switch(operator->kind) {
+        case opMultK:
+            printf(" * ");
+            break;
+        case opDivK:
+            printf(" / ");
+            break;
+        case opPlusK:
+            printf(" + ");
+            break;
+        case opMinusK:
+            printf(" - ");
+            break;
+        case opEqualityK:
+            printf(" == ");
+            break;
+        case opInequalityK:
+            printf(" != ");
+            break;
+        case opGreaterK:
+            printf(" > ");
+            break;
+        case opLessK:
+            printf(" < ");
+            break;
+        case opGeqK:
+            printf(" >= ");
+            break;
+        case opLeqK:
+            printf(" <= ");
+            break;
+        case opAndK:
+            printf(" && ");
+            break;
+        case opOrK:
+            printf(" || ");
+            break;
+    }
+
+    prettyEXP(rhs);
+}
+
+void prettyArgument(char *id) {
+    printf("\033[0;35m%s\033[0m", id);
+}
+
+void prettyFunctionName(char *id) {
+    printf("\033[0;31m%s\033[0m", id);
+}
+
+void prettyExpressionList(ExpressionList *expressionList) {
+    ExpressionList *el = expressionList;
+
+    while(el != NULL) {
+        prettyEXP(el->expression);
+        el = el->next;
     }
 }
 
@@ -14,6 +78,58 @@ char *getTypeName(Type *type);
 
 void prettyKeyword(char *keyword) {
     printf("\033[1;34m%s\033[0m", keyword);
+}
+
+void prettyVariable(Variable* variable) {
+    switch(variable->kind) {
+        case varIdK:
+            printf("%s", variable->val.idD);
+            break;
+        case arrayIndexK:
+            prettyVariable(variable->val.arrayIndexD.var);
+            printf("[");
+            prettyEXP(variable->val.arrayIndexD.idx);
+            printf("]");
+            break;
+        case recordLookupK:
+            prettyVariable(variable->val.recordLookupD.var);
+            printf(".");
+            printf(variable->val.recordLookupD.id);
+            break;
+    }
+}
+
+void prettyTerm(Term *term) {
+    switch(term->kind) {
+        case variableK:
+            prettyVariable(term->val.variableD.var);
+            break;
+        case functionCallK:
+            prettyFunctionName(term->val.functionCallD.functionId);
+            printf("(");
+            prettyExpressionList(term->val.functionCallD.expressionList);
+            printf(")");
+            break;
+        case negateK:
+            printf("!");
+            prettyTerm(term->val.negateD.term);
+            break;
+        case absK:
+            printf("|");
+            prettyEXP(term->val.absD.expression);
+            printf("|");
+            break;
+        case trueK:
+            prettyKeyword("true");
+            break;
+        case falseK:
+            prettyKeyword("false");
+            break;
+        case nullK:
+            prettyKeyword("null");
+            break;
+
+    }
 }
 
 void prettyType(Type *type) {
@@ -41,14 +157,6 @@ void prettyType(Type *type) {
             printf("\033[0;36m%s\033[0m", getTypeName(type));
             break;
     }
-}
-
-void prettyArgument(char *id) {
-    printf("\033[0;35m%s\033[0m", id);
-}
-
-void prettyFunctionName(char *id) {
-    printf("\033[0;31m%s\033[0m", id);
 }
 
 void prettyFunction(Function *f) {
@@ -108,6 +216,7 @@ void prettyDeclaration(Declaration *decl) {
     }
 }
 
+
 void prettyStatement(Statement *statement) {
     printCurrentIndent();
 
@@ -159,21 +268,26 @@ void prettyStatement(Statement *statement) {
         case statWhileK:
             prettyKeyword("while ");
             prettyEXP(statement->val.whileD.exp);
-            prettyKeyword(" do ");
-            printf("{\n");
-            indentation++;
-            prettyBody(statement->val.whileD.localBody);
-            indentation--;
-            printf("}\n");
-            break;
-        case statWhileSSK:
-            prettyKeyword("while ");
-            prettyEXP(statement->val.whileSSD.exp);
             prettyKeyword(" do \n");
             indentation++;
-            prettyStatement(statement->val.whileSSD.statement);
+            prettyStatement(statement->val.whileD.statement);
             indentation--;
+            printf("\n");
             break;
+        case stmListK:
+            printf("\n{\n");
+            prettyStatementList(statement->val.stmListD.statementList);
+            printf("}\n");
+            break;
+    }
+}
+
+void prettyStatementList(StatementList *statementList) {
+    StatementList *st = statementList;
+
+    while(st != NULL) {
+        prettyStatement(st->statement);
+        st = st->next;
     }
 }
 
@@ -221,6 +335,12 @@ void prettyEXP(Expression *e) {
             break;
         case intconstK:
             printf("%i", e->val.intconstE);
+            break;
+        case opK:
+            prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);
+            break;
+        case termK:
+            prettyTerm(e->val.termD.term);
             break;
     }
 }
