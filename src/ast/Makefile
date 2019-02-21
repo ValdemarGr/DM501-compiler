@@ -91,14 +91,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/valde/Git/DM501-compiler && $(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles /home/valde/Git/DM501-compiler/tests/symbol/CMakeFiles/progress.marks
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/all
+	cd /home/valde/Git/DM501-compiler && $(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles /home/valde/Git/DM501-compiler/src/ast/CMakeFiles/progress.marks
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/ast/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/clean
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/ast/clean
 .PHONY : clean
 
 # The main clean target
@@ -108,12 +108,12 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/preinstall
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/ast/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/preinstall
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/ast/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
@@ -122,46 +122,46 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-tests/symbol/CMakeFiles/TestsSymbol.dir/rule:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/CMakeFiles/TestsSymbol.dir/rule
-.PHONY : tests/symbol/CMakeFiles/TestsSymbol.dir/rule
+src/ast/CMakeFiles/AbstractSyntaxTree.dir/rule:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/ast/CMakeFiles/AbstractSyntaxTree.dir/rule
+.PHONY : src/ast/CMakeFiles/AbstractSyntaxTree.dir/rule
 
 # Convenience name for target.
-TestsSymbol: tests/symbol/CMakeFiles/TestsSymbol.dir/rule
+AbstractSyntaxTree: src/ast/CMakeFiles/AbstractSyntaxTree.dir/rule
 
-.PHONY : TestsSymbol
+.PHONY : AbstractSyntaxTree
 
 # fast build rule for target.
-TestsSymbol/fast:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/build
-.PHONY : TestsSymbol/fast
+AbstractSyntaxTree/fast:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/ast/CMakeFiles/AbstractSyntaxTree.dir/build.make src/ast/CMakeFiles/AbstractSyntaxTree.dir/build
+.PHONY : AbstractSyntaxTree/fast
 
-symbol_tests.o: symbol_tests.c.o
+tree.o: tree.c.o
 
-.PHONY : symbol_tests.o
+.PHONY : tree.o
 
 # target to build an object file
-symbol_tests.c.o:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.o
-.PHONY : symbol_tests.c.o
+tree.c.o:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/ast/CMakeFiles/AbstractSyntaxTree.dir/build.make src/ast/CMakeFiles/AbstractSyntaxTree.dir/tree.c.o
+.PHONY : tree.c.o
 
-symbol_tests.i: symbol_tests.c.i
+tree.i: tree.c.i
 
-.PHONY : symbol_tests.i
+.PHONY : tree.i
 
 # target to preprocess a source file
-symbol_tests.c.i:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.i
-.PHONY : symbol_tests.c.i
+tree.c.i:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/ast/CMakeFiles/AbstractSyntaxTree.dir/build.make src/ast/CMakeFiles/AbstractSyntaxTree.dir/tree.c.i
+.PHONY : tree.c.i
 
-symbol_tests.s: symbol_tests.c.s
+tree.s: tree.c.s
 
-.PHONY : symbol_tests.s
+.PHONY : tree.s
 
 # target to generate assembly for a file
-symbol_tests.c.s:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.s
-.PHONY : symbol_tests.c.s
+tree.c.s:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/ast/CMakeFiles/AbstractSyntaxTree.dir/build.make src/ast/CMakeFiles/AbstractSyntaxTree.dir/tree.c.s
+.PHONY : tree.c.s
 
 # Help Target
 help:
@@ -171,11 +171,11 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... TestsSymbol"
+	@echo "... AbstractSyntaxTree"
 	@echo "... test"
-	@echo "... symbol_tests.o"
-	@echo "... symbol_tests.i"
-	@echo "... symbol_tests.s"
+	@echo "... tree.o"
+	@echo "... tree.i"
+	@echo "... tree.s"
 .PHONY : help
 
 

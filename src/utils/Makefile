@@ -91,14 +91,14 @@ test/fast: test
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/valde/Git/DM501-compiler && $(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles /home/valde/Git/DM501-compiler/tests/symbol/CMakeFiles/progress.marks
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/all
+	cd /home/valde/Git/DM501-compiler && $(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles /home/valde/Git/DM501-compiler/src/utils/CMakeFiles/progress.marks
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/utils/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/valde/Git/DM501-compiler/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/clean
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/utils/clean
 .PHONY : clean
 
 # The main clean target
@@ -108,12 +108,12 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/preinstall
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/utils/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/preinstall
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/utils/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
@@ -122,46 +122,46 @@ depend:
 .PHONY : depend
 
 # Convenience name for target.
-tests/symbol/CMakeFiles/TestsSymbol.dir/rule:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 tests/symbol/CMakeFiles/TestsSymbol.dir/rule
-.PHONY : tests/symbol/CMakeFiles/TestsSymbol.dir/rule
+src/utils/CMakeFiles/Utilities.dir/rule:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f CMakeFiles/Makefile2 src/utils/CMakeFiles/Utilities.dir/rule
+.PHONY : src/utils/CMakeFiles/Utilities.dir/rule
 
 # Convenience name for target.
-TestsSymbol: tests/symbol/CMakeFiles/TestsSymbol.dir/rule
+Utilities: src/utils/CMakeFiles/Utilities.dir/rule
 
-.PHONY : TestsSymbol
+.PHONY : Utilities
 
 # fast build rule for target.
-TestsSymbol/fast:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/build
-.PHONY : TestsSymbol/fast
+Utilities/fast:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/utils/CMakeFiles/Utilities.dir/build.make src/utils/CMakeFiles/Utilities.dir/build
+.PHONY : Utilities/fast
 
-symbol_tests.o: symbol_tests.c.o
+memory.o: memory.c.o
 
-.PHONY : symbol_tests.o
+.PHONY : memory.o
 
 # target to build an object file
-symbol_tests.c.o:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.o
-.PHONY : symbol_tests.c.o
+memory.c.o:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/utils/CMakeFiles/Utilities.dir/build.make src/utils/CMakeFiles/Utilities.dir/memory.c.o
+.PHONY : memory.c.o
 
-symbol_tests.i: symbol_tests.c.i
+memory.i: memory.c.i
 
-.PHONY : symbol_tests.i
+.PHONY : memory.i
 
 # target to preprocess a source file
-symbol_tests.c.i:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.i
-.PHONY : symbol_tests.c.i
+memory.c.i:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/utils/CMakeFiles/Utilities.dir/build.make src/utils/CMakeFiles/Utilities.dir/memory.c.i
+.PHONY : memory.c.i
 
-symbol_tests.s: symbol_tests.c.s
+memory.s: memory.c.s
 
-.PHONY : symbol_tests.s
+.PHONY : memory.s
 
 # target to generate assembly for a file
-symbol_tests.c.s:
-	cd /home/valde/Git/DM501-compiler && $(MAKE) -f tests/symbol/CMakeFiles/TestsSymbol.dir/build.make tests/symbol/CMakeFiles/TestsSymbol.dir/symbol_tests.c.s
-.PHONY : symbol_tests.c.s
+memory.c.s:
+	cd /home/valde/Git/DM501-compiler && $(MAKE) -f src/utils/CMakeFiles/Utilities.dir/build.make src/utils/CMakeFiles/Utilities.dir/memory.c.s
+.PHONY : memory.c.s
 
 # Help Target
 help:
@@ -171,11 +171,11 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... TestsSymbol"
+	@echo "... Utilities"
 	@echo "... test"
-	@echo "... symbol_tests.o"
-	@echo "... symbol_tests.i"
-	@echo "... symbol_tests.s"
+	@echo "... memory.o"
+	@echo "... memory.i"
+	@echo "... memory.s"
 .PHONY : help
 
 
