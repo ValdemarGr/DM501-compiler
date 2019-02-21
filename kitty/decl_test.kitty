@@ -13,9 +13,10 @@ func sum(a: int, b: int): int
 end sum
 
 (*
-Statements
-    and more
+    Test (* of (* Nested (* Comments *) *) *)
 *)
+
+# Statements and more
 
 bar = true;
 
