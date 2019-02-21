@@ -13,9 +13,23 @@ type B = record of { a: int, b: int };
 func hallo(times:int):bool
 var d : int,
 c: bool;
+
+allocate a of length q;
+
+while asd do {
+    while asd do {
+        return stm;
+    }
+}
+
+return c;
 end hallo
 
 return 1+1;
+
+if a then
+    if b then
+        return c;
 
 if asd then
 return a;
@@ -51,6 +65,8 @@ return a || b;
 
 if !a then {
     return !b;
+    return !a;
+    return |a|;
 }
 
 if !a then
