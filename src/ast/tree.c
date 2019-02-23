@@ -292,6 +292,7 @@ FunctionTail *makeFunctionTail(char *identifier) {
     FunctionTail *tail;
     tail = NEW(FunctionTail);
     tail->indentifier = identifier;
+    tail->lineno = lineno;
     return tail;
 }
 

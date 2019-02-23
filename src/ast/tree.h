@@ -30,6 +30,7 @@ typedef struct FunctionHead {
 } FunctionHead;
 
 typedef struct FunctionTail {
+    int lineno;
     char *indentifier;
 } FunctionTail;
 
@@ -96,7 +97,7 @@ typedef struct Statement {
 } Statement;
 
 typedef struct StatementList {
-    int loneno;
+    int lineno;
     Statement *statement;
     struct StatementList *next;
 } StatementList;

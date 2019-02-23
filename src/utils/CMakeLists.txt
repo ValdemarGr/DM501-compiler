@@ -1,1 +1,1 @@
-add_library(Utilities memory.c)
+add_library(Utilities memory.c map.c)
