@@ -268,6 +268,7 @@ void prettyStatement(Statement *statement) {
             indentation++;
             prettyStatement(statement->val.ifElD.statement);
             indentation--;
+            printCurrentIndent();
             printf("}");
             prettyKeyword(" else ");
             printf("{\n");

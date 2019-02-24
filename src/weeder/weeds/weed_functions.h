@@ -11,8 +11,8 @@
 #include <stdio.h>
 #include "../../utils/map.h"
 
-Error *weed_function_name(Body *body);
+Error *weedFunctionNames(Body *body);
 
-Error *weed_function_return(Body *body);
+Error *weedFunctionReturns(Body *body);
 
 #endif //HELLO_FUNCTION_H

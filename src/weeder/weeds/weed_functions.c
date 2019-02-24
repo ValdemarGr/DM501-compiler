@@ -7,7 +7,7 @@
 #include "../../utils/map.h"
 #include "../../error/error.h"
 
-Error *weed_function_name(Body *body) {
+Error *weedFunctionNames(Body *body) {
     //Find all functions
     DeclarationList *l = body->declarationList;
 
@@ -122,7 +122,91 @@ Error *weed_function_name(Body *body) {
 */
 }
 
-Error *weed_function_return(Body *body) {
+Error *weedReturnsForStatementList(StatementList *sl, char* fid);
+Error *checkStatementReturns(Statement *stm, char* fid);
+
+Error *checkIfElseReturns(Statement *statement, char* fid) {
+    Error *e1 = NULL;
+    Error *e2 = NULL;
+    Statement *ifBody = statement->val.ifElD.statement;
+    Statement *elseBody = statement->val.ifElD.elseStatement;
+
+    e1 = checkStatementReturns(ifBody, fid);
+    e2 = checkStatementReturns(elseBody, fid);
+
+    if (e1 != NULL) {
+        return e1;
+    } else if (e2 != NULL) {
+        return e2;
+    } else {
+        return NULL;
+    }
+}
+
+Error *checkStatementReturns(Statement *stm, char* fid) {
+    Error *e = NULL;
+
+    switch (stm->kind) {
+        //We look for a return statement freely in the body
+        case statReturnK:
+            return NULL;
+            break;
+        //Statements may contain statement lists
+        case stmListK:
+            return weedReturnsForStatementList(stm->val.stmListD.statementList, fid);
+            break;
+        //If we reach this part, we must look at all conditional branches for a return statement
+        //If else statements are the primary concern, for this we must recursively check if else nests
+        case statIfElK:
+            return checkIfElseReturns(stm, fid);
+        default:
+            break;
+    }
+
+    e = NEW(Error);
+    e->error = WEED_FUNC_HAS_NO_RETURN;
+    e->val.WEED_FUNC_HAS_NO_RETURN_S.fid = fid;
+
+    return e;
+}
+
+Error *weedReturnsForStatementList(StatementList *sl, char* fid) {
+    Error *e = NULL;
+
+    StatementList *statementList = sl;
+    while (statementList != NULL) {
+
+        //Here we are searching for nulls, nulls show that there is a return statement
+        e = checkStatementReturns(statementList->statement, fid);
+        if (e == NULL) return NULL;
+
+        statementList = statementList->next;
+    }
+
+    //No return statements found in the current statement list
+    e = NEW(Error);
+    e->error = WEED_FUNC_HAS_NO_RETURN;
+    e->val.WEED_FUNC_HAS_NO_RETURN_S.fid = fid;
+
+    return e;
+}
+
+Error *weedFunctionReturns(Body *body) {
+    Error *e = NULL;
+    DeclarationList *declarationList = body->declarationList;
+
+    while (declarationList != NULL) {
+        if (declarationList->declaration->kind == declFuncK) {
+            e = weedReturnsForStatementList(
+                    declarationList->declaration->val.functionD.function->body->statementList,
+                    declarationList->declaration->val.functionD.function->head->indentifier
+                    );
+            if (e != NULL) return e;
+        }
+
+        declarationList = declarationList->next;
+    }
+
     return NULL;
 }
 

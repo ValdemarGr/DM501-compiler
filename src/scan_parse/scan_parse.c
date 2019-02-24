@@ -10,7 +10,9 @@ int main() {
     lineno = 1;
     yyparse();
     prettyBody(theexpression);
-    Error *e = weed_function_name(theexpression);
+    Error *e = weedFunctionNames(theexpression);
+    writeError(e);
+    e = weedFunctionReturns(theexpression);
     writeError(e);
     printf("\n");
     return 0;

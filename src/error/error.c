@@ -5,7 +5,7 @@
 
 int writeError(Error *e) {
     if (e == NULL) {
-        return;
+        return 0;
     }
 
     switch (e->error) {
@@ -16,7 +16,7 @@ int writeError(Error *e) {
                    e->val.WEED_FUNC_HAS_NO_END_S.lineno);
             break;
         case WEED_FUNC_HAS_NO_RETURN:
-            printf("Function \"%s\" has no return statement\n", e->val.WEED_FUNC_HAS_NO_RETURN_S.tailId);
+            printf("Function \"%s\" does not always/never return\n", e->val.WEED_FUNC_HAS_NO_RETURN_S.fid);
             break;
         default:
             break;

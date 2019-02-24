@@ -15,7 +15,7 @@ typedef struct Error {
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
-        struct { char* tailId; } WEED_FUNC_HAS_NO_RETURN_S;
+        struct { char* fid; } WEED_FUNC_HAS_NO_RETURN_S;
     } val;
 } Error;
 
