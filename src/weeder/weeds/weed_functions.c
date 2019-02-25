@@ -3,9 +3,6 @@
 //
 
 #include "weed_functions.h"
-#include "../../ast/tree.h"
-#include "../../utils/map.h"
-#include "../../error/error.h"
 
 Error *weedFunctionNames(Body *body) {
     //Find all functions

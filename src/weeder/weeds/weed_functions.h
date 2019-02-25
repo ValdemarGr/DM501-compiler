@@ -7,9 +7,10 @@
 
 #include "../../ast/tree.h"
 #include "../../error/error.h"
+#include "../../utils/memory.h"
+#include "string.h"
 #include <stddef.h>
 #include <stdio.h>
-#include "../../utils/map.h"
 
 Error *weedFunctionNames(Body *body);
 

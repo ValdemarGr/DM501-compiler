@@ -18,6 +18,9 @@ int writeError(Error *e) {
         case WEED_FUNC_HAS_NO_RETURN:
             printf("Function \"%s\" does not always/never return\n", e->val.WEED_FUNC_HAS_NO_RETURN_S.fid);
             break;
+        case SYMBOL_COULD_NOT_SCOPE:
+            printf("Could not scope table\n");
+            break;
         default:
             break;
     }

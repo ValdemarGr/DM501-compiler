@@ -44,3 +44,4 @@ i = 0;
 while i <= a do
     write i;
     i = i + 1;
+

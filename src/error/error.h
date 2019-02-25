@@ -11,7 +11,8 @@
 typedef struct Error {
     enum {
         WEED_FUNC_HAS_NO_END,
-        WEED_FUNC_HAS_NO_RETURN
+        WEED_FUNC_HAS_NO_RETURN,
+        SYMBOL_COULD_NOT_SCOPE
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;

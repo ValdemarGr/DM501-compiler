@@ -7,7 +7,9 @@
 
 #include "symbol.h"
 #include "../ast/tree.h"
+#include "../error/error.h"
 
-SymbolTable *symbolFromAst(Body *body);
+
+Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable);
 
 #endif //HELLO_SYMBOL_FROM_AST_H

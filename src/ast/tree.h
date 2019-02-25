@@ -5,6 +5,8 @@ typedef struct Body Body;
 typedef struct Type Type;
 typedef struct Term Term;
 typedef struct Variable Variable;
+typedef struct SymbolTable SymbolTable;
+
 
 typedef struct VarDelList {
     char *identifier;
@@ -24,6 +26,8 @@ typedef struct Type {
 } Type;
 
 typedef struct FunctionHead {
+    SymbolTable *symbolTable;
+
     char *indentifier;
     VarDelList *declarationList;
     Type *returnType;
@@ -41,6 +45,8 @@ typedef struct Function {
 } Function;
 
 typedef struct Declaration {
+    SymbolTable *symbolTable;
+
     int lineno;
     enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
     union {
@@ -58,6 +64,8 @@ typedef struct DeclarationList {
 } DeclarationList;
 
 typedef struct Expression {
+    SymbolTable *symbolTable;
+
     int lineno;
     enum {
         idK, intconstK, opK, termK//, functionK
@@ -83,6 +91,7 @@ typedef struct Expression {
 typedef struct Statement {
     int lineno;
     enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
+    SymbolTable *symbolTable;
     union {
         struct { Expression* exp; } returnD;
         struct { Expression* exp; } writeD;
@@ -114,6 +123,8 @@ typedef struct ExpressionList {
 } ExpressionList;
 
 typedef struct Variable {
+    SymbolTable *symbolTable;
+
     int lineno;
     enum { varIdK, arrayIndexK, recordLookupK } kind;
     union {

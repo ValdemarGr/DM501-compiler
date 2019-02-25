@@ -1,3 +1,5 @@
+#ifndef HELLO_SYMBOL_H
+#define HELLO_SYMBOL_H
 
 #define HashSize 317
 
@@ -16,7 +18,7 @@
 
 typedef struct SYMBOL {
   char *name;
-  int value;
+  struct Type *tpe;
   struct SYMBOL *next;
 } SYMBOL;
 
@@ -31,8 +33,11 @@ SymbolTable *initSymbolTable();
 
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
+//SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 
 void dumpSymbolTable(SymbolTable *t);
+
+#endif

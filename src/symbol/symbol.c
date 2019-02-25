@@ -3,6 +3,7 @@
 //
 
 #include "symbol.h"
+#include "../ast/tree.h"
 
 int Hash(char *str){
     //If garbage is given
@@ -57,7 +58,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     return htable;
 }
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
+/*SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
     //Error stuff
     if (t == NULL || name == NULL) {
         return NULL;
@@ -93,6 +94,53 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
 
     current_node->value = value;
     
+    //If parent node is not NULL we have to adjust the parent's next
+    if (parent_node != NULL) {
+        parent_node->next = current_node;
+    } else {
+        t->table[pos] = current_node;
+    }
+
+    //Node created and inited, we are done
+    return current_node;
+}*/
+
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe) {
+    //Error stuff
+    if (t == NULL || name == NULL) {
+        return NULL;
+    }
+
+    //First we find the hash position
+    int pos = Hash(name);
+
+    //Then we find table root node of our desired item hash
+    SYMBOL* current_node = t->table[pos];
+    SYMBOL* parent_node = NULL;
+
+    //Traverse until we find empty next
+    while (current_node != NULL) {
+        //Abort if we encounter a duplicate
+        if (strcmp(name, current_node->name) == 0) {
+            fprintf(stderr, "\nVariable declared in same scope %s same scope\n", name);
+            fflush(stderr);
+            return NULL;
+        }
+
+        parent_node = current_node;
+        current_node = current_node->next;
+    }
+
+    //Node has been found, init it
+    current_node = NEW(SYMBOL);
+    current_node->next = NULL;
+
+    //Allocate new space for the name (the given name is an R-value
+    current_node->name = (char*)malloc(sizeof(char) * strlen(name));
+    strcpy(current_node->name, name);
+
+    current_node->tpe = tpe;
+
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {
         parent_node->next = current_node;
@@ -163,20 +211,18 @@ void dumpSymbolTable(SymbolTable *t) {
     int tableNum = 0;
     //While the table we are looking at is allocated (aka it exists)
     while (current_table != NULL) {
-        printf("We are looking at table %i:\n", tableNum);
+        printf("We are looking at table level %i:\n", tableNum);
+        printf("|name\t|typeId\t|bucket\t|\n");
         //We print our while whole table bucket wise
         for (int i = 0; i < HashSize; i++) {
             //This is the i'th symbol root node
             SYMBOL *current_symbol = (current_table->table)[i];
 
-            if (current_symbol != NULL) {
-                printf("At bucket %i we have the values:\n", i);
-            }
 
             //We keep printing the contents of the linked list elements as long as they exist
             while (current_symbol != NULL) {
                 //We print the contents of this node
-                printf("name: %s, value: %i\n", current_symbol->name, current_symbol->value);
+                printf("|%s\t|%i\t|%i\t|\n", current_symbol->name, current_symbol->tpe->kind, i);
 
                 //We prepare the next level
                 current_symbol = current_symbol->next;
