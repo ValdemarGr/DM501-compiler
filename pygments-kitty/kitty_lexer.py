@@ -18,6 +18,7 @@ class CustomLexer(RegexLexer):
         'root': [
             (r'\s+', Text),
             (r'\(\*', Comment.Multiline, 'comment'),
+            (r'#.*?$', Comment.SingleLine),
             (r'(func)\s*(\()', bygroups(Keyword, Text), 'par_decl_list'),
             (words(keywords, suffix=r'\b'), Keyword),
             (words(declaration_keywords, suffix=r'\b'), Keyword.Declaration),
@@ -26,7 +27,7 @@ class CustomLexer(RegexLexer):
             (words(punctuation), Punctuation),
             (r'true|false', Keyword.Constant),
             (r'0|([1-9][0-9]*)', Number),
-            (r'[a-zA-Z_][a-zA-Z0-9_]*', Name.Variable),
+            (r'[a-zA-Z_][a-zA-Z0-9_]*', Name.Variable)
         ],
         'comment': [
             (r'\(\*', Comment.Multiline, '#push'),
