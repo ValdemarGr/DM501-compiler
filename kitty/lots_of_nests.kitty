@@ -1,4 +1,6 @@
 
+type A = array of bool;
+
 func identity(a: int): int
     return a;
 end identity
@@ -7,6 +9,12 @@ func sum(a : int, b : int): int
     return a + b;
 end sum
 
-func thisVeryVeryLongFunctionNameShouldFormatCorrectly(a : int) : int
-    return a;
-end thisVeryVeryLongFunctionNameShouldFormatCorrectly
+func doSmartStuff(x: int, z: int): int
+    return sum(x, z) - sum(x, z) + identity(sum(z, x));
+end doSmartStuff
+
+func returnCustomType(value: int): A
+    var v : A;
+
+    return v;
+end returnCustomType

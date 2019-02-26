@@ -297,14 +297,14 @@ void dumpSymbolTable(SymbolTable *t) {
                         }
 
                         //For the arrow
-                        printf("\t");
+                        printf(" : \t");
                         printf("\033[0;36m%s", typeToString(current_symbol->value->val.typeD.tpe));
 
                         for (int j = 0; j < typeTabsBetween; j++) {
                             printf("\t");
                         }
 
-                        printf("\033[0;32m\t%i\033[0m\n", i);
+                        printf("\033[0;32m%i\033[0m\n", i);
 
                         break;
                     case typeFunctionK:
@@ -330,7 +330,7 @@ void dumpSymbolTable(SymbolTable *t) {
                             printf("\t");
                         }
 
-                        printf("\033[0;32m\t%i\033[0m\n", i);
+                        printf("\033[0;32m%i\033[0m\n", i);
                         break;
                     default:
                         printf("ERROR IN DUMP\n");

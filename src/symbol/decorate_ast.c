@@ -105,6 +105,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
         case declFuncK:
             child = scopeSymbolTable(symbolTable);
 
+            functionParams = declaration->val.functionD.function->head->declarationList;
+
             //Put the function definition in the scope
             value = NEW(Value);
 
@@ -117,8 +119,6 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                       value);
 
             //Put the parameters in the child scope
-            functionParams = declaration->val.functionD.function->head->declarationList;
-
             while (functionParams != NULL) {
                 value = NEW(Value);
 

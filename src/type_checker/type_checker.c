@@ -27,8 +27,9 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
                 return e;
             }
 
+            //Functions as values will be a feature, this is not an error
+/*
             if (symbol->value->kind != typeK) {
-                //Incorrect error
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
@@ -36,15 +37,18 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
                 e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
 
                 return e;
-            }
+            }*/
 
             if (symbol->value->val.typeD.tpe->kind != expectedType) {
                 //Incorrect error
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
-                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                e->error = VARIABLE_UNEXPECTED_TYPE;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symbol->value->val.typeD.tpe->kind;
+
 
                 return e;
             }
@@ -122,7 +126,6 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             int paramNum = 0;
 
             while (expressionList != NULL && varDelList != NULL) {
-
                 e = typeCheckExpression(expressionList->expression, varDelList->type->kind, symbolTable);
                 if (e != NULL) return e;
 
