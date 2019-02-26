@@ -22,7 +22,7 @@ int writeError(Error *e) {
             printf("Could not scope table\n");
             break;
         case TYPE_EXPRESSION_IS_NOT_AS_EXPECTED:
-            printf("Type error at %i, expected type is %s, expression:\n",
+            printf("Type error at %i, expected type is %s, expression: ",
                     e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno,
                     typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType));
             prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError);
@@ -59,13 +59,13 @@ int writeError(Error *e) {
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno);
             break;
         case TYPE_TERM_NOT_BOOLEAN:
-            printf("Type error at %i, expected boolean, term:\n",
+            printf("Type error at %i, expected boolean, term: ",
                    e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno);
             prettyTerm(e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError);
             printf("\n");
             break;
         case TYPE_TERM_NOT_INTEGER:
-            printf("Type error at %i, expected int, term:\n",
+            printf("Type error at %i, expected int, term: ",
                    e->val.TYPE_TERM_NOT_INTEGER_S.lineno);
             prettyTerm(e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError);
             printf("\n");
