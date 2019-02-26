@@ -35,7 +35,7 @@ typedef struct Error {
         struct { char* fid; int lineno;} TYPE_TERM_IS_NOT_FUNCTION_S;
         struct { char* fid; int lineno;} TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;
         struct { char* fid; int lineno; TypeKind expectedType; TypeKind foundType; int argNumber;} TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S;
-        struct { char* fid; int lineno; int foundCount;} TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S;
+        struct { char* fid; int lineno; int foundCount; int expectedCount;} TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S;
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_BOOLEAN_S;
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_INTEGER_S;
         struct { char *id; int lineno; } SYMBOL_NOT_FOUND_S;

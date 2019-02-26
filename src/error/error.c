@@ -53,9 +53,10 @@ int writeError(Error *e) {
                    typeEnumToString(e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.foundType));
             break;
         case TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH:
-            printf("Function call %s does not have the correct number of arguments, found %i, at line number %i\n",
+            printf("Function call %s does not have the correct number of arguments. Expected %i found %i, at line number %i\n",
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid,
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount,
+                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount,
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno);
             break;
         case TYPE_TERM_NOT_BOOLEAN:

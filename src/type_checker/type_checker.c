@@ -61,7 +61,7 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
             e = typeCheckVariable(variable->val.recordLookupD.var, expectedType, symbolTable);
             if (e != NULL) return e;
 
-            variable->val.recordLookupD.
+            //variable->val.recordLookupD.
 
             break;
     }
@@ -119,20 +119,41 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
             VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
+            int paramNum = 0;
+
             while (expressionList != NULL && varDelList != NULL) {
+
+                e = typeCheckExpression(expressionList->expression, varDelList->type->kind, symbolTable);
+                if (e != NULL) return e;
 
                 expressionList = expressionList->next;
                 varDelList = varDelList->next;
+                paramNum++;
             }
 
             if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
                 //Error
                 e = NEW(Error);
 
+                int expectedCount = paramNum;
+
+                if (varDelList == NULL) {
+                    while (expressionList != NULL) {
+                        paramNum++;
+                        expressionList = expressionList->next;
+                    }
+                } else {
+                    while (varDelList != NULL) {
+                        expectedCount++;
+                        varDelList = varDelList->next;
+                    }
+                }
+
                 e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
-                e->val.TYPE_.lineno = term->lineno;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
 
                 return e;
             }
@@ -387,7 +408,7 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             }
 
             e = typeCheckExpression(statement->val.assignmentD.exp,
-                                    symbol->tpe->kind,
+                                    symbol->value->val.typeD.tpe->kind,
                                     statement->symbolTable);
             if (e != NULL) return e;
             break;

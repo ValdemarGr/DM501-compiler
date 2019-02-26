@@ -12,6 +12,7 @@
 
 #include "../utils/memory.h"
 #include <stdbool.h>
+#include "../utils/enum_to_string.h"
 
 /* SYMBOL will be extended later.
    Function calls will take more parameters later.

@@ -213,18 +213,129 @@ void dumpSymbolTable(SymbolTable *t) {
     int tableNum = 0;
     //While the table we are looking at is allocated (aka it exists)
     while (current_table != NULL) {
+        //For formatting purposes we find the longest name and type (since this can be user defined)
+        size_t longestName = 0;
+        size_t longestType = 0;
+
+        for (int i = 0; i < HashSize; i++) {
+            SYMBOL *current_symbol = (current_table->table)[i];
+
+            //We keep printing the contents of the linked list elements as long as they exist
+            while (current_symbol != NULL) {
+
+                size_t tmpNameLen = strlen(current_symbol->name);
+                size_t tmptypeLen = 0;
+
+                switch (current_symbol->value->kind) {
+                    case typeK:
+                        tmptypeLen = strlen(typeToString(current_symbol->value->val.typeD.tpe));
+                        break;
+                    case typeFunctionK:
+                        tmptypeLen = strlen(typeToString(current_symbol->value->val.typeFunctionD.returnType));
+                        break;
+                    default:
+                        break;
+                }
+
+                if (tmpNameLen > longestName) longestName = tmpNameLen;
+                if (tmptypeLen > longestType) longestType = tmptypeLen;
+
+                //We prepare the next level
+                current_symbol = current_symbol->next;
+            }
+        }
+
+        size_t nameTabs = longestName / 8 + 1;
+        size_t typeTabs = longestType / 8 + 1;
+
         printf("We are looking at table level %i:\n", tableNum);
-        printf("|name\t|typeId\t|bucket\t|\n");
+        printf("\tname");
+
+        for (int j = 0; j < nameTabs; j++) {
+            printf("\t");
+        }
+
+        printf("ret");
+
+        for (int j = 0; j < typeTabs; j++) {
+            printf("\t");
+        }
+
+        printf("typeId\tbucket\n");
+
+
+
+
         //We print our while whole table bucket wise
         for (int i = 0; i < HashSize; i++) {
             //This is the i'th symbol root node
             SYMBOL *current_symbol = (current_table->table)[i];
 
-
             //We keep printing the contents of the linked list elements as long as they exist
             while (current_symbol != NULL) {
+
+                size_t nameLen;
+                size_t nameTabsBetween;
+
+                size_t typeLen;
+                size_t typeTabsBetween;
                 //We print the contents of this node
-                printf("|%s\t|%i\t|%i\t|\n", current_symbol->name, current_symbol->tpe->kind, i);
+                switch (current_symbol->value->kind) {
+                    case typeK:
+                        nameLen = strlen(current_symbol->name);
+
+                        nameTabsBetween = nameTabs - nameLen / 8;
+
+                        typeLen = strlen(typeToString(current_symbol->value->val.typeD.tpe));
+
+                        typeTabsBetween = typeTabs - typeLen / 8;
+
+                        printf("\t\033[0;31m%s", current_symbol->name);
+
+                        for (int j = 0; j < nameTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        //For the arrow
+                        printf("\t");
+                        printf("\033[0;36m%s", typeToString(current_symbol->value->val.typeD.tpe));
+
+                        for (int j = 0; j < typeTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        printf("\033[0;32m\t%i\033[0m\n", i);
+
+                        break;
+                    case typeFunctionK:
+                        nameLen = strlen(current_symbol->name);
+
+                        nameTabsBetween = nameTabs - nameLen / 8;
+
+                        typeLen = strlen(typeToString(current_symbol->value->val.typeFunctionD.returnType));
+
+                        typeTabsBetween = typeTabs - typeLen / 8;
+
+                        printf("\t\033[0;31m%s", current_symbol->name);
+
+                        for (int j = 0; j < nameTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        //For the arrow
+                        printf(" -> \t");
+                        printf("\033[0;36m%s", typeToString(current_symbol->value->val.typeFunctionD.returnType));
+
+                        for (int j = 0; j < typeTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        printf("\033[0;32m\t%i\033[0m\n", i);
+                        break;
+                    default:
+                        printf("ERROR IN DUMP\n");
+                        break;
+                }
 
                 //We prepare the next level
                 current_symbol = current_symbol->next;

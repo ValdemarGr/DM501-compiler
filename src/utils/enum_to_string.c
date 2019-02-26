@@ -3,11 +3,22 @@
 //
 
 #include "enum_to_string.h"
+#include "../ast/tree.h"
+
+char *typeToString(Type *type) {
+    switch (type->kind) {
+        case typeIdK:
+            return type->val.idType.id;
+        default:
+            return typeEnumToString(type->kind);
+            break;
+    }
+}
 
 char *typeEnumToString(TypeKind typeKind) {
     switch (typeKind) {
         case typeIdK:
-            return "id typed";
+            return "custom";
             break;
         case typeIntK:
             return "int";

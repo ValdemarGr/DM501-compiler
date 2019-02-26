@@ -8,6 +8,7 @@
 #include "../ast/tree.h"
 #include <stdlib.h>
 
+char *typeToString(Type *type);
 char *typeEnumToString(TypeKind typeKind);
 
 #endif //HELLO_ENUM_TO_STRING_H

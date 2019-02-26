@@ -105,35 +105,34 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
         case declFuncK:
             child = scopeSymbolTable(symbolTable);
 
-            //We need to account for the parameters
-            //This is done in a somewhat hacky way
-            //We name the arguments from 0 to x and append them to the function name like following
-            //functionname-param-0, functionname-param-1, functionname-param-2...
-            //This is so we can look them up in the future instead of researching the AST
-            //Also future expansion like lambdas will be easier and more flexible this way
-            functionParams = declaration->val.functionD.function->head->declarationList;
-
-            Value *value = NEW(Value);
-
-            value->kind = typeFunctionBodyK;
-            value->val.typeFunctionD.tpe = functionParams;
-
-            putSymbol(child,
-            functionParams->identifier,
-                    value);
-
-
+            //Put the function definition in the scope
             value = NEW(Value);
 
-            value->kind = typeK;
-            value->val.typeD.tpe = declaration->val.functionD.function->head->returnType;
+            value->kind = typeFunctionK;
+            value->val.typeFunctionD.tpe = functionParams;
+            value->val.typeFunctionD.returnType = declaration->val.functionD.function->head->returnType;
 
-            //We have also gotta put the function type here as well
             putSymbol(symbolTable,
-                    declaration->val.functionD.function->head->indentifier,
-                    value);
+                      declaration->val.functionD.function->head->indentifier,
+                      value);
 
-            //We handle the body locally since its a bit different than the global scope
+            //Put the parameters in the child scope
+            functionParams = declaration->val.functionD.function->head->declarationList;
+
+            while (functionParams != NULL) {
+                value = NEW(Value);
+
+                value->kind = typeK;
+                value->val.typeD.tpe = declaration->val.functionD.function->head->returnType;
+
+                putSymbol(child,
+                          functionParams->identifier,
+                          value);
+
+                functionParams =functionParams->next;
+            }
+
+            //Recurse to body
             decorateAstWithSymbols(declaration->val.functionD.function->body, child);
 
             break;
