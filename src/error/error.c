@@ -21,11 +21,11 @@ int writeError(Error *e) {
         case SYMBOL_COULD_NOT_SCOPE:
             printf("Could not scope table\n");
             break;
-        case TYPE_EXPRESSION_IS_NOT_BOOLEAN:
+        case TYPE_EXPRESSION_IS_NOT_AS_EXPECTED:
             printf("Type error at %i, expected type is %s, expression:\n",
-                    e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.lineno,
-                    typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.expectedType));
-            prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.expThatCausedError);
+                    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno,
+                    typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType));
+            prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError);
             printf("\n");
 
             break;

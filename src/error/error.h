@@ -15,7 +15,7 @@ typedef struct Error {
     enum {
         WEED_FUNC_HAS_NO_END,
         WEED_FUNC_HAS_NO_RETURN,
-        TYPE_EXPRESSION_IS_NOT_BOOLEAN,
+        TYPE_EXPRESSION_IS_NOT_AS_EXPECTED,
         TYPE_TERM_FUNCTION_NOT_FOUND,
         TYPE_TERM_IS_NOT_FUNCTION,
         TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE,
@@ -30,7 +30,7 @@ typedef struct Error {
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
         struct { char* fid; } WEED_FUNC_HAS_NO_RETURN_S;
-        struct { struct Expression *expThatCausedError; int lineno; TypeKind expectedType; } TYPE_EXPRESSION_IS_NOT_BOOLEAN_S;
+        struct { struct Expression *expThatCausedError; int lineno; TypeKind expectedType; } TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S;
         struct { char* fid; int lineno;} TYPE_TERM_FUNCTION_NOT_FOUND_S;
         struct { char* fid; int lineno;} TYPE_TERM_IS_NOT_FUNCTION_S;
         struct { char* fid; int lineno;} TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;

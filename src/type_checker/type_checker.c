@@ -254,6 +254,7 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType) {
             //We want to check if the operator is boolean or not
             isBoolean = false;
 
+
             switch (expression->val.op.operator->kind) {
                 case opMultK:
                     isBoolean = true;
@@ -272,13 +273,14 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType) {
             }
 
             //If types do not match
-            if (isBoolean == true && expectedType != typeBoolK) {
+            if ((isBoolean == true && expectedType != typeBoolK ) ||
+                    (isBoolean == false && expectedType != typeIntK)) {
                 e = NEW(Error);
 
-                e->error = TYPE_EXPRESSION_IS_NOT_BOOLEAN;
-                e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.lineno = expression->lineno;
-                e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.expThatCausedError = expression;
-                e->val.TYPE_EXPRESSION_IS_NOT_BOOLEAN_S.expectedType = expectedType;
+                e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
+                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno = expression->lineno;
+                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expression;
+                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType;
 
                 return e;
             }
@@ -426,8 +428,9 @@ Error *typeCheck(Body *body, TypeKind functionReturnType) {
 
     while (statementList != NULL) {
 
-        typeCheckStatement(statementList->statement,
+        e = typeCheckStatement(statementList->statement,
                 functionReturnType);
+        if (e != NULL) return e;
 
         statementList = statementList->next;
     }
