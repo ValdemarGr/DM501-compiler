@@ -48,18 +48,22 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
         default:
             break;
     }
+
+    return NULL;
 }
 
 Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     Error *e = NULL;
     Declaration *varList = NULL;
     SymbolTable *child = NULL;
+    VarDelList *functionParams = NULL;
 
     switch (declaration->kind) {
         case declVarK:
             putSymbol(symbolTable,
                       declaration->val.varD.id,
-                      declaration->val.varD.type);
+                      declaration->val.varD.type,
+                      false);
             break;
         case declVarsK:
             varList = declaration;
@@ -81,19 +85,50 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
         case declTypeK:
             putSymbol(symbolTable,
                       declaration->val.typeD.id,
-                      declaration->val.typeD.type);
+                      declaration->val.typeD.type,
+                      false);
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
             child = scopeSymbolTable(symbolTable);
 
-            if (child == NULL) {
-                e = NEW(Error);
+            //We need to account for the parameters
+            //This is done in a somewhat hacky way
+            //We name the arguments from 0 to x and append them to the function name like following
+            //functionname-param-0, functionname-param-1, functionname-param-2...
+            //This is so we can look them up in the future instead of researching the AST
+            //Also future expansion like lambdas will be easier and more flexible this way
+            functionParams = declaration->val.functionD.function->head->declarationList;
 
-                e->error = SYMBOL_COULD_NOT_SCOPE;
+            int paramNum = 0;
 
-                return e;
+            while (functionParams != NULL) {
+                char* fncName = declaration->val.functionD.function->head->indentifier;
+
+                char *paramName = (char*)malloc(sizeof(char) * (strlen(fncName) + 10));
+
+                char asString[16];
+                sprintf(asString, "%i", paramNum);
+
+                strcat(paramName, fncName);
+                strcat(paramName, FUNCTION_PARAM_SUFFIX);
+                strcat(paramName, asString);
+
+                putSymbol(child,
+                          paramName,
+                        functionParams->type,
+                        false);
+
+                paramNum++;
+                functionParams = functionParams->next;
             }
+
+            //We have also gotta put the function type here as well
+            putSymbol(symbolTable,
+                    declaration->val.functionD.function->head->indentifier,
+                    declaration->val.functionD.function->head->returnType,
+                    true);
+
 
             e = decorateAstWithSymbols(declaration->val.functionD.function->body, child);
             if (e != NULL) return e;
@@ -101,6 +136,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
         default:
             break;
     }
+
+    return NULL;
 }
 
 //We have to treat things a bit differently in global scope
@@ -129,6 +166,8 @@ Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable) {
 
         statementList = statementList->next;
     }
+
+    return NULL;
 }
 
 

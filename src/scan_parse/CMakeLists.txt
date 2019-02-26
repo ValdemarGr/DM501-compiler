@@ -13,4 +13,4 @@ add_executable(PrettyPrint scan_parse.c pretty.c ${SOURCES})
 # Ugly, but otherwise it cannot find tree.h when compiling our parser
 target_include_directories(PrettyPrint PUBLIC ${PROJECT_SOURCE_DIR}/src/scan_parse)
 
-target_link_libraries(PrettyPrint AbstractSyntaxTree Weeder Symbol)
+target_link_libraries(PrettyPrint AbstractSyntaxTree Weeder Symbol TypeChecker)

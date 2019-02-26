@@ -11,6 +11,7 @@
 #endif
 
 #include "../utils/memory.h"
+#include <stdbool.h>
 
 /* SYMBOL will be extended later.
    Function calls will take more parameters later.
@@ -19,6 +20,7 @@
 typedef struct SYMBOL {
   char *name;
   struct Type *tpe;
+  bool isFunc;
   struct SYMBOL *next;
 } SYMBOL;
 
@@ -34,7 +36,7 @@ SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
 //SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe, bool isFunc);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 

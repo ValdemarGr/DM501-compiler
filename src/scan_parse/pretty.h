@@ -9,5 +9,6 @@
 
 void prettyBody(Body *body);
 void prettyEXP(Expression *e);
+void prettyTerm(Term *term);
 
 #endif //HELLO_PRETTY_H

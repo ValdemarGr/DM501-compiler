@@ -1,1 +1,1 @@
-add_library(Utilities memory.c map.c)
+add_library(Utilities memory.c map.c enum_to_string.c)

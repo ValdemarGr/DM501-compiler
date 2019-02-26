@@ -14,10 +14,12 @@ typedef struct VarDelList {
     struct VarDelList *next;
 } VarDelList;
 
+typedef enum {
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK
+} TypeKind;
+
 typedef struct Type {
-    enum {
-        typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK
-    } kind;
+    TypeKind kind;
     union {
         struct { char *id; } idType;
         struct { struct Type *type; } arrayType;
@@ -95,8 +97,8 @@ typedef struct Statement {
     union {
         struct { Expression* exp; } returnD;
         struct { Expression* exp; } writeD;
-        struct { Expression* exp; } allocateD;
-        struct { Expression* exp; Expression* len; } allocateLenD;
+        struct { Variable* var; } allocateD;
+        struct { Variable* var; Expression* len; } allocateLenD;
         struct { Variable* var; Expression* exp; } assignmentD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
@@ -123,8 +125,6 @@ typedef struct ExpressionList {
 } ExpressionList;
 
 typedef struct Variable {
-    SymbolTable *symbolTable;
-
     int lineno;
     enum { varIdK, arrayIndexK, recordLookupK } kind;
     union {
@@ -230,9 +230,9 @@ Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement 
 
 Statement *makeAssignment(Variable* variable, Expression *exp);
 
-Statement *makeAllocateStatement(Expression *exp);
+Statement *makeAllocateStatement(Variable *var);
 
-Statement *makeAllocateOfLenStatement(Expression *exp, Expression *len);
+Statement *makeAllocateOfLenStatement(Variable *var, Expression *len);
 
 Statement *makeWriteStatement(Expression *exp);
 

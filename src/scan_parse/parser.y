@@ -117,9 +117,9 @@ statement : tRETURN expression ';'
         {$$ = makeIfElseStatement($2, $4, $6);}
         | tIF expression tTHEN statement
         {$$ = makeIfStatement($2, $4);}
-        | tALLOCATE expression ';'
+        | tALLOCATE variable ';'
         {$$ = makeAllocateStatement($2);}
-        | tALLOCATE expression tOF_LEN expression ';'
+        | tALLOCATE variable tOF_LEN expression ';'
         {$$ = makeAllocateOfLenStatement($2, $4);}
         | variable '=' expression ';'
         {$$ = makeAssignment($1, $3);}

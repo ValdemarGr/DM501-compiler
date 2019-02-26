@@ -8,5 +8,6 @@
 #include "../weeder/weeds/weed_functions.h"
 #include "../symbol/symbol.h"
 #include "../symbol/decorate_ast.h"
+#include "../type_checker/type_checker.h"
 
 #endif //HELLO_SCAN_PARSE_H

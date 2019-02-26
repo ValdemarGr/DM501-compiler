@@ -239,12 +239,12 @@ void prettyStatement(Statement *statement) {
             break;
         case statAllocateK:
             prettyKeyword("allocate ");
-            prettyEXP(statement->val.allocateD.exp);
+            prettyVariable(statement->val.allocateD.var);
             printf(";\n");
             break;
         case statAllocateLenK:
             prettyKeyword("allocate ");
-            prettyEXP(statement->val.allocateLenD.exp);
+            prettyVariable(statement->val.allocateLenD.var);
             prettyKeyword(" of length ");
             prettyEXP(statement->val.allocateLenD.len);
             printf(";\n");

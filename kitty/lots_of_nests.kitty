@@ -4,7 +4,7 @@ var a : int;
 var i : int, bar : bool;
 
 func sum(): int
-    var a : int;
+    var a : bool;
     var i : int;
     return a + i;
 end sum

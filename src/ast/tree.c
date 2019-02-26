@@ -381,21 +381,21 @@ Statement *makeAssignment(Variable* variable, Expression *exp) {
     return statement;
 }
 
-Statement *makeAllocateStatement(Expression *exp) {
+Statement *makeAllocateStatement(Variable *var) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
     statement->kind = statAllocateK;
-    statement->val.allocateD.exp = exp;
+    statement->val.allocateD.var = var;
     return statement;
 }
 
-Statement *makeAllocateOfLenStatement(Expression *exp, Expression *len) {
+Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
     Statement *statement = NEW(Statement);
 
     statement->lineno = lineno;
     statement->kind = statAllocateLenK;
-    statement->val.allocateLenD.exp = exp;
+    statement->val.allocateLenD.var = var;
     statement->val.allocateLenD.len = len;
     return statement;
 }
