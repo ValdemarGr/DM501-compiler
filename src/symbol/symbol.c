@@ -105,7 +105,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     return current_node;
 }*/
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe, bool isFunc) {
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value) {
     //Error stuff
     if (t == NULL || name == NULL) {
         return NULL;
@@ -139,8 +139,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe, bool isFunc) {
     current_node->name = (char*)malloc(sizeof(char) * strlen(name));
     strcpy(current_node->name, name);
 
-    current_node->tpe = tpe;
-    current_node->isFunc = isFunc;
+    current_node->value = value;
 
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {

@@ -1,5 +1,8 @@
-
-
+type A = record of { a: int, b: int q: A };
+var t: A;
 func sum(a : int, b : int): int
     return a + b;
 end sum
+
+t.a = 2;
+t.b = 3;

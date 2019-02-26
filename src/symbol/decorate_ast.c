@@ -5,6 +5,7 @@
 #include "decorate_ast.h"
 #include "../ast/tree.h"
 #include "../error/error.h"
+#include "symbol.h"
 
 Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTable) {
     Error *e = NULL;
@@ -59,13 +60,18 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     Declaration *varList = NULL;
     SymbolTable *child = NULL;
     VarDelList *functionParams = NULL;
+    Value *value = NULL;
 
     switch (declaration->kind) {
         case declVarK:
+            value = NEW(Value);
+
+            value->kind = typeK;
+            value->val.typeD.tpe = declaration->val.varD.type;
+
             putSymbol(symbolTable,
                       declaration->val.varD.id,
-                      declaration->val.varD.type,
-                      false);
+                      value);
             break;
         case declVarsK:
             varList = declaration;
@@ -85,10 +91,15 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             break;
         case declTypeK:
+
+            value = NEW(Value);
+
+            value->kind = typeK;
+            value->val.typeD.tpe = declaration->val.typeD.type;
+
             putSymbol(symbolTable,
                       declaration->val.typeD.id,
-                      declaration->val.typeD.type,
-                      false);
+                      value);
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
@@ -102,42 +113,25 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             //Also future expansion like lambdas will be easier and more flexible this way
             functionParams = declaration->val.functionD.function->head->declarationList;
 
-            int paramNum = 0;
+            Value *value = NEW(Value);
 
-            while (functionParams != NULL) {
-                char* fncName = declaration->val.functionD.function->head->indentifier;
+            value->kind = typeFunctionBodyK;
+            value->val.typeFunctionD.tpe = functionParams;
 
-                char *paramName = (char*)malloc(sizeof(char) * (strlen(fncName) + 10));
+            putSymbol(child,
+            functionParams->identifier,
+                    value);
 
-                char asString[16];
-                sprintf(asString, "%i", paramNum);
 
-                strcat(paramName, fncName);
-                strcat(paramName, FUNCTION_PARAM_SUFFIX);
-                strcat(paramName, asString);
+            value = NEW(Value);
 
-                //We put two instances in the symbol tabe, the reason we do this is because we both need to look-up
-                //The variables when we are in the function and also when we call the function
-                //This is a hack
-                putSymbol(child,
-                          paramName,
-                        functionParams->type,
-                        false);
-
-                putSymbol(child,
-                          functionParams->identifier,
-                          functionParams->type,
-                          false);
-
-                paramNum++;
-                functionParams = functionParams->next;
-            }
+            value->kind = typeK;
+            value->val.typeD.tpe = declaration->val.functionD.function->head->returnType;
 
             //We have also gotta put the function type here as well
             putSymbol(symbolTable,
                     declaration->val.functionD.function->head->indentifier,
-                    declaration->val.functionD.function->head->returnType,
-                    true);
+                    value);
 
             //We handle the body locally since its a bit different than the global scope
             decorateAstWithSymbols(declaration->val.functionD.function->body, child);

@@ -17,10 +17,17 @@
    Function calls will take more parameters later.
 */
 
+typedef struct Value {
+    enum { typeK, typeFunctionK } kind;
+    union {
+        struct { struct Type *tpe; } typeD;
+        struct { struct VarDelList *tpe; struct Type *returnType; } typeFunctionD;
+    } val;
+} Value;
+
 typedef struct SYMBOL {
   char *name;
-  struct Type *tpe;
-  bool isFunc;
+  Value *value;
   struct SYMBOL *next;
 } SYMBOL;
 
@@ -36,7 +43,7 @@ SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
 //SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Type *tpe, bool isFunc);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 

@@ -5,6 +5,7 @@
 #include "type_checker.h"
 #include "../ast/tree.h"
 #include "../error/error.h"
+#include "../symbol/symbol.h"
 
 Error *typeCheckExpression(Expression *expression, TypeKind expectedType, SymbolTable *symbolTable);
 
@@ -26,7 +27,18 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
                 return e;
             }
 
-            if (symbol->tpe->kind != expectedType) {
+            if (symbol->value->kind != typeK) {
+                //Incorrect error
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                return e;
+            }
+
+            if (symbol->value->val.typeD.tpe->kind != expectedType) {
                 //Incorrect error
                 e = NEW(Error);
 
@@ -49,7 +61,7 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
             e = typeCheckVariable(variable->val.recordLookupD.var, expectedType, symbolTable);
             if (e != NULL) return e;
 
-            //How do record?
+            variable->val.recordLookupD.
 
             break;
     }
@@ -84,7 +96,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
                 return e;
             }
 
-            if (!symbol->isFunc) {
+            if (symbol->value->kind != typeFunctionK) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_IS_NOT_FUNCTION;
@@ -94,7 +106,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
                 return e;
             }
 
-            if (symbol->tpe->kind != expectedType) {
+            if (symbol->value->val.typeFunctionD.returnType->kind != expectedType) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
@@ -104,62 +116,26 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
                 return e;
             }
 
-            //Now for checking the parameter list
-            //First we need to find the function
-            int paramNum = 0;
-            char *fncName = term->val.functionCallD.functionId;
-            char *paramName = (char*)malloc(sizeof(char) * (strlen(fncName) + 10));
-            char asString[16];
-
-            //We also need to traverse the call
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
+            VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
-            //This could be done as do while, but its fine
-            sprintf(asString, "%i", paramNum);
-            strcat(paramName, fncName);
-            strcat(paramName, FUNCTION_PARAM_SUFFIX);
-            strcat(paramName, asString);
+            while (expressionList != NULL && varDelList != NULL) {
 
-            symbol = getSymbol(symbolTable, paramName);
-
-            while (symbol != NULL && expressionList != NULL) {
-                //This MIGHT cause an error, test later
-                e = typeCheckExpression(expressionList->expression, expectedType, symbolTable);
-                if (e != NULL) {
-                    e->error = TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE;
-                    e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.lineno = term->lineno;
-                    e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.fid = term->val.functionCallD.functionId;
-                    e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.expectedType = symbol->tpe->kind;
-                    e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.foundType = expectedType;
-                    e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.argNumber = paramNum;
-
-                    return e;
-                }
-
-                sprintf(asString, "%i", paramNum);
-                strcat(paramName, fncName);
-                strcat(paramName, FUNCTION_PARAM_SUFFIX);
-                strcat(paramName, asString);
-
-                symbol = getSymbol(symbolTable, paramName);
                 expressionList = expressionList->next;
-
-                paramName[0] = '\0'; //Empty string
-                paramNum++;
+                varDelList = varDelList->next;
             }
 
-            if ((symbol == NULL && expressionList != NULL) || (symbol != NULL && expressionList == NULL)) {
+            if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
                 //Error
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
+                e->val.TYPE_.lineno = term->lineno;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
 
                 return e;
             }
-
 
             break;
         case parenthesesK:
