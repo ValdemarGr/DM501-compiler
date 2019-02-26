@@ -67,10 +67,16 @@ void prettyFunctionName(char *id) {
 
 void prettyExpressionList(ExpressionList *expressionList) {
     ExpressionList *el = expressionList;
+    bool isEmpty = el == NULL;
 
     while(el != NULL) {
         prettyEXP(el->expression);
+        printf(", ");
         el = el->next;
+    }
+
+    if (!isEmpty) {
+        printf("\b\b");
     }
 }
 
@@ -165,6 +171,7 @@ void prettyFunction(Function *f) {
     prettyFunctionName(f->head->indentifier);
     printf("(");
     VarDelList *dels = f->head->declarationList;
+    bool hasParameter = dels != NULL;
 
     while (dels != NULL) {
         prettyArgument(dels->identifier);
@@ -174,7 +181,12 @@ void prettyFunction(Function *f) {
         dels = dels->next;
     }
 
-    printf("\b\b) : ");
+    if (hasParameter){
+        printf("\b\b");
+    }
+
+    printf(") : ");
+
     prettyType(f->head->returnType);
     printf("\n");
     prettyBody(f->body);
