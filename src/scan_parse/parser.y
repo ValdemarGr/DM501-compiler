@@ -5,8 +5,8 @@
 extern char *yytext;
 extern Body *theexpression;
 
-void yyerror() {
-   printf("syntax error before %s\n",yytext);
+void yyerror(char const *s) {
+   printf("syntax error before %s: %s\n",yytext,s);
 }
 %}
 

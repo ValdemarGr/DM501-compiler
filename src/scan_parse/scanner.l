@@ -23,6 +23,7 @@ extern int fileno();
 <comment>\n              lineno++;
 <comment>"("+"*"         { comment_depth++;}
 <comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);}}
+<comment><<EOF>>         { yyerror("unterminated comment"); BEGIN(INITIAL); }
 
 "*"             return '*';
 "/"             return '/';
