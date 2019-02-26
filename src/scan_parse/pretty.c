@@ -363,7 +363,9 @@ void prettyEXP(Expression *e) {
             printf("%i", e->val.intconstE);
             break;
         case opK:
+            printf("(");
             prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);
+            printf(")");
             break;
         case termK:
             prettyTerm(e->val.termD.term);
