@@ -206,6 +206,8 @@ void dumpSymbolTable(SymbolTable *t) {
         return;
     }
 
+    printf("Dumping symbol table\n");
+
     //We have our current node we are looking at
     SymbolTable *current_table = t;
 

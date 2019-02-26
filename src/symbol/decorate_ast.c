@@ -49,6 +49,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             break;
     }
 
+    dumpSymbolTable(symbolTable);
+
     return NULL;
 }
 
@@ -114,10 +116,18 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 strcat(paramName, FUNCTION_PARAM_SUFFIX);
                 strcat(paramName, asString);
 
+                //We put two instances in the symbol tabe, the reason we do this is because we both need to look-up
+                //The variables when we are in the function and also when we call the function
+                //This is a hack
                 putSymbol(child,
                           paramName,
                         functionParams->type,
                         false);
+
+                putSymbol(child,
+                          functionParams->identifier,
+                          functionParams->type,
+                          false);
 
                 paramNum++;
                 functionParams = functionParams->next;
@@ -129,9 +139,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     declaration->val.functionD.function->head->returnType,
                     true);
 
+            //We handle the body locally since its a bit different than the global scope
+            decorateAstWithSymbols(declaration->val.functionD.function->body, child);
 
-            e = decorateAstWithSymbols(declaration->val.functionD.function->body, child);
-            if (e != NULL) return e;
             break;
         default:
             break;
@@ -140,8 +150,6 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     return NULL;
 }
 
-//We have to treat things a bit differently in global scope
-//We do not allow some free floating statements in global space for instance; an if statement for instance
 Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable) {
     DeclarationList *declarationList = body->declarationList;
     StatementList *statementList = body->statementList;

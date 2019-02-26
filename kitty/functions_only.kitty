@@ -1,4 +1,7 @@
 
+return | | a | |;
+return ( ( a ) ) ;
+
 func main(): int
     var i : int;
     var b : bool;

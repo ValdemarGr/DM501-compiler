@@ -66,8 +66,6 @@ typedef struct DeclarationList {
 } DeclarationList;
 
 typedef struct Expression {
-    SymbolTable *symbolTable;
-
     int lineno;
     enum {
         idK, intconstK, opK, termK//, functionK

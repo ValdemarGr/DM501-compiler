@@ -6,7 +6,7 @@
 #include "../ast/tree.h"
 #include "../error/error.h"
 
-Error *typeCheckExpression(Expression *expression, TypeKind expectedType);
+Error *typeCheckExpression(Expression *expression, TypeKind expectedType, SymbolTable *symbolTable);
 
 Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable *symbolTable) {
     Error *e = NULL;
@@ -27,6 +27,7 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
             }
 
             if (symbol->tpe->kind != expectedType) {
+                //Incorrect error
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
@@ -35,12 +36,13 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
 
                 return e;
             }
+
             break;
         case arrayIndexK:
             e = typeCheckVariable(variable->val.arrayIndexD.var, expectedType, symbolTable);
             if (e != NULL) return e;
 
-            e = typeCheckExpression(variable->val.arrayIndexD.idx, typeIntK);
+            e = typeCheckExpression(variable->val.arrayIndexD.idx, typeIntK, symbolTable);
             if (e != NULL) return e;
             break;
         case recordLookupK:
@@ -51,14 +53,18 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
 
             break;
     }
+
+    return NULL;
 }
 
 Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable) {
+
     Error *e = NULL;
     SYMBOL *symbol = NULL;
 
     switch (term->kind) {
         case variableK:
+
             e = typeCheckVariable(term->val.variableD.var, expectedType, symbolTable);
             if (e != NULL) return e;
             break;
@@ -118,7 +124,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
 
             while (symbol != NULL && expressionList != NULL) {
                 //This MIGHT cause an error, test later
-                e = typeCheckExpression(expressionList->expression, expectedType);
+                e = typeCheckExpression(expressionList->expression, expectedType, symbolTable);
                 if (e != NULL) {
                     e->error = TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE;
                     e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.lineno = term->lineno;
@@ -157,7 +163,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
 
             break;
         case parenthesesK:
-            e = typeCheckExpression(term->val.parenthesesD.expression, expectedType);
+            e = typeCheckExpression(term->val.parenthesesD.expression, expectedType, symbolTable);
             if (e != NULL) return e;
             break;
         case negateK:
@@ -233,7 +239,8 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
     return NULL;
 }
 
-Error *typeCheckExpression(Expression *expression, TypeKind expectedType) {
+Error *typeCheckExpression(Expression *expression, TypeKind expectedType, SymbolTable *symbolTable) {
+
     Error *e = NULL;
     SYMBOL *symbol;
     bool isBoolean;
@@ -252,21 +259,22 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType) {
             break;*/
         case opK:
             //We want to check if the operator is boolean or not
-            isBoolean = false;
+
+            isBoolean = true;
 
 
             switch (expression->val.op.operator->kind) {
                 case opMultK:
-                    isBoolean = true;
+                    isBoolean = false;
                     break;
                 case opDivK:
-                    isBoolean = true;
+                    isBoolean = false;
                     break;
                 case opPlusK:
-                    isBoolean = true;
+                    isBoolean = false;
                     break;
                 case opMinusK:
-                    isBoolean = true;
+                    isBoolean = false;
                     break;
                 default:
                     break;
@@ -285,22 +293,25 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType) {
                 return e;
             }
 
+
             //If they do match, we check children!
-            e = typeCheckExpression(expression->val.op.left, expectedType);
+            e = typeCheckExpression(expression->val.op.left, expectedType, symbolTable);
             if (e != NULL) return e;
-            e = typeCheckExpression(expression->val.op.right, expectedType);
+            e = typeCheckExpression(expression->val.op.right, expectedType, symbolTable);
             if (e != NULL) return e;
 
             break;
         case termK:
             e = typeCheckTerm(expression->val.termD.term,
                     expectedType,
-                    expression->symbolTable);
+                    symbolTable);
             if (e != NULL) return e;
+
             break;
         default:
             break;
     }
+
 
     return NULL;
 }
@@ -314,16 +325,19 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
     switch (statement->kind) {
         case statReturnK:
             e = typeCheckExpression(statement->val.returnD.exp,
-                    functionReturnType);
+                    functionReturnType,
+                    statement->symbolTable);
             if (e != NULL) return e;
             break;
         case statWriteK:
             e = typeCheckExpression(statement->val.writeD.exp,
-                                    typeBoolK);
+                                    typeBoolK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
 
             e = typeCheckExpression(statement->val.writeD.exp,
-                                    typeIntK);
+                                    typeIntK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
             break;
         /*case statAllocateK:
@@ -332,12 +346,14 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;*/
         case statAllocateLenK:
             e = typeCheckExpression(statement->val.allocateLenD.len,
-                    typeIntK);
+                    typeIntK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
             break;
         case statIfK:
             e = typeCheckExpression(statement->val.ifD.exp,
-                    typeBoolK);
+                    typeBoolK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
 
             e = typeCheckStatement(statement->val.ifD.statement,
@@ -346,7 +362,8 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;
         case statIfElK:
             e = typeCheckExpression(statement->val.ifElD.exp,
-                                    typeBoolK);
+                                    typeBoolK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
 
             e = typeCheckStatement(statement->val.ifElD.statement,
@@ -359,7 +376,8 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;
         case statWhileK:
             e = typeCheckExpression(statement->val.whileD.exp,
-                                    typeBoolK);
+                                    typeBoolK,
+                                    statement->symbolTable);
             if (e != NULL) return e;
 
             e = typeCheckStatement(statement->val.whileD.statement,
@@ -393,7 +411,8 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             }
 
             e = typeCheckExpression(statement->val.assignmentD.exp,
-                                    symbol->tpe->kind);
+                                    symbol->tpe->kind,
+                                    statement->symbolTable);
             if (e != NULL) return e;
             break;
         default:
