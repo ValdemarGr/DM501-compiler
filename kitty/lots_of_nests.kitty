@@ -3,6 +3,13 @@ type A = array of bool;
 type Coordinate = record of { x: int, y: int };
 type LinkedList = record of { k : int, val: int, next : LinkedList };
 
+type TypeA = record of { k : int, next : TypeB };
+type TypeB = record of { k : int, next : TypeC };
+type TypeC = record of { k : int, next : TypeA };
+
+# TypeQ is a homogenous record of TypeC
+type TypeQ = record of { k : int, next : TypeA };
+
 func identity(a: int): int
     return a;
 end identity
@@ -33,16 +40,41 @@ func recordTest(z: int, j: int): Coordinate
 
 end recordTest
 
-func linkedListTest(hello: A): Coordinate
+func linkedListTest(hello: A): LinkedList
     var ll : LinkedList;
     var anotherll : LinkedList;
+
+    var ll2 : LinkedList;
+    var ll3 : LinkedList;
+    var ll4 : LinkedList;
+    var ll5 : LinkedList;
 
     ll.k = 1;
     ll.val = 69;
     ll.next = anotherll;
+    ll.next = ll2;
+    ll.next.next.next = ll3;
+    ll.next.next.next.next = ll4;
+    ll4.next = ll5;
+    ll5.next = ll;
 
     return ll;
 
 end linkedListTest
 
+func imATypeWizard(hello: A): int
+    var a: TypeA;
+    var b: TypeB;
+    var c: TypeC;
+    var q: TypeQ;
 
+    a.next = b;
+    b.next = c;
+    c.next = a;
+
+    a.next.next.next = a;
+
+    b.next = q;
+
+    return 42;
+end imATypeWizard

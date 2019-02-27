@@ -66,7 +66,6 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
     switch (type->kind) {
         case typeIdK:
                 symbol = getSymbol(symbolTable, type->val.idType.id);
-                printf("%s\n", type->val.idType.id);
 
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
             break;
@@ -92,14 +91,10 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
             }
 
 
-            return symbol->value->val.typeD.tpe;
+            return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
             break;
         case arrayIndexK:
             innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
-
-            if (innerType == NULL) {
-                printf("nononono\n");
-            }
 
             //Check if expression is int
             e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
@@ -114,13 +109,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
             break;
         case recordLookupK:
-            innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
-
-            if (innerType == NULL) {
-                printf("nononononononono\n");
-            }
-
-            innerType = innerType;
+            innerType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable);
 
             //Check if id is in the type's vardellist
             varDelList = innerType->val.recordType.types;
@@ -655,10 +644,6 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             //We have to find out what the LHS is first
 
             lhsType = unwrapVariable(statement->val.assignmentD.var, statement->symbolTable);
-
-            if (lhsType == NULL) {
-                printf("Nono\n");
-            }
 
             e = typeCheckExpression(statement->val.assignmentD.exp, lhsType, statement->symbolTable);
             if (e != NULL) return e;
