@@ -6,7 +6,7 @@ extern int lineno;
 extern int fileno();
 %}
 
-%option noyywrap nounput noinput
+%option noyywrap
 %x comment
 
 %%

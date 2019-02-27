@@ -8,9 +8,9 @@ ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
 SET(SOURCES ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS})
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-add_executable(PrettyPrint scan_parse.c pretty.c ${SOURCES})
+add_library(ScanParsePrint ${SOURCES})
 
 # Ugly, but otherwise it cannot find tree.h when compiling our parser
-target_include_directories(PrettyPrint PUBLIC ${PROJECT_SOURCE_DIR}/src/scan_parse)
+target_include_directories(ScanParsePrint PUBLIC ${PROJECT_SOURCE_DIR}/src/scan_parse)
 
-target_link_libraries(PrettyPrint AbstractSyntaxTree Weeder Symbol TypeChecker)
+target_link_libraries(ScanParsePrint PrettyPrint AbstractSyntaxTree Weeder Symbol TypeChecker)

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../ast/tree.h"
-#include "../scan_parse/pretty.h"
+#include "../pretty_print/pretty.h"
 #include "../utils/enum_to_string.h"
 
 typedef struct Error {

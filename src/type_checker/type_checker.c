@@ -92,7 +92,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
             }
 
 
-            return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+            return symbol->value->val.typeD.tpe;
             break;
         case arrayIndexK:
             innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
@@ -101,15 +101,13 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 printf("nononono\n");
             }
 
-            innerType = unwrapTypedef(innerType, symbolTable);
-
             //Check if expression is int
             e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
             if (e != NULL) return NULL;
 
             //Since we are in an array subscript, we want to subscript by removing a type layer
             if (innerType->kind == typeArrayK) {
-                return unwrapTypedef(innerType->val.arrayType.type, symbolTable);
+                return innerType->val.arrayType.type;
             } else {
                 return NULL;
             }
@@ -122,7 +120,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 printf("nononononononono\n");
             }
 
-            innerType = unwrapTypedef(innerType, symbolTable);
+            innerType = innerType;
 
             //Check if id is in the type's vardellist
             varDelList = innerType->val.recordType.types;
@@ -131,7 +129,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
                 if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
                     //ID
-                    return unwrapTypedef(varDelList->type, symbolTable);
+                    return varDelList->type;
                 }
 
                 varDelList = varDelList->next;
@@ -228,15 +226,15 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             }
 
             //This segfaults, pls fix, it stack overflows
-            symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+            symAsType = symbol->value->val.typeD.tpe;
 
-            if (areTypesEqual(symAsType, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
+            if (areTypesEqual(symAsType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = VARIABLE_UNEXPECTED_TYPE;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = unwrapTypedef(expectedType, symbolTable)->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
 
 
