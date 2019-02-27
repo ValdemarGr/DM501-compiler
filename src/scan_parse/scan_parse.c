@@ -7,6 +7,7 @@ Body *theexpression;
 
 int main() {
     SymbolTable *globalScope = initSymbolTable();
+    struct Type intStaticType = {.kind = typeIntK};
 
     int ei;
     Error *e;
@@ -21,7 +22,7 @@ int main() {
     ei = writeError(e); if (ei != 0) return ei;
     e = decorateAstWithSymbols(theexpression, globalScope);
     ei = writeError(e); if (ei != 0) return ei;
-    e = typeCheck(theexpression, typeIntK);
+    e = typeCheck(theexpression, &intStaticType);
     ei = writeError(e); if (ei != 0) return ei;
 
     printf("\n");

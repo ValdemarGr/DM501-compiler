@@ -77,11 +77,15 @@ int writeError(Error *e) {
                    e->val.SYMBOL_NOT_FOUND_S.lineno);
             break;
         case VARIABLE_UNEXPECTED_TYPE:
-            printf("Variable %s unexpected type %i\nExpected type %s, found %s\n",
+            printf("Variable %s unexpected type at line number %i. Expected type %s, found type %s\n",
                    e->val.VARIABLE_UNEXPECTED_TYPE_S.id,
                    e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno,
                    typeEnumToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType),
                    typeEnumToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType));
+            break;
+        case VARIABLE_COULD_NOT_FIND_RECORD_ITEM:
+            printf("Record item could not be found at line %i\n",
+                   e->val.VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S.lineno);
             break;
         default:
             break;

@@ -25,6 +25,7 @@ typedef struct Error {
         TYPE_TERM_NOT_INTEGER,
         SYMBOL_NOT_FOUND,
         VARIABLE_UNEXPECTED_TYPE,
+        VARIABLE_COULD_NOT_FIND_RECORD_ITEM,
         SYMBOL_COULD_NOT_SCOPE
     } error;
     union {
@@ -40,6 +41,7 @@ typedef struct Error {
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_INTEGER_S;
         struct { char *id; int lineno; } SYMBOL_NOT_FOUND_S;
         struct { char *id; int lineno; TypeKind expectedType; TypeKind foundType;} VARIABLE_UNEXPECTED_TYPE_S;
+        struct { int lineno; } VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S;
     } val;
 } Error;
 

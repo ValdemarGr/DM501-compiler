@@ -7,14 +7,204 @@
 #include "../error/error.h"
 #include "../symbol/symbol.h"
 
-Error *typeCheckExpression(Expression *expression, TypeKind expectedType, SymbolTable *symbolTable);
+struct Type booleanStaticType = {.kind = typeBoolK};
+struct Type intStaticType = {.kind = typeIntK};
 
-Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable *symbolTable) {
+Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
+//Go all the way down through variable, then once at bottom get type
+//when we get type start returning, apply subscripting and such as we go up
+
+bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
+    if (first == NULL || second == NULL) {
+        return false;
+    }
+    VarDelList *firstDelList;
+    VarDelList *secondDelList;
+
+    if (first->kind == second->kind) {
+        if (first->kind == typeIntK || first->kind == typeBoolK) {
+            return true;
+        } else if (first->kind == typeArrayK) {
+            return areTypesEqual(first->val.arrayType.type, second->val.arrayType.type, symbolTable);
+        } else if (first->kind == typeRecordK) {
+            firstDelList = first->val.recordType.types;
+            secondDelList = second->val.recordType.types;
+
+            while (firstDelList != NULL && secondDelList != NULL) {
+
+                if (areTypesEqual(firstDelList->type, secondDelList->type, symbolTable) == false) {
+                    return false;
+                }
+
+                firstDelList = firstDelList->next;
+                secondDelList = secondDelList->next;
+            }
+
+            if (firstDelList != NULL || secondDelList != NULL) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            //TypeIdK
+            //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
+            if (strcmp(first->val.idType.id, second->val.idType.id) == 0) {
+                return true;
+            } else {
+                return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
+            }
+        }
+    } else {
+        return false;
+    }
+}
+
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
+    SYMBOL *symbol;
+
+    switch (type->kind) {
+        case typeIdK:
+                symbol = getSymbol(symbolTable, type->val.idType.id);
+                printf("%s\n", type->val.idType.id);
+
+                return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+            break;
+        default:
+            return type;
+            break;
+    }
+}
+
+Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
+    SYMBOL *symbol;
+    Variable *base;
+    VarDelList *varDelList;
+    Type *innerType;
     Error *e = NULL;
-    SYMBOL *symbol = NULL;
 
     switch (variable->kind) {
         case varIdK:
+            symbol = getSymbol(symbolTable, variable->val.idD.id);
+
+            if (symbol == NULL) {
+                return NULL;
+            }
+
+
+            return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+            break;
+        case arrayIndexK:
+            innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
+
+            if (innerType == NULL) {
+                printf("nononono\n");
+            }
+
+            innerType = unwrapTypedef(innerType, symbolTable);
+
+            //Check if expression is int
+            e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
+            if (e != NULL) return NULL;
+
+            //Since we are in an array subscript, we want to subscript by removing a type layer
+            if (innerType->kind == typeArrayK) {
+                return unwrapTypedef(innerType->val.arrayType.type, symbolTable);
+            } else {
+                return NULL;
+            }
+
+            break;
+        case recordLookupK:
+            innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
+
+            if (innerType == NULL) {
+                printf("nononononononono\n");
+            }
+
+            innerType = unwrapTypedef(innerType, symbolTable);
+
+            //Check if id is in the type's vardellist
+            varDelList = innerType->val.recordType.types;
+
+            while (varDelList != NULL) {
+
+                if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
+                    //ID
+                    return unwrapTypedef(varDelList->type, symbolTable);
+                }
+
+                varDelList = varDelList->next;
+            }
+
+            return NULL;
+
+            break;
+    }
+
+    return NULL;
+}
+
+/*
+Type *unwrapNestedType(Type *type, Variable *variable, SymbolTable *symbolTable) {
+    SYMBOL *symbol;
+    Variable *base;
+    VarDelList *varDelList;
+
+    switch (type->kind) {
+        case typeIdK:
+            symbol = getSymbol(symbolTable, type->val.idType.id);
+            return unwrapNestedType(symbol->value->val.typeD.tpe, variable, symbolTable);
+            break;
+        case typeIntK:
+            return type;
+            break;
+        case typeBoolK:
+            return type;
+            break;
+        case typeArrayK:
+
+            if (variable->kind == arrayIndexK) {
+                return unwrapNestedType(type->val.arrayType.type, variable->val.arrayIndexD.var, symbolTable);
+            } else {
+                return type;
+            }
+            break;
+        case typeRecordK:
+
+            if (variable->kind == recordLookupK) {
+                varDelList = type->val.recordType.types;
+
+                while (varDelList != NULL) {
+
+                    if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
+                        //ID
+                        return unwrapNestedType(varDelList->type, variable->val.recordLookupD.var, symbolTable);
+                    }
+
+                    varDelList = varDelList->next;
+                }
+
+
+                return NULL;
+            } else {
+                return type;
+            }
+            break;
+    }
+    return NULL;
+}
+*/
+
+Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *symbolTable) {
+    Error *e = NULL;
+    SYMBOL *symbol = NULL;
+    VarDelList *recordItems = NULL;
+    Type *symAsType = NULL;
+
+    switch (variable->kind) {
+        case varIdK:
+
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
             if (symbol == NULL) {
@@ -27,8 +217,6 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
                 return e;
             }
 
-            //Functions as values will be a feature, this is not an error
-/*
             if (symbol->value->kind != typeK) {
                 e = NEW(Error);
 
@@ -37,35 +225,96 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
                 e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
 
                 return e;
-            }*/
+            }
 
-            if (symbol->value->val.typeD.tpe->kind != expectedType) {
-                //Incorrect error
+            //This segfaults, pls fix, it stack overflows
+            symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+
+            if (areTypesEqual(symAsType, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = VARIABLE_UNEXPECTED_TYPE;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symbol->value->val.typeD.tpe->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = unwrapTypedef(expectedType, symbolTable)->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
 
 
                 return e;
             }
+
+
 
             break;
         case arrayIndexK:
             e = typeCheckVariable(variable->val.arrayIndexD.var, expectedType, symbolTable);
             if (e != NULL) return e;
 
-            e = typeCheckExpression(variable->val.arrayIndexD.idx, typeIntK, symbolTable);
+            e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
             if (e != NULL) return e;
             break;
         case recordLookupK:
-            e = typeCheckVariable(variable->val.recordLookupD.var, expectedType, symbolTable);
-            if (e != NULL) return e;
 
-            //variable->val.recordLookupD.
+            //The id subscript decides the return type
+            /*
+            e = typeCheckVariable(variable->val.recordLookupD.var, expectedType, symbolTable);
+            if (e != NULL) return e;*/
+
+            symbol = getSymbol(symbolTable, variable->val.recordLookupD.id);
+
+            if (symbol == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                return e;
+            }
+
+            if (symbol->value->kind != typeK) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                return e;
+            }
+
+            recordItems = symbol->value->val.typeD.tpe->val.recordType.types;
+
+            while (recordItems != NULL) {
+
+                //If we are at the desired id
+                if (strcmp(recordItems->identifier, variable->val.recordLookupD.id) == 0) {
+                    break;
+                }
+
+                recordItems = recordItems->next;
+            }
+
+            if (recordItems == NULL) {
+                e = NEW(Error);
+
+                e->error = VARIABLE_COULD_NOT_FIND_RECORD_ITEM;
+                e->val.VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S.lineno = variable->lineno;
+
+                return e;
+            }
+
+
+            if (areTypesEqual(recordItems->type, expectedType, symbolTable) == false) {
+                e = NEW(Error);
+
+                e->error = VARIABLE_UNEXPECTED_TYPE;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.recordLookupD.id;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symbol->value->val.typeD.tpe->kind;
+
+                return e;
+            }
 
             break;
     }
@@ -73,7 +322,7 @@ Error *typeCheckVariable(Variable* variable, TypeKind expectedType, SymbolTable 
     return NULL;
 }
 
-Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable) {
+Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
     Error *e = NULL;
     SYMBOL *symbol = NULL;
@@ -110,7 +359,9 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
                 return e;
             }
 
-            if (symbol->value->val.typeFunctionD.returnType->kind != expectedType) {
+
+
+            if (areTypesEqual(symbol->value->val.typeFunctionD.returnType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
@@ -126,7 +377,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             int paramNum = 0;
 
             while (expressionList != NULL && varDelList != NULL) {
-                e = typeCheckExpression(expressionList->expression, varDelList->type->kind, symbolTable);
+                e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
                 if (e != NULL) return e;
 
                 expressionList = expressionList->next;
@@ -167,7 +418,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             if (e != NULL) return e;
             break;
         case negateK:
-            if (expectedType != typeBoolK) {
+            if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_BOOLEAN;
@@ -182,7 +433,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
 
             break;
         case absK:
-            if (expectedType != typeIntK) {
+            if (areTypesEqual(&intStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_INTEGER;
@@ -197,7 +448,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
 
             break;
         case numK:
-            if (expectedType != typeIntK) {
+            if (areTypesEqual(&intStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_INTEGER;
@@ -208,7 +459,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             }
             break;
         case trueK:
-            if (expectedType != typeBoolK) {
+            if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_BOOLEAN;
@@ -219,7 +470,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
             }
             break;
         case falseK:
-            if (expectedType != typeBoolK) {
+            if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_BOOLEAN;
@@ -239,7 +490,7 @@ Error *typeCheckTerm(Term *term, TypeKind expectedType, SymbolTable *symbolTable
     return NULL;
 }
 
-Error *typeCheckExpression(Expression *expression, TypeKind expectedType, SymbolTable *symbolTable) {
+Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable) {
 
     Error *e = NULL;
     SYMBOL *symbol;
@@ -281,14 +532,14 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType, Symbol
             }
 
             //If types do not match
-            if ((isBoolean == true && expectedType != typeBoolK ) ||
-                    (isBoolean == false && expectedType != typeIntK)) {
+            if ((isBoolean == true && areTypesEqual(expectedType, &booleanStaticType, symbolTable) == false) ||
+                    (isBoolean == false && areTypesEqual(expectedType, &intStaticType, symbolTable) == false)) {
                 e = NEW(Error);
 
                 e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno = expression->lineno;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expression;
-                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType;
+                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType->kind;
 
                 return e;
             }
@@ -317,10 +568,14 @@ Error *typeCheckExpression(Expression *expression, TypeKind expectedType, Symbol
 }
 
 //We need to track the return type, since we can have deeeeeeeep dwelling return statements
-Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
+Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
     Error *e = NULL;
     StatementList *statementList;
     SYMBOL *symbol;
+    VarDelList *varDelList;
+    Variable *topVariable;
+    char *innerId;
+    Type *lhsType;
 
     switch (statement->kind) {
         case statReturnK:
@@ -331,12 +586,12 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;
         case statWriteK:
             e = typeCheckExpression(statement->val.writeD.exp,
-                                    typeBoolK,
+                                    &booleanStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
 
             e = typeCheckExpression(statement->val.writeD.exp,
-                                    typeIntK,
+                                    &intStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
             break;
@@ -346,13 +601,13 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;*/
         case statAllocateLenK:
             e = typeCheckExpression(statement->val.allocateLenD.len,
-                    typeIntK,
+                                    &intStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
             break;
         case statIfK:
             e = typeCheckExpression(statement->val.ifD.exp,
-                    typeBoolK,
+                                    &booleanStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
 
@@ -362,7 +617,7 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;
         case statIfElK:
             e = typeCheckExpression(statement->val.ifElD.exp,
-                                    typeBoolK,
+                                    &booleanStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
 
@@ -376,7 +631,7 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
             break;
         case statWhileK:
             e = typeCheckExpression(statement->val.whileD.exp,
-                                    typeBoolK,
+                                    &booleanStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
 
@@ -398,22 +653,18 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
 
             break;
         case assignmentK:
-            symbol = getSymbol(statement->symbolTable, statement->val.assignmentD.var->val.idD.id);
+            //Assignment is a bit funny, we have to check if the  and RHS are the same
+            //We have to find out what the LHS is first
 
-            if (symbol == NULL) {
-                e = NEW(Error);
+            lhsType = unwrapVariable(statement->val.assignmentD.var, statement->symbolTable);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = statement->val.assignmentD.var->val.idD.id;
-                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
-
-                return e;
+            if (lhsType == NULL) {
+                printf("Nono\n");
             }
 
-            e = typeCheckExpression(statement->val.assignmentD.exp,
-                                    symbol->value->val.typeD.tpe->kind,
-                                    statement->symbolTable);
+            e = typeCheckExpression(statement->val.assignmentD.exp, lhsType, statement->symbolTable);
             if (e != NULL) return e;
+
             break;
         default:
             break;
@@ -425,7 +676,7 @@ Error *typeCheckStatement(Statement *statement, TypeKind functionReturnType) {
 //We want to unwrap the expression types and compare them, effectively folding the nest of types
 //An easy way to do this is to for every expression, we want to check the symbol table for a matching type
 //We have been preemptively smart and decorated the AST's statements with symbol pointers also!
-Error *typeCheck(Body *body, TypeKind functionReturnType) {
+Error *typeCheck(Body *body, Type *functionReturnType) {
     Error *e = NULL;
     DeclarationList *declarationList = body->declarationList;
     StatementList *statementList = body->statementList;
@@ -435,7 +686,7 @@ Error *typeCheck(Body *body, TypeKind functionReturnType) {
         switch (declarationList->declaration->kind)  {
             case declFuncK:
                 e = typeCheck(declarationList->declaration->val.functionD.function->body,
-                        declarationList->declaration->val.functionD.function->head->returnType->kind);
+                        declarationList->declaration->val.functionD.function->head->returnType);
                 if (e != NULL) return e;
                 break;
             default:

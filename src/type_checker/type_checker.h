@@ -12,6 +12,6 @@
 #include "../symbol/symbol.h"
 #include "../symbol/decorate_ast.h"
 
-Error *typeCheck(Body *body, TypeKind functionReturnType);
+Error *typeCheck(Body *body, Type *functionReturnType);
 
 #endif //HELLO_TYPE_CHECKER_H

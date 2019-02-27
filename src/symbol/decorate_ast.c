@@ -50,8 +50,6 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             break;
     }
 
-    dumpSymbolTable(symbolTable);
-
     return NULL;
 }
 

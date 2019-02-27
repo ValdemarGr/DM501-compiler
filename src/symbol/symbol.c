@@ -255,13 +255,13 @@ void dumpSymbolTable(SymbolTable *t) {
             printf("\t");
         }
 
-        printf("ret");
+        printf("ret\ttypeId");
 
         for (int j = 0; j < typeTabs; j++) {
             printf("\t");
         }
 
-        printf("typeId\tbucket\n");
+        printf("bucket\n");
 
 
 

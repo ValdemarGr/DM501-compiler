@@ -1,5 +1,7 @@
 
 type A = array of bool;
+type Coordinate = record of { x: int, y: int };
+type LinkedList = record of { k : int, val: int, next : LinkedList };
 
 func identity(a: int): int
     return a;
@@ -18,3 +20,29 @@ func returnCustomType(value: int): A
 
     return v;
 end returnCustomType
+
+func recordTest(z: int, j: int): Coordinate
+    var point : Coordinate;
+    var t : int;
+    var o : int;
+
+    point.x = t;
+    point.y = o;
+
+    return point;
+
+end recordTest
+
+func linkedListTest(hello: A): Coordinate
+    var ll : LinkedList;
+    var anotherll : LinkedList;
+
+    ll.k = 1;
+    ll.val = 69;
+    ll.next = anotherll;
+
+    return ll;
+
+end linkedListTest
+
+
