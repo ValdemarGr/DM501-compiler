@@ -10,6 +10,14 @@ type TypeC = record of { k : int, next : TypeA };
 # TypeQ is a homogenous record of TypeC
 type TypeQ = record of { k : int, next : TypeA };
 
+func boolTest(b: bool) : bool
+
+    if b == null then
+        return false;
+    else
+        return true;
+end boolTest
+
 func identity(a: int): int
     return a;
 end identity
@@ -27,6 +35,13 @@ func returnCustomType(value: int): A
 
     return v;
 end returnCustomType
+
+func doArrays(arrayOne : array of int): array of int
+    var arrayTwo : array of int;
+    arrayTwo = arrayOne;
+
+    return arrayTwo;
+end doArrays
 
 func recordTest(z: int, j: int): Coordinate
     var point : Coordinate;
@@ -62,6 +77,15 @@ func linkedListTest(hello: A): LinkedList
 
 end linkedListTest
 
+func recursiveLinkedListTail(lll: LinkedList): LinkedList
+    var ll : LinkedList;
+
+    if ll == null then
+        return ll;
+
+    return recursiveLinkedListTail(ll.next);
+end recursiveLinkedListTail
+
 func imATypeWizard(hello: A): int
     var a: TypeA;
     var b: TypeB;
@@ -78,3 +102,4 @@ func imATypeWizard(hello: A): int
 
     return 42;
 end imATypeWizard
+

@@ -9,6 +9,8 @@
 
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
+//This is a hack, it is very hacky. Do not do this at home.
+#define NULL_KITTY_VALUE_INDICATOR ((void *)1)
 
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -19,6 +21,7 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
     if (first == NULL || second == NULL) {
         return false;
     }
+
     VarDelList *firstDelList;
     VarDelList *secondDelList;
 
@@ -247,6 +250,18 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             e = typeCheckVariable(variable->val.recordLookupD.var, expectedType, symbolTable);
             if (e != NULL) return e;*/
 
+            if (areTypesEqual(expectedType, unwrapVariable(variable, symbolTable), symbolTable) == false) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                return e;
+            } else {
+                return NULL;
+            }
+
             symbol = getSymbol(symbolTable, variable->val.recordLookupD.id);
 
             if (symbol == NULL) {
@@ -468,7 +483,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
             break;
         case nullK:
-            //What do?
+            //Null satisfies all types
+            return NULL_KITTY_VALUE_INDICATOR;
             break;
         default:
             break;
@@ -497,9 +513,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             break;*/
         case opK:
             //We want to check if the operator is boolean or not
-
             isBoolean = true;
-
 
             switch (expression->val.op.operator->kind) {
                 case opMultK:
@@ -518,7 +532,6 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                     break;
             }
 
-            //If types do not match
             if ((isBoolean == true && areTypesEqual(expectedType, &booleanStaticType, symbolTable) == false) ||
                     (isBoolean == false && areTypesEqual(expectedType, &intStaticType, symbolTable) == false)) {
                 e = NEW(Error);
@@ -533,10 +546,20 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
 
             //If they do match, we check children!
-            e = typeCheckExpression(expression->val.op.left, expectedType, symbolTable);
-            if (e != NULL) return e;
-            e = typeCheckExpression(expression->val.op.right, expectedType, symbolTable);
-            if (e != NULL) return e;
+            Error *e1 = typeCheckExpression(expression->val.op.left, expectedType, symbolTable);
+            Error *e2 = typeCheckExpression(expression->val.op.right, expectedType, symbolTable);
+
+            //If the operator is equality or enquality and one of the terms is a null. We can safely compare.
+            //The reason for this line is that we can use the equality or inequality operator between a null and anything
+            if (expression->val.op.operator->kind == opEqualityK || expression->val.op.operator->kind == opInequalityK) {
+                if (e1 == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
+                    return NULL;
+                }
+            }
+
+            if (e1 != NULL) return e1;
+            if (e2 != NULL) return e2;
+
 
             break;
         case termK:
