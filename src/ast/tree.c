@@ -306,6 +306,16 @@ Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail) {
     return function;
 }
 
+Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
+    Lambda *lambda = NEW(Lambda);
+
+    lambda->returnType = returnType;
+    lambda->body = body;
+    lambda->declarationList = varDelList;
+
+    return lambda;
+}
+
 VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next) {
     VarDelList *list;
     list = NEW(VarDelList);
@@ -475,6 +485,17 @@ Declaration *makeFunctionDecleration(Function *function) {
     declaration->lineno = lineno;
     declaration->kind = declFuncK;
     declaration->val.functionD.function = function;
+
+    return declaration;
+}
+
+//TODO do this
+Declaration *makeLambdaDeclaration(Lambda *function) {
+    Declaration *declaration = NEW(Declaration);
+
+    declaration->lineno = lineno;
+    declaration->kind = declLambdaK;
+    declaration->val.lambdaD.lambda = function;
 
     return declaration;
 }

@@ -6,9 +6,23 @@ type LinkedList = record of { k : int, val: int, next : LinkedList };
 type TypeA = record of { k : int, next : TypeB };
 type TypeB = record of { k : int, next : TypeC };
 type TypeC = record of { k : int, next : TypeA };
+(*
+type List[A]   = union of { Nil, Cons[A] };
+type Nil       = record of {};
+type Cons[A]   = record of { x: int, xs: List[A] };
+
+type Either[L,R] = union of { Left[L], Right[R] };
+type Left[L]   = record of { v: L };
+type Right[R]  = record of { v: R };
+*)
+
 
 # TypeQ is a homogenous record of TypeC
 type TypeQ = record of { k : int, next : TypeA };
+
+(i: int, z: bool): int -> {
+    return i;
+}
 
 func boolTest(b: bool) : bool
 
@@ -90,15 +104,12 @@ func imATypeWizard(hello: A): int
     var a: TypeA;
     var b: TypeB;
     var c: TypeC;
-    var q: TypeQ;
 
     a.next = b;
     b.next = c;
     c.next = a;
 
     a.next.next.next = a;
-
-    b.next = q;
 
     return 42;
 end imATypeWizard

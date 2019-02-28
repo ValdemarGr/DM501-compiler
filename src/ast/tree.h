@@ -40,6 +40,12 @@ typedef struct FunctionTail {
     char *indentifier;
 } FunctionTail;
 
+typedef struct Lambda {
+    VarDelList *declarationList;
+    Type *returnType;
+    Body *body;
+} Lambda;
+
 typedef struct Function {
     FunctionHead *head;
     Body *body;
@@ -50,12 +56,13 @@ typedef struct Declaration {
     SymbolTable *symbolTable;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK, declLambdaK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
+        struct { Lambda *lambda; } lambdaD;
     } val;
 } Declaration;
 
@@ -254,6 +261,8 @@ VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next);
 
 Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail);
 
+Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body);
+
 FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type);
 
 FunctionTail *makeFunctionTail(char *identifier);
@@ -261,5 +270,7 @@ FunctionTail *makeFunctionTail(char *identifier);
 Body *makeBody(DeclarationList *declarationList, StatementList *statementList);
 
 Declaration *makeFunctionDecleration(Function *function);
+
+Declaration *makeLambdaDeclaration(Lambda *function);
 
 #endif

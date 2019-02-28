@@ -20,6 +20,7 @@ void yyerror() {
    struct Declaration *declaration;
    struct Type *type;
    struct Function *function;
+   struct Lambda *lambda;
    struct FunctionHead *functionHead;
    struct FunctionTail *functionTail;
    struct StatementList *statementList;
@@ -60,8 +61,10 @@ void yyerror() {
 %token tTRUE
 %token tFALSE
 %token tNULL
+%token tLAMBDA_ARROW
 
 %type <expression> expression
+%type <lambda> lambda
 %type <body> program body
 %type <declarationList> decl_list
 %type <varDelList> var_decl_list par_decl_list
@@ -107,6 +110,8 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
+              | lambda
+              {$$ = makeLambdaDeclaration($1); }
               | tTYPE tIDENTIFIER '=' type ';'
               {$$ = makeTypeDeclaration($2, $4); }
 ;
@@ -141,6 +146,10 @@ type :  tIDENTIFIER
         {$$ = makeArrayType($2); }
         | tRECORD_OF '{' var_decl_list '}'
         {$$ = makeRecordType($3); }
+;
+
+lambda : '(' par_decl_list ')' ':' type tLAMBDA_ARROW body
+        {$$ = makeLambda($2, $5, $7);}
 ;
 
 function :  head body tail

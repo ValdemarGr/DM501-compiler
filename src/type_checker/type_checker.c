@@ -52,11 +52,13 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
-            if (strcmp(first->val.idType.id, second->val.idType.id) == 0) {
+            return strcmp(first->val.idType.id, second->val.idType.id) == 0;
+            /*if (strcmp(first->val.idType.id, second->val.idType.id) == 0) {
                 return true;
             } else {
+                return false;
                 return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
-            }
+            }*/
         }
     } else {
         return false;

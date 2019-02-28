@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "stdbool.h"
 #include "pretty.h"
+#include "../ast/tree.h"
 
 static int indentation = 0;
 
@@ -195,6 +196,31 @@ void prettyFunction(Function *f) {
     printf("\n");
 }
 
+void prettyLambda(Lambda *lambda) {
+    printf("(");
+    VarDelList *dels = lambda->declarationList;
+    bool hasParameter = dels != NULL;
+
+    while (dels != NULL) {
+        prettyArgument(dels->identifier);
+        printf(" : ");
+        prettyType(dels->type);
+        printf(", ");
+        dels = dels->next;
+    }
+
+    if (hasParameter){
+        printf("\b\b");
+    }
+
+    printf(") : ");
+
+    prettyType(lambda->returnType);
+    printf(" ->\n");
+    prettyBody(lambda->body);
+    printf("\n");
+}
+
 void prettyDeclaration(Declaration *decl) {
     printCurrentIndent();
 
@@ -221,6 +247,11 @@ void prettyDeclaration(Declaration *decl) {
         case declFuncK:
             indentation++;
             prettyFunction(decl->val.functionD.function);
+            indentation--;
+            break;
+        case declLambdaK:
+            indentation++;
+            prettyLambda(decl->val.lambdaD.lambda);
             indentation--;
             break;
         default:
