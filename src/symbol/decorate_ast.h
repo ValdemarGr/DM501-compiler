@@ -10,7 +10,7 @@
 #include "../error/error.h"
 #include <string.h>
 
-#define FUNCTION_PARAM_SUFFIX "-param-"
+#define LAMBDA_SUFFIX "_lambda"
 
 Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable);
 

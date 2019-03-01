@@ -20,10 +20,6 @@ type Right[R]  = record of { v: R };
 # TypeQ is a homogenous record of TypeC
 type TypeQ = record of { k : int, next : TypeA };
 
-(i: int, z: bool): int -> {
-    return i;
-}
-
 func boolTest(b: bool) : bool
 
     if b == null then
@@ -35,6 +31,13 @@ end boolTest
 func identity(a: int): int
     return a;
 end identity
+
+func differentTypes(a: int): bool
+    if a == 5 then
+        return true;
+    else
+        return false;
+end differentTypes
 
 func sum(a : int, b : int): int
     return a + b;

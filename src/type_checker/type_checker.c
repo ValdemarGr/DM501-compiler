@@ -49,6 +49,32 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
             } else {
                 return true;
             }
+        } else if (first->kind == typeLambdaK) {
+            //Are return types equal?
+            if (areTypesEqual(first->val.typeLambdaK.returnType, second->val.typeLambdaK.returnType, symbolTable) == false) {
+                return false;
+            }
+
+            //Check if all arguments are equal also
+            TypeList *firstTypeList = first->val.typeLambdaK.typeList;
+            TypeList *secondTypeList = second->val.typeLambdaK.typeList;
+
+            while (firstTypeList != NULL && secondTypeList != NULL) {
+
+                if (areTypesEqual(firstTypeList->type, secondTypeList->type, symbolTable) == false) {
+                    return false;
+                }
+
+                firstTypeList = firstTypeList->next;
+                secondTypeList = secondTypeList->next;
+            }
+
+            if (firstTypeList != NULL || secondTypeList != NULL) {
+                return false;
+            }
+
+            return true;
+
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
@@ -327,7 +353,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 }
 
 Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
-
+    Type *typeMatch = NULL;
     Error *e = NULL;
     SYMBOL *symbol = NULL;
 
@@ -341,6 +367,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             //Here we both want to check if the function we are checking is returning the correct type
             //Additionally we also want to check if the parameters are correct also
 
+            //This can also be a lambda
             symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
 
             if (symbol == NULL) {
@@ -354,18 +381,22 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
 
             if (symbol->value->kind != typeFunctionK) {
-                e = NEW(Error);
+                //Check for lambda
+                if (unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable)->kind != typeLambdaK) {
+                    e = NEW(Error);
 
-                e->error = TYPE_TERM_IS_NOT_FUNCTION;
-                e->val.TYPE_TERM_IS_NOT_FUNCTION_S.lineno = term->lineno;
-                e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid = term->val.functionCallD.functionId;
+                    e->error = TYPE_TERM_IS_NOT_FUNCTION;
+                    e->val.TYPE_TERM_IS_NOT_FUNCTION_S.lineno = term->lineno;
+                    e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid = term->val.functionCallD.functionId;
 
-                return e;
+                    return e;
+                }
             }
 
-
-
-            if (areTypesEqual(symbol->value->val.typeFunctionD.returnType, expectedType, symbolTable) == false) {
+            if ((symbol->value->kind == typeFunctionK &&
+               areTypesEqual(symbol->value->val.typeFunctionD.returnType, expectedType, symbolTable) == false) ||
+               (symbol->value->val.typeD.tpe->kind == typeLambdaK &&
+               areTypesEqual(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, expectedType, symbolTable) == false)) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
@@ -376,45 +407,144 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
 
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
-            VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
-            int paramNum = 0;
+            if (symbol->value->kind == typeFunctionK) {
+                VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
-            while (expressionList != NULL && varDelList != NULL) {
-                e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
-                if (e != NULL) return e;
 
-                expressionList = expressionList->next;
-                varDelList = varDelList->next;
-                paramNum++;
-            }
 
-            if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
-                //Error
-                e = NEW(Error);
+                int paramNum = 0;
 
-                int expectedCount = paramNum;
+                while (expressionList != NULL && varDelList != NULL) {
+                    e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
+                    if (e != NULL) return e;
 
-                if (varDelList == NULL) {
-                    while (expressionList != NULL) {
-                        paramNum++;
-                        expressionList = expressionList->next;
-                    }
-                } else {
-                    while (varDelList != NULL) {
-                        expectedCount++;
-                        varDelList = varDelList->next;
-                    }
+                    expressionList = expressionList->next;
+                    varDelList = varDelList->next;
+                    paramNum++;
                 }
 
-                e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
+                    //Error
+                    e = NEW(Error);
+
+                    int expectedCount = paramNum;
+
+                    if (varDelList == NULL) {
+                        while (expressionList != NULL) {
+                            paramNum++;
+                            expressionList = expressionList->next;
+                        }
+                    } else {
+                        while (varDelList != NULL) {
+                            expectedCount++;
+                            varDelList = varDelList->next;
+                        }
+                    }
+
+                    e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+
+                    return e;
+                }
+            } else {
+                TypeList *varDelList;
+                if (symbol->value->val.typeD.tpe->kind == typeIdK) {
+                    varDelList = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable)->val.typeLambdaK.typeList;
+                } else {
+                    varDelList = symbol->value->val.typeD.tpe->val.typeLambdaK.typeList;
+                }
+
+                int paramNum = 0;
+
+                while (expressionList != NULL && varDelList != NULL) {
+                    e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
+                    if (e != NULL) return e;
+
+                    expressionList = expressionList->next;
+                    varDelList = varDelList->next;
+                    paramNum++;
+                }
+
+                if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
+                    //Error
+                    e = NEW(Error);
+
+                    int expectedCount = paramNum;
+
+                    if (varDelList == NULL) {
+                        while (expressionList != NULL) {
+                            paramNum++;
+                            expressionList = expressionList->next;
+                        }
+                    } else {
+                        while (varDelList != NULL) {
+                            expectedCount++;
+                            varDelList = varDelList->next;
+                        }
+                    }
+
+                    e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+
+                    return e;
+                }
+
+            }
+
+            break;
+        case lambdaK:
+            typeMatch = NEW(Type);
+
+            typeMatch->kind = typeLambdaK;
+            typeMatch->val.typeLambdaK.returnType = term->val.lambdaD.lambda->returnType;
+            typeMatch->val.typeLambdaK.typeList = NULL;
+
+            //Now for converting the "advanced" type list
+            VarDelList *vdl = term->val.lambdaD.lambda->declarationList;
+            TypeList *typeList = NEW(TypeList);
+            typeList->next = NULL;
+
+            while (vdl != NULL) {
+                typeList->type = vdl->type;
+
+                if (typeMatch->val.typeLambdaK.typeList == NULL) {
+                    typeMatch->val.typeLambdaK.typeList = typeList;
+                }
+
+                if (vdl->next == NULL) {
+                    typeList->next = NULL;
+                    vdl = vdl->next;
+                } else {
+                    typeList->next = NEW(TypeList);
+                    typeList = typeList->next;
+                    vdl = vdl->next;
+                }
+            }
+
+            //Check if lhs and rhs are same type
+            if (areTypesEqual(expectedType, typeMatch, symbolTable) == false) {
+                //Better error please
+                e = NEW(Error);
+
+                e->error = VARIABLE_UNEXPECTED_TYPE;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.id = "lambda";
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno =  term->lineno;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = term->val.lambdaD.lambda->returnType->kind;
+
 
                 return e;
             }
+
+            e = typeCheck(term->val.lambdaD.lambda->body, term->val.lambdaD.lambda->returnType);
+            if (e != NULL) return e;
 
             break;
         case parenthesesK:
@@ -534,6 +664,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                     break;
             }
 
+            //Check if the operator matches the expected return type
             if ((isBoolean == true && areTypesEqual(expectedType, &booleanStaticType, symbolTable) == false) ||
                     (isBoolean == false && areTypesEqual(expectedType, &intStaticType, symbolTable) == false)) {
                 e = NEW(Error);
@@ -546,22 +677,41 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                 return e;
             }
 
+            Error *e1 = NULL;
+            Error *e2 = NULL;
 
-            //If they do match, we check children!
-            Error *e1 = typeCheckExpression(expression->val.op.left, expectedType, symbolTable);
-            Error *e2 = typeCheckExpression(expression->val.op.right, expectedType, symbolTable);
+            //The idea here is that either one of the sides are null or they are both integer or both boolean.
 
-            //If the operator is equality or enquality and one of the terms is a null. We can safely compare.
-            //The reason for this line is that we can use the equality or inequality operator between a null and anything
-            if (expression->val.op.operator->kind == opEqualityK || expression->val.op.operator->kind == opInequalityK) {
+            //Equality and inequality works on both booleans and integers
+            if (expression->val.op.operator->kind == opEqualityK ||
+                    expression->val.op.operator->kind == opInequalityK) {
+                //Check for int
+                e1 = typeCheckExpression(expression->val.op.left, &intStaticType, symbolTable);
+                e2 = typeCheckExpression(expression->val.op.right, &intStaticType, symbolTable);
+
                 if (e1 == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
                     return NULL;
                 }
+
+                if (e1 == NULL && e2 == NULL) {
+                    return NULL;
+                }
+
+                //Also check for bool
+                e1 = typeCheckExpression(expression->val.op.left, &booleanStaticType, symbolTable);
+                e2 = typeCheckExpression(expression->val.op.right, &booleanStaticType, symbolTable);
+
+                if (e1 == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
+                    return NULL;
+                }
+
+                if (e1 == NULL && e2 == NULL) {
+                    return NULL;
+                }
+
+                if (e1 != NULL) return e1;
+                if (e2 != NULL) return e2;
             }
-
-            if (e1 != NULL) return e1;
-            if (e2 != NULL) return e2;
-
 
             break;
         case termK:

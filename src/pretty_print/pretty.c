@@ -6,6 +6,7 @@
 static int indentation = 0;
 
 void prettyStatementList(StatementList *statementList);
+void prettyLambda(Lambda *lambda);
 
 void printCurrentIndent() {
     for (int i = 0; i < indentation; i++) {
@@ -135,11 +136,18 @@ void prettyTerm(Term *term) {
         case nullK:
             prettyKeyword("null");
             break;
-
+        case numK:
+            printf("%i", term->val.numD.num);
+            break;
+        case lambdaK:
+            prettyLambda(term->val.lambdaD.lambda);
+            break;
     }
 }
 
 void prettyType(Type *type) {
+
+
     switch(type->kind) {
         case typeIdK:
             printf("\033[0;36m%s\033[0m", type->val.idType.id);
@@ -159,6 +167,23 @@ void prettyType(Type *type) {
                 dels = dels->next;
             }
             printf("\b\b}");
+            break;
+        case typeLambdaK:
+            printf("(");
+            TypeList *typeList = type->val.typeLambdaK.typeList;
+
+            while (typeList != NULL) {
+                prettyType(typeList->type);
+
+                if (typeList->next != NULL) {
+                    printf(", ");
+                }
+
+                typeList = typeList->next;
+            }
+            printf(") -> ");
+
+            prettyType(type->val.typeLambdaK.returnType);
             break;
         default:
             printf("\033[0;36m%s\033[0m", getTypeName(type));
@@ -216,9 +241,12 @@ void prettyLambda(Lambda *lambda) {
     printf(") : ");
 
     prettyType(lambda->returnType);
-    printf(" ->\n");
+    printf(" -> {\n");
+    indentation++;
     prettyBody(lambda->body);
-    printf("\n");
+    indentation--;
+    printCurrentIndent();
+    printf("}");
 }
 
 void prettyDeclaration(Declaration *decl) {
@@ -247,11 +275,6 @@ void prettyDeclaration(Declaration *decl) {
         case declFuncK:
             indentation++;
             prettyFunction(decl->val.functionD.function);
-            indentation--;
-            break;
-        case declLambdaK:
-            indentation++;
-            prettyLambda(decl->val.lambdaD.lambda);
             indentation--;
             break;
         default:
@@ -387,12 +410,6 @@ void prettyBody(Body *body) {
 
 void prettyEXP(Expression *e) {
     switch (e->kind) {
-        case idK:
-            printf("%s", e->val.idE);
-            break;
-        case intconstK:
-            printf("%i", e->val.intconstE);
-            break;
         case opK:
             prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);
             break;

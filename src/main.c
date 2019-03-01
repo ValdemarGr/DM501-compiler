@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
         char* arg = argv[i];
 
-        //We can also do smart stuff like a preprocessor and bundle it all in an out file
+        //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
         yyin = fp;
 

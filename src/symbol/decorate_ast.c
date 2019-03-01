@@ -7,6 +7,41 @@
 #include "../error/error.h"
 #include "symbol.h"
 
+
+void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
+                      VarDelList *params, Body *body) {
+    Value *value = NULL;
+    SymbolTable *child = scopeSymbolTable(symbolTable);
+
+    //Put the function definition in the scope
+    value = NEW(Value);
+
+    value->kind = typeFunctionK;
+    value->val.typeFunctionD.tpe = params;
+    value->val.typeFunctionD.returnType = returnType;
+
+    putSymbol(symbolTable,
+              id,
+              value);
+
+    //Put the parameters in the child scope
+    while (params != NULL) {
+        value = NEW(Value);
+
+        value->kind = typeK;
+        value->val.typeD.tpe = params->type;
+
+        putSymbol(child,
+                  params->identifier,
+                  value);
+
+        params =params->next;
+    }
+
+    //Recurse to body
+    decorateAstWithSymbols(body, child);
+}
+
 Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTable) {
     Error *e = NULL;
     StatementList *statementList = NULL;
@@ -46,6 +81,43 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             }
 
             break;
+        case assignmentK:
+            if (statement->val.assignmentD.exp->kind == termK) {
+                if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
+                    //Give the lambda a name for future reference
+                    int suffix_len = strlen(LAMBDA_SUFFIX);
+
+                    //Unwrap the whole variable
+                    Variable *var = statement->val.assignmentD.var;
+
+                    while (var->kind != varIdK) {
+                        switch (var->kind) {
+                            case arrayIndexK:
+                                var = var->val.arrayIndexD.var;
+                                break;
+                            case recordLookupK:
+                                var = var->val.recordLookupD.var;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    char *var_name = var->val.idD.id;
+                    int var_len = strlen(var_name);
+
+                    char *lambda_id = (char*)malloc(sizeof(char) * (var_len + suffix_len));
+
+                    strcat(lambda_id, var_name);
+                    strcat(lambda_id, LAMBDA_SUFFIX);
+
+                    decorateFunction(lambda_id,
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->returnType,
+                            symbolTable,
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->declarationList,
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body);
+                }
+            }
         default:
             break;
     }
@@ -101,37 +173,11 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
-            child = scopeSymbolTable(symbolTable);
-
-            functionParams = declaration->val.functionD.function->head->declarationList;
-
-            //Put the function definition in the scope
-            value = NEW(Value);
-
-            value->kind = typeFunctionK;
-            value->val.typeFunctionD.tpe = functionParams;
-            value->val.typeFunctionD.returnType = declaration->val.functionD.function->head->returnType;
-
-            putSymbol(symbolTable,
-                      declaration->val.functionD.function->head->indentifier,
-                      value);
-
-            //Put the parameters in the child scope
-            while (functionParams != NULL) {
-                value = NEW(Value);
-
-                value->kind = typeK;
-                value->val.typeD.tpe = declaration->val.functionD.function->head->returnType;
-
-                putSymbol(child,
-                          functionParams->identifier,
-                          value);
-
-                functionParams =functionParams->next;
-            }
-
-            //Recurse to body
-            decorateAstWithSymbols(declaration->val.functionD.function->body, child);
+            decorateFunction(declaration->val.functionD.function->head->indentifier,
+                             declaration->val.functionD.function->head->returnType,
+                             symbolTable,
+                             declaration->val.functionD.function->head->declarationList,
+                             declaration->val.functionD.function->body);
 
             break;
         default:

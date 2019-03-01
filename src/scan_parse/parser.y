@@ -4,9 +4,10 @@
 
 extern char *yytext;
 extern Body *theexpression;
+extern int lineno;
 
 void yyerror() {
-   printf("syntax error before %s\n",yytext);
+   printf("syntax error before %s, at line %i\n",yytext, lineno);
 }
 %}
 
@@ -29,6 +30,7 @@ void yyerror() {
    struct Variable *variable;
    struct ExpressionList *expressionList;
    struct Term *term;
+   struct TypeList *typeList;
 }
 
 %token <intconst> tINTCONST
@@ -79,6 +81,7 @@ void yyerror() {
 %type <variable> variable
 %type <expressionList> act_list exp_list
 %type <term> term
+%type <typeList> type_list
 
 %start program
 
@@ -110,8 +113,6 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
-              | lambda
-              {$$ = makeLambdaDeclaration($1); }
               | tTYPE tIDENTIFIER '=' type ';'
               {$$ = makeTypeDeclaration($2, $4); }
 ;
@@ -136,6 +137,14 @@ statement : tRETURN expression ';'
         {$$ = makeStatementFromList($2);}
 ;
 
+type_list : type ',' type_list
+        {$$ = makeTypeList($3, $1);}
+        | type
+        {$$ = makeTypeList(NULL, $1);}
+        |
+        {$$ = NULL;}
+;
+
 type :  tIDENTIFIER
         {$$ = makeIdType($1); }
         | tINT
@@ -146,10 +155,12 @@ type :  tIDENTIFIER
         {$$ = makeArrayType($2); }
         | tRECORD_OF '{' var_decl_list '}'
         {$$ = makeRecordType($3); }
+        | '(' type_list ')' tLAMBDA_ARROW type
+        {$$ = makeLambdaType($2, $5);}
 ;
 
-lambda : '(' par_decl_list ')' ':' type tLAMBDA_ARROW body
-        {$$ = makeLambda($2, $5, $7);}
+lambda : '(' par_decl_list ')' ':' type tLAMBDA_ARROW '{' body '}'
+        {$$ = makeLambda($2, $5, $8);}
 ;
 
 function :  head body tail
@@ -176,9 +187,7 @@ var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
                     {$$ = makeVarDelList($1, $3, NULL); }
 ;
 
-expression : tINTCONST
-        {$$ = makeEXPintconst($1);}
-        | '(' expression ')'
+expression : '(' expression ')'
         {$$ = $2;}
 ;
 
@@ -252,6 +261,8 @@ term : variable
         {$$ = makeFalseTerm();}
         | tNULL
         {$$ = makeNullTerm();}
+        | lambda
+        {$$ = makeLambdaTerm($1);}
 ;
 
 %%

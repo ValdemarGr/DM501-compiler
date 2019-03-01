@@ -232,7 +232,7 @@ db.sqlite3
 instance/
 .webassets-cache
 
-# Scrapy stuff:
+# Scrapy decorateFunction:
 .scrapy
 
 # Sphinx documentation

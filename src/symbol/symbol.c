@@ -59,7 +59,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
 }
 
 /*SYMBOL *putSymbol(SymbolTable *t, char *name, int value) {
-    //Error stuff
+    //Error decorateFunction
     if (t == NULL || name == NULL) {
         return NULL;
     }
@@ -106,7 +106,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
 }*/
 
 SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value) {
-    //Error stuff
+    //Error decorateFunction
     if (t == NULL || name == NULL) {
         return NULL;
     }

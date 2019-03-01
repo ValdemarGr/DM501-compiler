@@ -6,6 +6,7 @@ typedef struct Type Type;
 typedef struct Term Term;
 typedef struct Variable Variable;
 typedef struct SymbolTable SymbolTable;
+typedef struct TypeList TypeList;
 
 
 typedef struct VarDelList {
@@ -15,7 +16,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK
 } TypeKind;
 
 typedef struct Type {
@@ -24,8 +25,14 @@ typedef struct Type {
         struct { char *id; } idType;
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
+        struct { TypeList *typeList; Type *returnType; } typeLambdaK;
     } val;
 } Type;
+
+typedef struct TypeList {
+    Type *type;
+    struct TypeList *next;
+} TypeList;
 
 typedef struct FunctionHead {
     SymbolTable *symbolTable;
@@ -56,13 +63,12 @@ typedef struct Declaration {
     SymbolTable *symbolTable;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK, declLambdaK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
-        struct { Lambda *lambda; } lambdaD;
     } val;
 } Declaration;
 
@@ -75,11 +81,9 @@ typedef struct DeclarationList {
 typedef struct Expression {
     int lineno;
     enum {
-        idK, intconstK, opK, termK//, functionK
+        opK, termK//, functionK
     } kind;
     union {
-        char *idE;
-        int intconstE;
         struct {
             struct Expression *left;
             struct Operator *operator;
@@ -104,11 +108,11 @@ typedef struct Statement {
         struct { Expression* exp; } writeD;
         struct { Variable* var; } allocateD;
         struct { Variable* var; Expression* len; } allocateLenD;
-        struct { Variable* var; Expression* exp; } assignmentD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
         struct { Expression* exp; struct Statement* statement; } whileD;
         struct { struct StatementList* statementList; } stmListD;
+        struct { Variable* var; Expression* exp; } assignmentD;
     } val;
 } Statement;
 
@@ -141,7 +145,7 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
@@ -149,6 +153,7 @@ typedef struct Term {
         struct { Term* term; } negateD;
         struct { Expression* expression; } absD;
         struct { int num; } numD;
+        struct { Lambda *lambda; } lambdaD;
     } val;
 } Term;
 
@@ -156,6 +161,8 @@ typedef struct Body {
     DeclarationList *declarationList;
     StatementList *statementList;
 } Body;
+
+TypeList *makeTypeList(TypeList* next, Type *elem);
 
 Expression *makeEXPFromTerm(Term *term);
 
@@ -183,9 +190,7 @@ Term *makeFalseTerm();
 
 Term *makeNullTerm();
 
-Expression *makeEXPid(char *id);
-
-Expression *makeEXPintconst(int intconst);
+Term *makeLambdaTerm(Lambda *lambda);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -255,6 +260,8 @@ Type *makeArrayType(Type *type);
 
 Type *makeRecordType(VarDelList *record);
 
+Type *makeLambdaType(TypeList *typeList, Type *type);
+
 Expression *makeEXPfunction(char *identifier, Expression *body);
 
 VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next);
@@ -270,7 +277,5 @@ FunctionTail *makeFunctionTail(char *identifier);
 Body *makeBody(DeclarationList *declarationList, StatementList *statementList);
 
 Declaration *makeFunctionDecleration(Function *function);
-
-Declaration *makeLambdaDeclaration(Lambda *function);
 
 #endif

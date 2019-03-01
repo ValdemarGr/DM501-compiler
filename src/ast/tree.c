@@ -5,6 +5,16 @@
 
 extern int lineno;
 
+TypeList *makeTypeList(TypeList* next, Type *elem) {
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+    tpeLst->type = elem;
+
+    return tpeLst;
+}
+
+
 Expression *makeEXPFromTerm(Term *term) {
     Expression *returning = NEW(Expression);
 
@@ -135,24 +145,13 @@ Term *makeNullTerm() {
     return returning;
 }
 
+Term *makeLambdaTerm(Lambda *lambda) {
+    Term* returning = NEW(Term);
 
-Expression *makeEXPid(char *id) {
-    Expression *e;
+    returning->kind = lambdaK;
+    returning->val.lambdaD.lambda = lambda;
 
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = idK;
-    e->val.idE = id;
-    return e;
-}
-
-Expression *makeEXPintconst(int intconst) {
-    Expression *e;
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = intconstK;
-    e->val.intconstE = intconst;
-    return e;
+    return returning;
 }
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
@@ -489,17 +488,6 @@ Declaration *makeFunctionDecleration(Function *function) {
     return declaration;
 }
 
-//TODO do this
-Declaration *makeLambdaDeclaration(Lambda *function) {
-    Declaration *declaration = NEW(Declaration);
-
-    declaration->lineno = lineno;
-    declaration->kind = declLambdaK;
-    declaration->val.lambdaD.lambda = function;
-
-    return declaration;
-}
-
 Declaration *makeTypeDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
@@ -536,6 +524,16 @@ Type *makeRecordType(VarDelList *record) {
 
     t->kind = typeRecordK;
     t->val.recordType.types = record;
+
+    return t;
+}
+
+Type *makeLambdaType(TypeList *typeList, Type *type) {
+    Type *t = NEW(Type);
+
+    t->kind = typeLambdaK;
+    t->val.typeLambdaK.typeList = typeList;
+    t->val.typeLambdaK.returnType = type;
 
     return t;
 }
