@@ -1,0 +1,41 @@
+type IntArray = array of int;
+type IntList = record of { internal: IntArray, size: int };
+
+val mapInt = (lst: IntList, apply: (int) -> int): IntList -> {
+    var i: int;
+    var newArray: IntArray;
+    var newList: IntList;
+    var oldList: IntArray;
+
+    allocate newList of length (lst.size);
+    allocate newList;
+
+    i = lst.size;
+    while i > (0 - 1) do {
+        oldList = lst.internal;
+
+        newArray[i] = apply(oldList[i]);
+        i = i - 1;
+    }
+
+    newList.internal = newArray;
+    newList.size = lst.size;
+
+    return newList;
+};
+
+func main(): IntList
+    var initialArr: IntArray;
+    var intList: IntList;
+
+    allocate intList;
+    allocate initialArr of length 10;
+
+    val appliance = (o: int): int -> {
+        return o;
+    };
+
+    return mapInt(intList, appliance);
+end main()
+
+return main();

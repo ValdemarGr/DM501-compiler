@@ -11,6 +11,7 @@
 #include "../cmake-build-debug/src/scan_parse/parser.h"
 
 int lineno;
+int stmDeclNum;
 Body *theexpression;
 extern FILE *yyin;
 

@@ -335,6 +335,9 @@ DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *
 Declaration *makeVarDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
+    stmDeclNum++;
+result->internal_stmDeclNum = stmDeclNum;
+
     result->lineno = lineno;
     result->kind = declVarK;
     result->val.varD.id = id;
@@ -352,6 +355,8 @@ StatementList *makeStatementList(Statement *statement, StatementList *next) {
 
 Statement *makeReturnStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statReturnK;
@@ -361,6 +366,8 @@ Statement *makeReturnStatement(Expression *exp) {
 
 Statement *makeIfStatement(Expression *exp, Statement *statement) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = statIfK;
@@ -371,6 +378,8 @@ Statement *makeIfStatement(Expression *exp, Statement *statement) {
 
 Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = statIfElK;
@@ -382,6 +391,8 @@ Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement 
 
 Statement *makeAssignment(Variable* variable, Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = assignmentK;
@@ -392,6 +403,8 @@ Statement *makeAssignment(Variable* variable, Expression *exp) {
 
 Statement *makeAllocateStatement(Variable *var) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statAllocateK;
@@ -401,6 +414,8 @@ Statement *makeAllocateStatement(Variable *var) {
 
 Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statAllocateLenK;
@@ -411,6 +426,8 @@ Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
 
 Statement *makeWriteStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statWriteK;
@@ -420,6 +437,8 @@ Statement *makeWriteStatement(Expression *exp) {
 
 Statement *makeWhileStatement(Expression *exp, Statement *stm) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statWhileK;
@@ -430,6 +449,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm) {
 
 Statement *makeStatementFromList(StatementList *statementList) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = stmListK;
@@ -467,6 +488,10 @@ Declaration *makeVarDeclarations(VarDelList *vars) {
     Declaration *result;
     result = makeVarsDeclaration(vars->identifier, vars->type,
                                  makeVarDeclarations(vars->next));
+
+
+    stmDeclNum++;
+    result->internal_stmDeclNum = stmDeclNum;
     return result;
 }
 
@@ -480,6 +505,8 @@ Body *makeBody(DeclarationList *declarationList, StatementList *statementList) {
 
 Declaration *makeFunctionDecleration(Function *function) {
     Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
 
     declaration->lineno = lineno;
     declaration->kind = declFuncK;
@@ -495,6 +522,8 @@ Declaration *makeTypeDeclaration(char *id, Type *type) {
     result->kind = declTypeK;
     result->val.typeD.id = id;
     result->val.typeD.type = type;
+    stmDeclNum++;
+result->internal_stmDeclNum = stmDeclNum;
     return result;
 }
 
@@ -548,6 +577,8 @@ ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
 
 Declaration *makeValDeclaration(char *id, Expression *rhs) {
     Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
 
     declaration->kind = declValK;
     declaration->val.valK.id = id;

@@ -61,6 +61,7 @@ typedef struct Function {
 
 typedef struct Declaration {
     SymbolTable *symbolTable;
+    int internal_stmDeclNum;
 
     int lineno;
     enum { declVarK, declVarsK, declTypeK, declFuncK, declValK } kind;
@@ -102,6 +103,8 @@ typedef struct Expression {
 
 typedef struct Statement {
     int lineno;
+    int internal_stmDeclNum;
+
     enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
     SymbolTable *symbolTable;
     union {

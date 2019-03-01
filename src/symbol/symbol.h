@@ -28,6 +28,7 @@ typedef struct Value {
 
 typedef struct SYMBOL {
   char *name;
+  int symbol_stmDeclNum;
   Value *value;
   struct SYMBOL *next;
 } SYMBOL;
@@ -44,7 +45,7 @@ SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
 //SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 

@@ -10,7 +10,7 @@
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
-                      VarDelList *params, Body *body) {
+                      VarDelList *params, Body *body, int stmDeclNum) {
     Value *value = NULL;
     SymbolTable *child = scopeSymbolTable(symbolTable);
 
@@ -23,7 +23,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
 
     putSymbol(symbolTable,
               id,
-              value);
+              value,
+              stmDeclNum);
 
     //Put the parameters in the child scope
     while (params != NULL) {
@@ -34,7 +35,7 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
 
         putSymbol(child,
                   params->identifier,
-                  value);
+                  value, stmDeclNum);
 
         params =params->next;
     }
@@ -116,7 +117,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->returnType,
                             symbolTable,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->declarationList,
-                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body);
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body,
+                            statement->internal_stmDeclNum);
                 }
             }
         default:
@@ -143,7 +145,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             putSymbol(symbolTable,
                       declaration->val.varD.id,
-                      value);
+                      value,
+                      declaration->internal_stmDeclNum);
             break;
         case declVarsK:
             varList = declaration;
@@ -171,7 +174,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             putSymbol(symbolTable,
                       declaration->val.typeD.id,
-                      value);
+                      value,
+                      declaration->internal_stmDeclNum);
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
@@ -179,7 +183,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                              declaration->val.functionD.function->head->returnType,
                              symbolTable,
                              declaration->val.functionD.function->head->declarationList,
-                             declaration->val.functionD.function->body);
+                             declaration->val.functionD.function->body,
+                             declaration->internal_stmDeclNum);
 
             break;
         case declValK:
@@ -197,7 +202,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                                  lambda->returnType,
                                  symbolTable,
                                  lambda->declarationList,
-                                 lambda->body);
+                                 lambda->body,
+                                 declaration->internal_stmDeclNum);
             } else {
                 value = NEW(Value);
 
@@ -206,7 +212,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
                 putSymbol(symbolTable,
                           declaration->val.valK.id,
-                          value);
+                          value,
+                          declaration->internal_stmDeclNum);
             }
 
 

@@ -28,7 +28,7 @@ else
   a = 5;
 
 if a > 4 then
-  write a;
+  write true;
 
 allocate list of length 16;
 

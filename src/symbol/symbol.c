@@ -105,7 +105,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     return current_node;
 }*/
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value) {
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum) {
     //Error decorateFunction
     if (t == NULL || name == NULL) {
         return NULL;
@@ -140,6 +140,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value) {
     strcpy(current_node->name, name);
 
     current_node->value = value;
+    current_node->symbol_stmDeclNum = symbol_stmDeclNum;
 
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {
