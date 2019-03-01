@@ -9,6 +9,9 @@ char *typeToString(Type *type) {
     switch (type->kind) {
         case typeIdK:
             return type->val.idType.id;
+        case typeLambdaK:
+            typeToString(type->val.typeLambdaK.returnType);
+            break;
         default:
             return typeEnumToString(type->kind);
             break;

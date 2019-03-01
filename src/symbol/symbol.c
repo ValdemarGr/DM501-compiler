@@ -255,16 +255,13 @@ void dumpSymbolTable(SymbolTable *t) {
             printf("\t");
         }
 
-        printf("ret\ttypeId");
+        printf("mapsBy\ttypeId");
 
         for (int j = 0; j < typeTabs; j++) {
             printf("\t");
         }
 
-        printf("bucket\n");
-
-
-
+        printf("bucket\targuments\n");
 
         //We print our while whole table bucket wise
         for (int i = 0; i < HashSize; i++) {
@@ -330,7 +327,28 @@ void dumpSymbolTable(SymbolTable *t) {
                             printf("\t");
                         }
 
-                        printf("\033[0;32m%i\033[0m\n", i);
+                        printf("\033[0;32m%i\t", i);
+
+                        //Arguments
+                        VarDelList *vdl = current_symbol->value->val.typeFunctionD.tpe;
+
+                        if (vdl != NULL) {
+                            printf("(");
+
+                            while (vdl != NULL) {
+                                printf("\033[0;36m%s", typeToString(vdl->type));
+
+                                if (vdl->next != NULL) {
+                                    printf("\033[0m, ");
+                                }
+
+                                vdl = vdl->next;
+                            }
+
+                            printf("\033[0m)");
+                        }
+
+                        printf("\033[0m\n");
                         break;
                     default:
                         printf("ERROR IN DUMP\n");

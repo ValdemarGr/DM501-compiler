@@ -7,6 +7,7 @@
 #include "../error/error.h"
 #include "symbol.h"
 
+Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                       VarDelList *params, Body *body) {
@@ -131,6 +132,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     SymbolTable *child = NULL;
     VarDelList *functionParams = NULL;
     Value *value = NULL;
+    Type* valType;
 
     switch (declaration->kind) {
         case declVarK:
@@ -178,6 +180,35 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                              symbolTable,
                              declaration->val.functionD.function->head->declarationList,
                              declaration->val.functionD.function->body);
+
+            break;
+        case declValK:
+            //Determine the type by the rhs type
+            valType = evaluateExpressionType(declaration->val.valK.rhs, symbolTable);
+
+            //Update the decl
+            declaration->val.valK.tpe = valType;
+
+            //If its a lambda, we want to decorate it
+            if (valType->kind == typeLambdaK) {
+                Lambda *lambda = declaration->val.valK.rhs->val.termD.term->val.lambdaD.lambda;
+
+                decorateFunction(declaration->val.valK.id,
+                                 lambda->returnType,
+                                 symbolTable,
+                                 lambda->declarationList,
+                                 lambda->body);
+            } else {
+                value = NEW(Value);
+
+                value->kind = typeK;
+                value->val.typeD.tpe = valType;
+
+                putSymbol(symbolTable,
+                          declaration->val.valK.id,
+                          value);
+            }
+
 
             break;
         default:

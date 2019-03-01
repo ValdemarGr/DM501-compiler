@@ -2,9 +2,6 @@ type ComplexFunction = (int, ComplexFunction) -> int;
 
 var t: (int, bool) -> int;
 
-
-
-
 func lambdaStuff(): int
     var a: int;
     var b: (int, bool) -> int;

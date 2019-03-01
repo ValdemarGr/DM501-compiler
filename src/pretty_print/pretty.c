@@ -277,6 +277,12 @@ void prettyDeclaration(Declaration *decl) {
             prettyFunction(decl->val.functionD.function);
             indentation--;
             break;
+        case declValK:
+            prettyKeyword("val ");
+            printf("%s = ", decl->val.valK.id);
+            prettyEXP(decl->val.valK.rhs);
+            printf(";\n");
+            break;
         default:
             break;
     }

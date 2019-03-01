@@ -1,9 +1,12 @@
-
+type ComplexFunction = (int, ComplexFunction) -> int;
 
 func main(): int
     var a: int;
     val q = 1 + 1;
-
+    var z: (int) -> int;
+    val b = (x: int, c: ComplexFunction): int -> {
+        return c(x, c);
+    };
 
     return a;
 end main
