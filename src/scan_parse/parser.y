@@ -64,6 +64,7 @@ void yyerror() {
 %token tFALSE
 %token tNULL
 %token tLAMBDA_ARROW
+%token tVAL
 
 %type <expression> expression
 %type <lambda> lambda
@@ -115,6 +116,8 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeFunctionDecleration($1); }
               | tTYPE tIDENTIFIER '=' type ';'
               {$$ = makeTypeDeclaration($2, $4); }
+              | tVAL tIDENTIFIER '=' expression ';'
+              {$$ = makeValDeclaration($2, $4);}
 ;
 
 statement : tRETURN expression ';'

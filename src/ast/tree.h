@@ -7,7 +7,7 @@ typedef struct Term Term;
 typedef struct Variable Variable;
 typedef struct SymbolTable SymbolTable;
 typedef struct TypeList TypeList;
-
+typedef struct Expression Expression;
 
 typedef struct VarDelList {
     char *identifier;
@@ -63,12 +63,13 @@ typedef struct Declaration {
     SymbolTable *symbolTable;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK, declValK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
+        struct { char* id; Expression *rhs; Type *tpe; } valK;
     } val;
 } Declaration;
 
@@ -229,6 +230,8 @@ Declaration *makeDeclaration(char* id, Type* type);
 Declaration *makeTypeDeclaration(char* id, Type* type);
 
 Declaration *makeVarDeclarations(VarDelList* vars);
+
+Declaration *makeValDeclaration(char* id, Expression *rhs);
 
 StatementList *makeStatementList(Statement *statement, StatementList *next);
 

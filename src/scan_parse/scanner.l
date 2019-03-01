@@ -70,6 +70,7 @@ extern int fileno();
 "of length"     return tOF_LEN;
 "else"          return tELSE;
 "->"            return tLAMBDA_ARROW;
+"val"           return tVAL;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

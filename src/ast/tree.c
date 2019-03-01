@@ -4,6 +4,7 @@
 #include "tree.h"
 
 extern int lineno;
+extern int stmDeclNum;
 
 TypeList *makeTypeList(TypeList* next, Type *elem) {
     TypeList *tpeLst = NEW(TypeList);
@@ -13,7 +14,6 @@ TypeList *makeTypeList(TypeList* next, Type *elem) {
 
     return tpeLst;
 }
-
 
 Expression *makeEXPFromTerm(Term *term) {
     Expression *returning = NEW(Expression);
@@ -544,4 +544,14 @@ ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
     list->expression = exp;
     list->next = next;
     return list;
+}
+
+Declaration *makeValDeclaration(char *id, Expression *rhs) {
+    Declaration *declaration = NEW(Declaration);
+
+    declaration->kind = declValK;
+    declaration->val.valK.id = id;
+    declaration->val.valK.rhs = rhs;
+
+    return declaration;
 }

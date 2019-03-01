@@ -1,7 +1,7 @@
 
 type A = array of bool;
 type Coordinate = record of { x: int, y: int };
-type LinkedList = record of { k : int, val: int, next : LinkedList };
+type LinkedList = record of { k : int, value: int, next : LinkedList };
 
 type TypeA = record of { k : int, next : TypeB };
 type TypeB = record of { k : int, next : TypeC };
@@ -47,7 +47,7 @@ func doSmartStuff(x: int, z: int): int
     return sum(x, z) - sum(x, z) + identity(sum(z, x));
 end doSmartStuff
 
-func returnCustomType(value: int): A
+func returnCustomType(valueue: int): A
     var v : A;
 
     return v;
@@ -82,7 +82,7 @@ func linkedListTest(hello: A): LinkedList
     var ll5 : LinkedList;
 
     ll.k = 1;
-    ll.val = 69;
+    ll.value = 69;
     ll.next = anotherll;
     ll.next = ll2;
     ll.next.next.next = ll3;

@@ -1,5 +1,10 @@
 type ComplexFunction = (int, ComplexFunction) -> int;
 
+var t: (int, bool) -> int;
+
+
+
+
 func lambdaStuff(): int
     var a: int;
     var b: (int, bool) -> int;
@@ -45,3 +50,9 @@ func recursiveTypedFunction(a: ComplexFunction): int
 
     return b(1, a);
 end recursiveTypedFunction
+
+t = (i: int, z: bool): int -> {
+    return i;
+};
+
+return t(1,false);

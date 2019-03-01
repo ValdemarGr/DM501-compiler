@@ -1,0 +1,9 @@
+
+
+func main(): int
+    var a: int;
+    val q = 1 + 1;
+
+
+    return a;
+end main
