@@ -367,34 +367,68 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 return e;
             }
 
-            if (symbol->value->kind != typeK) {
-                e = NEW(Error);
+            if (symbol->value->kind == typeK) {
+                symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
-                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                if (areTypesEqual(symAsType, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
+                    e = NEW(Error);
 
-                return e;
+                    e->error = VARIABLE_UNEXPECTED_TYPE;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
+
+
+                    return e;
+                }
+            } else {
+                if (expectedType->kind == typeLambdaK) {
+                    Type *returnType = unwrapTypedef(expectedType->val.typeLambdaK.returnType, symbolTable);
+
+                    TypeList *typeList = expectedType->val.typeLambdaK.typeList;
+                    VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
+
+                    //Compare the argument types sequentially
+                    while (typeList != NULL & varDelList != NULL) {
+
+                        if (areTypesEqual(typeList->type, varDelList->type, symbolTable) == false) {
+                            e = NEW(Error);
+
+                            e->error = VARIABLE_UNEXPECTED_TYPE;
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.id = "FIX ME 1";
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = returnType->kind;
+
+
+                            return e;
+                        }
+
+                        typeList = typeList->next;
+                        varDelList = varDelList->next;
+                    }
+
+                    if (typeList != NULL || varDelList != NULL) {
+                        e = NEW(Error);
+
+                        e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = variable->lineno;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = "FIX ME 2";
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = 0;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = 0;
+
+                        return e;
+                    }
+                }
+
             }
-
-            symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
             /*if (symAsType->kind == typeArrayK) {
                 symAsType = symAsType->val.arrayType.type;
             }*/
 
-            if (areTypesEqual(symAsType, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
-                e = NEW(Error);
 
-                e->error = VARIABLE_UNEXPECTED_TYPE;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
-
-
-                return e;
-            }
 
             break;
         case arrayIndexK:
@@ -439,7 +473,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             symAsType = unwrapTypedef(unwrapped, symbolTable);
 
-            if (areTypesEqual(expectedType, symAsType, symbolTable) == false) {
+            if (areTypesEqual(unwrapTypedef(expectedType, symbolTable), symAsType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
@@ -926,7 +960,6 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                     functionReturnType,
                     statement->symbolTable);
             if (e != NULL) return e;
-            dumpSymbolTable(statement->symbolTable);
             break;
         case statWriteK:
             e = typeCheckExpression(statement->val.writeD.exp,

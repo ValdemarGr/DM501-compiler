@@ -1,6 +1,6 @@
 type ComplexFunction = (int, ComplexFunction) -> int;
 
-func main(): int
+func fnc(): int
     var a: int;
     val q = 1 + 1;
     var z: (int) -> int;
@@ -9,4 +9,4 @@ func main(): int
     };
 
     return a;
-end main
+end fnc

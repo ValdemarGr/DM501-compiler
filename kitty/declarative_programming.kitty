@@ -28,14 +28,16 @@ func main(): IntList
     var initialArr: IntArray;
     var intList: IntList;
 
-    allocate intList;
-    allocate initialArr of length 10;
-
     val appliance = (o: int): int -> {
         return o;
     };
 
-    return mapInt(intList, appliance);
-end main()
+    allocate intList;
+    allocate initialArr of length 10;
 
-return main();
+    return mapInt(intList, (o: int): int -> {
+                                   return o;
+                               });
+end main
+
+return 5;

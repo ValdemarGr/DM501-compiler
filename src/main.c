@@ -16,11 +16,13 @@ Body *theexpression;
 extern FILE *yyin;
 
 int main(int argc, char *argv[]) {
-    SymbolTable *globalScope = initSymbolTable();
-    struct Type intStaticType = {.kind = typeIntK};
-
     for (int i = 1; i < argc; i++) {
+        SymbolTable *globalScope = initSymbolTable();
+        struct Type intStaticType = {.kind = typeIntK};
+
         char* arg = argv[i];
+
+        printf("File name: %s\n", arg);
 
         //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
