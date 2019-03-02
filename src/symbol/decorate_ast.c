@@ -8,6 +8,62 @@
 #include "symbol.h"
 
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
+void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
+                     VarDelList *params, Body *body, int stmDeclNum);
+
+//We want to look for R-value lambdas to decorate their bodies
+//Function calls can contain a lambda
+Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
+    Error *e = NULL;
+
+    if (exp->kind == termK) {
+        if (exp->val.termD.term->kind == functionCallK) {
+
+            ExpressionList *expressionList = exp->val.termD.term->val.functionCallD.expressionList;
+
+            int counter = 0;
+
+            while (expressionList != NULL) {
+
+                Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
+
+                //Check if the lambda is a variable or an R-value
+                //If it is a variable,  we don't need to do any of the R-value decorating this time
+                if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
+                    Lambda *lambda = expressionList->expression->val.termD.term->val.lambdaD.lambda;
+                    char intToString[16];
+
+                    sprintf(intToString, "%i", counter);
+
+                    //Give the lambda a unique id
+                    int suffix_len = strlen(LAMBDA_SUFFIX);
+
+                    char *function_name = exp->val.termD.term->val.functionCallD.functionId;
+                    int var_len = strlen(function_name);
+
+                    char *lambda_id = (char*)malloc(sizeof(char) * (var_len + suffix_len) + 16);
+
+                    strcat(lambda_id, function_name);
+                    strcat(lambda_id, LAMBDA_SUFFIX);
+                    strcat(lambda_id, intToString);
+
+                    decorateFunction(lambda_id,
+                                     lambda->returnType,
+                                     symbolTable,
+                                     lambda->declarationList,
+                                     lambda->body,
+                                     0);
+                }
+
+                expressionList = expressionList->next;
+            }
+
+        }
+    } else if (exp->kind == opK) {
+        decorateRValue(exp->val.op.left, symbolTable);
+        decorateRValue(exp->val.op.right, symbolTable);
+    }
+}
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                       VarDelList *params, Body *body, int stmDeclNum) {
@@ -83,7 +139,9 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             }
 
             break;
+        //All statements that can create an R-value lambda definition
         case assignmentK:
+            //If the lambda is R-value assigned to a var
             if (statement->val.assignmentD.exp->kind == termK) {
                 if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
                     //Give the lambda a name for future reference
@@ -121,6 +179,13 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                             statement->internal_stmDeclNum);
                 }
             }
+            //If the rhs is an expression that contains a function call we have to check if the call itself
+            //Has an r-value lambda
+            decorateRValue(statement->val.assignmentD.exp, statement->symbolTable);
+            break;
+        case statReturnK:
+            decorateRValue(statement->val.returnD.exp, statement->symbolTable);
+            break;
         default:
             break;
     }

@@ -24,20 +24,18 @@ val mapInt = (lst: IntList, apply: (int) -> int): IntList -> {
     return newList;
 };
 
-func main(): IntList
-    var initialArr: IntArray;
-    var intList: IntList;
+func mulTwo(intList: IntList): IntList
+    val afterMap = mapInt(intList, (o: int): int -> {
+        return 2 * o;
+    });
 
-    val appliance = (o: int): int -> {
-        return o;
-    };
+    return afterMap;
+end mulTwo
 
-    allocate intList;
-    allocate initialArr of length 10;
-
+func anonMulTwo(intList: IntList): IntList
     return mapInt(intList, (o: int): int -> {
-                                   return o;
-                               });
-end main
+        return 2 * o;
+    });
+end anonMulTwo
 
 return 5;

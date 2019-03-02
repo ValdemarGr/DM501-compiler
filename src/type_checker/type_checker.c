@@ -960,6 +960,8 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                     functionReturnType,
                     statement->symbolTable);
             if (e != NULL) return e;
+
+            //dumpSymbolTable(statement->symbolTable);
             break;
         case statWriteK:
             e = typeCheckExpression(statement->val.writeD.exp,
