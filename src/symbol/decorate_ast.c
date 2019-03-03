@@ -11,6 +11,21 @@ Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                      VarDelList *params, Body *body, int stmDeclNum);
 
+void alterIdTypesToGenerics(Type *tpe, SymbolTable *symbolTable) {
+    if (tpe->kind == typeIdK) {
+        SYMBOL *symbol = getSymbol(symbolTable, tpe->val.idType.id);
+
+        if (symbol != NULL) {
+            if (symbol->value->kind == typeK) {
+                if (symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                    tpe->kind = typeGenericK;
+                    tpe->val.typeGeneric.genericName = tpe->val.idType.id;
+                }
+            }
+        }
+    }
+}
+
 //We want to look for R-value lambdas to decorate their bodies
 //Function calls can contain a lambda
 Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
@@ -27,6 +42,7 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 
                 Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
 
+                dumpSymbolTable(symbolTable);
                 //Check if the lambda is a variable or an R-value
                 //If it is a variable,  we don't need to do any of the R-value decorating this time
                 if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
@@ -84,6 +100,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
 
     //Put the parameters in the child scope
     while (params != NULL) {
+        alterIdTypesToGenerics(params->type, symbolTable);
+
         value = NEW(Value);
 
         value->kind = typeK;
@@ -203,10 +221,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
     switch (declaration->kind) {
         case declVarK:
+            alterIdTypesToGenerics(declaration->val.varD.type, symbolTable);
+
             value = NEW(Value);
 
             value->kind = typeK;
             value->val.typeD.tpe = declaration->val.varD.type;
+
 
             putSymbol(symbolTable,
                       declaration->val.varD.id,
@@ -231,6 +252,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             break;
         case declTypeK:
+            alterIdTypesToGenerics(declaration->val.typeD.type, symbolTable);
 
             value = NEW(Value);
 
@@ -244,6 +266,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
+            alterIdTypesToGenerics(declaration->val.functionD.function->head->returnType, symbolTable);
+
             decorateFunction(declaration->val.functionD.function->head->indentifier,
                              declaration->val.functionD.function->head->returnType,
                              symbolTable,
@@ -254,16 +278,18 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
         case declValK:
             //Determine the type by the rhs type
-            valType = evaluateExpressionType(declaration->val.valK.rhs, symbolTable);
+            valType = evaluateExpressionType(declaration->val.valD.rhs, symbolTable);
+
+            alterIdTypesToGenerics(valType, symbolTable);
 
             //Update the decl
-            declaration->val.valK.tpe = valType;
+            declaration->val.valD.tpe = valType;
 
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK) {
-                Lambda *lambda = declaration->val.valK.rhs->val.termD.term->val.lambdaD.lambda;
+                Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
 
-                decorateFunction(declaration->val.valK.id,
+                decorateFunction(declaration->val.valD.id,
                                  lambda->returnType,
                                  symbolTable,
                                  lambda->declarationList,
@@ -276,11 +302,54 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 value->val.typeD.tpe = valType;
 
                 putSymbol(symbolTable,
-                          declaration->val.valK.id,
+                          declaration->val.valD.id,
                           value,
                           declaration->internal_stmDeclNum);
             }
 
+            break;
+        case declClassK:
+            value = NEW(Value);
+            value->kind = symTypeClassK;
+            value->val.typeClassD.declarationList = declaration->val.classD.declarationList;
+
+            SymbolTable *newSt = scopeSymbolTable(symbolTable);
+
+            putSymbol(symbolTable,
+                      declaration->val.classD.id,
+                      value,
+                      declaration->internal_stmDeclNum);
+
+
+            //Also remember the generic type parameters
+            TypeList *generics = declaration->val.classD.genericTypeParameters;
+
+            while (generics != NULL) {
+
+                value = NEW(Value);
+
+                value->kind = typeK;
+                value->val.typeD.tpe = generics->type;
+
+                putSymbol(newSt,
+                          generics->type->val.typeGeneric.genericName,
+                          value,
+                          declaration->internal_stmDeclNum);
+
+                generics = generics->next;
+            }
+
+            DeclarationList *declarationList = declaration->val.classD.declarationList;
+
+            while (declarationList != NULL) {
+                //Set the decls scope
+                declarationList->declaration->symbolTable = symbolTable;
+
+                e = decorateDeclaration(declarationList->declaration, newSt);
+                if (e != NULL) return e;
+
+                declarationList = declarationList->next;
+            }
 
             break;
         default:

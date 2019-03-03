@@ -7,6 +7,7 @@
 
 #include "../ast/tree.h"
 #include <stdlib.h>
+#include <string.h>
 
 char *typeToString(Type *type);
 char *typeEnumToString(TypeKind typeKind);

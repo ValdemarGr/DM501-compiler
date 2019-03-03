@@ -1,0 +1,10 @@
+class SomeClass[A, B] {
+    val a = 5;
+
+    val f = (z: A, transformer: (A) -> B):B -> {
+        return transformer(z);
+    };
+};
+
+
+var a: class SomeClass;

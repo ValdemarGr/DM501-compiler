@@ -15,6 +15,22 @@ TypeList *makeTypeList(TypeList* next, Type *elem) {
     return tpeLst;
 }
 
+TypeList *makeGenericTypeList(TypeList* next, char* id){
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+
+    Type *tpe = NEW(Type);
+
+    tpe->kind = typeGenericK;
+    tpe->val.typeGeneric.genericName = id;
+
+
+    tpeLst->type = tpe;
+
+    return tpeLst;
+}
+
 Expression *makeEXPFromTerm(Term *term) {
     Expression *returning = NEW(Expression);
 
@@ -581,8 +597,31 @@ Declaration *makeValDeclaration(char *id, Expression *rhs) {
     declaration->internal_stmDeclNum = stmDeclNum;
 
     declaration->kind = declValK;
-    declaration->val.valK.id = id;
-    declaration->val.valK.rhs = rhs;
+    declaration->val.valD.id = id;
+    declaration->val.valD.rhs = rhs;
 
     return declaration;
+}
+
+Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList) {
+    Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
+
+    declaration->kind = declClassK;
+    declaration->val.classD.id = id;
+    declaration->val.classD.declarationList = declarationList;
+    declaration->val.classD.genericTypeParameters = typeList;
+
+    return declaration;
+}
+
+Type *makeClassType(char *id) {
+    Type *type;
+    type = NEW(Type);
+
+    type->kind = typeClassK;
+    type->val.typeClass.classId = id;
+
+    return type;
 }

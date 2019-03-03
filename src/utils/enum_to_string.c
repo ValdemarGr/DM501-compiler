@@ -6,12 +6,20 @@
 #include "../ast/tree.h"
 
 char *typeToString(Type *type) {
+    char *name;
     switch (type->kind) {
         case typeIdK:
             return type->val.idType.id;
         case typeLambdaK:
             typeToString(type->val.typeLambdaK.returnType);
             break;
+        case typeClassK:
+            name = (char*)malloc(sizeof(char) * (strlen(type->val.typeClass.classId) + strlen("class ") + 10));
+            strcat(name, "class ");
+            strcat(name, type->val.typeClass.classId);
+            break;
+        case typeGenericK:
+            return "generic";
         default:
             return typeEnumToString(type->kind);
             break;

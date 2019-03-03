@@ -16,7 +16,3 @@ func main(a: int): int
     return a + b;
 end main
 
-(*
-return | | a | |;
-return ( ( a ) ) ;
-*)

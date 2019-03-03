@@ -122,7 +122,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_st
     while (current_node != NULL) {
         //Abort if we encounter a duplicate
         if (strcmp(name, current_node->name) == 0) {
-            fprintf(stderr, "\nVariable declared in same scope %s same scope\n", name);
+            fprintf(stderr, "\nVariable declared in same scope %s\n", name);
             fflush(stderr);
             return NULL;
         }
@@ -348,6 +348,33 @@ void dumpSymbolTable(SymbolTable *t) {
 
                             printf("\033[0m)");
                         }
+
+                        printf("\033[0m\n");
+                        break;
+                    case symTypeClassK:
+                        nameLen = strlen(current_symbol->name);
+
+                        nameTabsBetween = nameTabs - nameLen / 8;
+
+                        typeLen = strlen("class");
+
+                        typeTabsBetween = typeTabs - typeLen / 8;
+
+                        printf("\t\033[0;31m%s", current_symbol->name);
+
+                        for (int j = 0; j < nameTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        //For the arrow
+                        printf(" {} \t");
+                        printf("\033[0;36m%s", "class");
+
+                        for (int j = 0; j < typeTabsBetween; j++) {
+                            printf("\t");
+                        }
+
+                        printf("\033[0;32m%i\t", i);
 
                         printf("\033[0m\n");
                         break;

@@ -186,7 +186,7 @@ void prettyType(Type *type) {
             prettyType(type->val.typeLambdaK.returnType);
             break;
         default:
-            printf("\033[0;36m%s\033[0m", getTypeName(type));
+            printf("\033[0;36m%s\033[0m", typeToString(type));
             break;
     }
 }
@@ -279,9 +279,45 @@ void prettyDeclaration(Declaration *decl) {
             break;
         case declValK:
             prettyKeyword("val ");
-            printf("%s = ", decl->val.valK.id);
-            prettyEXP(decl->val.valK.rhs);
+            printf("%s = ", decl->val.valD.id);
+            prettyEXP(decl->val.valD.rhs);
             printf(";\n");
+            break;
+        case declClassK:
+            prettyKeyword("class ");
+            printf("%s ", decl->val.classD.id);
+
+            if (decl->val.classD.genericTypeParameters != NULL) {
+                printf("\033[0m[");
+
+                TypeList *typeList = decl->val.classD.genericTypeParameters;
+
+                while (typeList != NULL) {
+
+                    printf("\033[0;32m%s", typeList->type->val.idType.id);
+
+                    if (typeList->next != NULL) {
+                        printf("\033[0m, \033[0m");
+                    }
+                    typeList = typeList->next;
+                }
+
+                printf("\033[0m]");
+
+
+            }
+
+            printf(" { \n");
+            indentation++;
+            DeclarationList *declarationList = decl->val.classD.declarationList;
+
+            while (declarationList != NULL) {
+                prettyDeclaration(declarationList->declaration);
+                declarationList = declarationList->next;
+            }
+
+            indentation--;
+            printf("};\n");
             break;
         default:
             break;

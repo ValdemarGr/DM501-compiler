@@ -71,6 +71,7 @@ extern int fileno();
 "else"          return tELSE;
 "->"            return tLAMBDA_ARROW;
 "val"           return tVAL;
+"class"         return tCLASS;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

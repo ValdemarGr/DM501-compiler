@@ -16,7 +16,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK
 } TypeKind;
 
 typedef struct Type {
@@ -26,6 +26,8 @@ typedef struct Type {
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
         struct { TypeList *typeList; Type *returnType; } typeLambdaK;
+        struct { char *classId; } typeClass;
+        struct { char *genericName; } typeGeneric;
     } val;
 } Type;
 
@@ -64,13 +66,14 @@ typedef struct Declaration {
     int internal_stmDeclNum;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK, declValK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
-        struct { char* id; Expression *rhs; Type *tpe; } valK;
+        struct { char* id; Expression *rhs; Type *tpe; } valD;
+        struct { char* id; struct DeclarationList *declarationList; struct TypeList *genericTypeParameters; } classD;
     } val;
 } Declaration;
 
@@ -168,6 +171,8 @@ typedef struct Body {
 
 TypeList *makeTypeList(TypeList* next, Type *elem);
 
+TypeList *makeGenericTypeList(TypeList* next, char* id);
+
 Expression *makeEXPFromTerm(Term *term);
 
 Variable *makeVariable(char *id);
@@ -236,6 +241,8 @@ Declaration *makeVarDeclarations(VarDelList* vars);
 
 Declaration *makeValDeclaration(char* id, Expression *rhs);
 
+Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList);
+
 StatementList *makeStatementList(Statement *statement, StatementList *next);
 
 Statement *makeReturnStatement(Expression *exp);
@@ -257,6 +264,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm);
 Statement *makeStatementFromList(StatementList *statementList);
 
 Type *makeIdType(char* id);
+
+Type *makeClassType(char* id);
 
 Type *makeIntType();
 

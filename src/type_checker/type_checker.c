@@ -191,6 +191,8 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
             return true;
 
+        } else if (first->kind == typeGenericK) {
+            return strcmp(first->val.typeGeneric.genericName, second->val.typeGeneric.genericName) == 0;
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
@@ -224,6 +226,56 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
             return type;
             break;
     }
+}
+
+Type *idMatchesDecl(Declaration *declaration, char* id) {
+    Declaration *looper;
+
+    switch (declaration->kind) {
+        case declVarK:
+            if (strcmp(declaration->val.varD.id, id) == 0) {
+                return declaration->val.varD.type;
+            }
+            break;
+        case declVarsK:
+            looper = declaration;
+
+            while (looper != NULL) {
+                Type *result = idMatchesDecl(looper->val.varsD.var, id);
+                if (result != NULL) return result;
+                looper = looper->val.varsD.next;
+            }
+
+            break;
+        case declTypeK:
+            if (strcmp(declaration->val.typeD.id, id) == 0) {
+                return declaration->val.typeD.type;
+            }
+            break;
+        case declFuncK:
+            if (strcmp(declaration->val.functionD.function->head->indentifier, id) == 0) {
+                return declaration->val.functionD.function->head->returnType;
+            }
+            break;
+        case declValK:
+            if (strcmp(declaration->val.valD.id, id) == 0) {
+                return declaration->val.valD.tpe;
+            }
+            break;
+        case declClassK:
+            if (strcmp(declaration->val.classD.id, id) == 0) {
+                //This a small hack because of how classes are both custom types and hold declarations
+                Type *hack = NEW(Type);
+
+                hack->kind = typeClassK;
+                hack->val.typeClass.classId = id;
+
+                return hack;
+            }
+            break;
+    }
+
+    return NULL;
 }
 
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
@@ -272,18 +324,40 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 return NULL;
             }
 
-            //Check if id is in the type's vardellist
-            varDelList = innerType->val.recordType.types;
+            //We hack the record type to work with classes
+            if (innerType->kind == typeClassK) {
+                //Look the class up in the symbol table
+                symbol = getSymbol(symbolTable, innerType->val.typeClass.classId);
 
-            while (varDelList != NULL) {
+                DeclarationList *classBody = symbol->value->val.typeClassD.declarationList;
 
-                if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
-                    //ID
-                    return varDelList->type;
+                while (classBody != NULL) {
+
+                    Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
+
+                    if (ret != NULL) {
+                        //ID
+                        return ret;
+                    }
+
+                    classBody = classBody->next;
                 }
 
-                varDelList = varDelList->next;
+            } else if (innerType->kind == typeRecordK) {
+                //Check if id is in the type's vardellist
+                varDelList = innerType->val.recordType.types;
+
+                while (varDelList != NULL) {
+
+                    if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
+                        //ID
+                        return varDelList->type;
+                    }
+
+                    varDelList = varDelList->next;
+                }
             }
+
 
             return NULL;
 
@@ -1191,7 +1265,12 @@ Error *checkDeclValidity(Declaration *declaration) {
             e = checkTypeExist(declaration->val.typeD.type, declaration->symbolTable, lineno, NULL);
             if (e != NULL) return e;
             break;
+        default:
+            return NULL;
+            break;
     }
+
+    return NULL;
 }
 
 //We want to unwrap the expression types and compare them, effectively folding the nest of types
@@ -1213,9 +1292,9 @@ Error *typeCheck(Body *body, Type *functionReturnType) {
                 if (e != NULL) return e;
                 break;
             case declValK:
-                if (declarationList->declaration->val.valK.tpe->kind == typeLambdaK) {
+                if (declarationList->declaration->val.valD.tpe->kind == typeLambdaK) {
                     //We know expression is lambda
-                    Lambda *lambda = declarationList->declaration->val.valK.rhs->val.termD.term->val.lambdaD.lambda;
+                    Lambda *lambda = declarationList->declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
 
                     e = typeCheck(lambda->body, lambda->returnType);
                     if (e != NULL) return e;

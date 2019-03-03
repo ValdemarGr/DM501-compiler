@@ -11,10 +11,10 @@ val mapInt = (lst: IntList, apply: (int) -> int): IntList -> {
     allocate newList;
 
     i = lst.size;
-    while i > (0 - 1) do {
+    while i > 0 do {
         oldList = lst.internal;
 
-        newArray[i] = apply(oldList[i]);
+        newArray[i - 1] = apply(oldList[i - 1]);
         i = i - 1;
     }
 

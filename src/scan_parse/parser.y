@@ -65,6 +65,7 @@ void yyerror() {
 %token tNULL
 %token tLAMBDA_ARROW
 %token tVAL
+%token tCLASS
 
 %type <expression> expression
 %type <lambda> lambda
@@ -82,7 +83,7 @@ void yyerror() {
 %type <variable> variable
 %type <expressionList> act_list exp_list
 %type <term> term
-%type <typeList> type_list
+%type <typeList> type_list generic_type_list
 
 %start program
 
@@ -110,6 +111,14 @@ stm_list :
             {$$ = makeStatementList($1, $2);}
 ;
 
+generic_type_list : tIDENTIFIER ',' generic_type_list
+        {$$ = makeGenericTypeList($3, $1);}
+        | tIDENTIFIER
+        {$$ = makeGenericTypeList(NULL, $1);}
+        |
+        {$$ = NULL;}
+;
+
 declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
@@ -118,6 +127,10 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeTypeDeclaration($2, $4); }
               | tVAL tIDENTIFIER '=' expression ';'
               {$$ = makeValDeclaration($2, $4);}
+              | tCLASS tIDENTIFIER '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $4, NULL);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $7, $4);}
 ;
 
 statement : tRETURN expression ';'
@@ -150,6 +163,8 @@ type_list : type ',' type_list
 
 type :  tIDENTIFIER
         {$$ = makeIdType($1); }
+        | tCLASS tIDENTIFIER
+        {$$ = makeClassType($2); }
         | tINT
         {$$ = makeIntType(); }
         | tBOOL
