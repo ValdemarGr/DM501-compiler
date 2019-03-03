@@ -1,14 +1,22 @@
+
 class ClassA {
     val h = 5;
 };
 
-class ClassB[A : ClassA, B] {
+class ClassC[A : ClassA] {
+    val g = 2;
+    var t: A;
+};
+
+
+class ClassB[A : ClassC, B] {
     var a: B;
     var next: class ClassB;
 
     val f = (z: A, transformer: (A) -> B):B -> {
         #This should not work
-        write z.h;
+        write z.g;
+        write z.t.h;
         return transformer(z);
     };
 };

@@ -117,6 +117,8 @@ generic_type_list : tIDENTIFIER ':' tIDENTIFIER ',' generic_type_list
         {$$ = makeGenericTypeList($3, $1, NULL);}
         | tIDENTIFIER
         {$$ = makeGenericTypeList(NULL, $1, NULL);}
+        | tIDENTIFIER ':' tIDENTIFIER
+        {$$ = makeGenericTypeList(NULL, $1, $3);}
         |
         {$$ = NULL;}
 ;
