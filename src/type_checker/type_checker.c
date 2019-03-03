@@ -333,7 +333,6 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 DeclarationList *classBody = symbol->value->val.typeClassD.declarationList;
 
                 //Find same bound index as the one of the ret
-                //Todo above
                 TypeList *boundTypes = innerType->val.typeClass.genericBoundValues;
 
                 while (classBody != NULL) {
@@ -341,7 +340,29 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                     Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
 
                     if (ret != NULL) {
-                        //ID
+                        if (ret->kind == typeGenericK) {
+                            //Find the bound type by generic type index
+
+                            //We are looking for the (counter - it) element
+                            int it = ret->val.typeGeneric.typeIndex;
+                            int counter = 0;
+
+                            //Count all items
+                            TypeList *boundCount = boundTypes;
+                            while (boundCount != NULL) {
+                                counter++;
+                                boundCount = boundCount->next;
+                            }
+
+                            while (counter - it - 1 > 0) {
+                                //Todo check for out of bounds (arg count invalid) error
+                                boundTypes = boundTypes->next;
+                                counter--;
+                            }
+
+                            return boundTypes->type;
+                        }
+
                         return ret;
                     }
 

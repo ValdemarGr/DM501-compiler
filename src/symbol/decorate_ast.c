@@ -323,9 +323,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //Also remember the generic type parameters
             TypeList *generics = declaration->val.classD.genericTypeParameters;
-
+            //The generics also need their indexes reversed
             while (generics != NULL) {
-
                 value = NEW(Value);
 
                 value->kind = typeK;
@@ -338,6 +337,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
                 generics = generics->next;
             }
+
 
             DeclarationList *declarationList = declaration->val.classD.declarationList;
 

@@ -5,6 +5,7 @@
 
 extern int lineno;
 extern int stmDeclNum;
+int typeIndex = 0;
 
 TypeList *makeTypeList(TypeList* next, Type *elem) {
     TypeList *tpeLst = NEW(TypeList);
@@ -25,6 +26,8 @@ TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType){
     tpe->kind = typeGenericK;
     tpe->val.typeGeneric.genericName = id;
     tpe->val.typeGeneric.subType = subType;
+    tpe->val.typeGeneric.typeIndex = typeIndex;
+    typeIndex++;
 
     tpeLst->type = tpe;
 
@@ -612,6 +615,7 @@ Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, Ty
     declaration->val.classD.id = id;
     declaration->val.classD.declarationList = declarationList;
     declaration->val.classD.genericTypeParameters = typeList;
+    typeIndex = 0;
 
     return declaration;
 }

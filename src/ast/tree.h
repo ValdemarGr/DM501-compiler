@@ -27,7 +27,7 @@ typedef struct Type {
         struct { VarDelList *types; } recordType;
         struct { TypeList *typeList; Type *returnType; } typeLambdaK;
         struct { char *classId; TypeList *genericBoundValues; } typeClass;
-        struct { char *genericName; char *subType; } typeGeneric;
+        struct { char *genericName; char *subType; int typeIndex; } typeGeneric;
     } val;
 } Type;
 
