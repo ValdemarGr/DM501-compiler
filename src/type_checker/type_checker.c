@@ -89,6 +89,7 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
 
             return type;
             break;
+            //Todo make class
     }
 
     return NULL;
@@ -331,6 +332,10 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
                 DeclarationList *classBody = symbol->value->val.typeClassD.declarationList;
 
+                //Find same bound index as the one of the ret
+                //Todo above
+                TypeList *boundTypes = innerType->val.typeClass.genericBoundValues;
+
                 while (classBody != NULL) {
 
                     Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
@@ -355,6 +360,25 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                     }
 
                     varDelList = varDelList->next;
+                }
+            } else if (innerType->kind == typeGenericK && innerType->val.typeGeneric.subType != NULL) {
+                //If the generic subtypes another type, we can look the other type up
+
+                //Get the subtype class
+                symbol = getSymbol(symbolTable, innerType->val.typeGeneric.subType);
+
+                DeclarationList *classBody = symbol->value->val.typeClassD.declarationList;
+
+                while (classBody != NULL) {
+
+                    Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
+
+                    if (ret != NULL) {
+                        //ID
+                        return ret;
+                    }
+
+                    classBody = classBody->next;
                 }
             }
 
@@ -537,6 +561,10 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             break;
         case recordLookupK:
+            //This needs work
+
+            //We call further down with the variables now bound
+
 
             //The id subscript decides the return type
             /*
@@ -1111,7 +1139,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
             break;
         case assignmentK:
-            //Assignment is a bit funny, we have to check if the  and RHS are the same
+            //Assignment is a bit funny, we have to check if the LHS and RHS are the same
             //We have to find out what the LHS is first
 
             lhsType = unwrapVariable(statement->val.assignmentD.var, statement->symbolTable);

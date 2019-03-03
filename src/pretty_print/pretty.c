@@ -185,6 +185,29 @@ void prettyType(Type *type) {
 
             prettyType(type->val.typeLambdaK.returnType);
             break;
+        case typeClassK:
+            printf("\033[0mclass \033[36m%s\033[0m", type->val.typeClass.classId);
+
+            if (type->val.typeClass.genericBoundValues != NULL) {
+                TypeList *typeList = type->val.typeClass.genericBoundValues;
+                printf("\033[0m[");
+
+                while (typeList != NULL) {
+
+                    printf("\033[36m%s", typeToString(typeList->type));
+
+                    if (typeList->next != NULL) {
+                        printf("\033[0m, \033[36m");
+                    }
+
+                    typeList = typeList->next;
+                }
+                printf("\033[0m]");
+
+            }
+
+            break;
+
         default:
             printf("\033[0;36m%s\033[0m", typeToString(type));
             break;
@@ -294,7 +317,11 @@ void prettyDeclaration(Declaration *decl) {
 
                 while (typeList != NULL) {
 
-                    printf("\033[0;32m%s", typeList->type->val.idType.id);
+                    printf("\033[0;32m%s", typeList->type->val.typeGeneric.genericName);
+
+                    if (typeList->type->val.typeGeneric.subType != NULL) {
+                        printf("\033[0m: \033[0;36m%s", typeList->type->val.typeGeneric.subType);
+                    }
 
                     if (typeList->next != NULL) {
                         printf("\033[0m, \033[0m");

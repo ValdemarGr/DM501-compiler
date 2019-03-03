@@ -26,8 +26,8 @@ typedef struct Type {
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
         struct { TypeList *typeList; Type *returnType; } typeLambdaK;
-        struct { char *classId; } typeClass;
-        struct { char *genericName; } typeGeneric;
+        struct { char *classId; TypeList *genericBoundValues; } typeClass;
+        struct { char *genericName; char *subType; } typeGeneric;
     } val;
 } Type;
 
@@ -171,7 +171,7 @@ typedef struct Body {
 
 TypeList *makeTypeList(TypeList* next, Type *elem);
 
-TypeList *makeGenericTypeList(TypeList* next, char* id);
+TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType);
 
 Expression *makeEXPFromTerm(Term *term);
 
@@ -265,7 +265,7 @@ Statement *makeStatementFromList(StatementList *statementList);
 
 Type *makeIdType(char* id);
 
-Type *makeClassType(char* id);
+Type *makeClassType(char* id, TypeList *genericBoundTypes);
 
 Type *makeIntType();
 

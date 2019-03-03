@@ -14,9 +14,7 @@ char *typeToString(Type *type) {
             typeToString(type->val.typeLambdaK.returnType);
             break;
         case typeClassK:
-            name = (char*)malloc(sizeof(char) * (strlen(type->val.typeClass.classId) + strlen("class ") + 10));
-            strcat(name, "class ");
-            strcat(name, type->val.typeClass.classId);
+            return type->val.typeClass.classId;
             break;
         case typeGenericK:
             return "generic";

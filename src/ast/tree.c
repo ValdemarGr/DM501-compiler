@@ -15,7 +15,7 @@ TypeList *makeTypeList(TypeList* next, Type *elem) {
     return tpeLst;
 }
 
-TypeList *makeGenericTypeList(TypeList* next, char* id){
+TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType){
     TypeList *tpeLst = NEW(TypeList);
 
     tpeLst->next = next;
@@ -24,7 +24,7 @@ TypeList *makeGenericTypeList(TypeList* next, char* id){
 
     tpe->kind = typeGenericK;
     tpe->val.typeGeneric.genericName = id;
-
+    tpe->val.typeGeneric.subType = subType;
 
     tpeLst->type = tpe;
 
@@ -616,12 +616,13 @@ Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, Ty
     return declaration;
 }
 
-Type *makeClassType(char *id) {
+Type *makeClassType(char *id, TypeList *genericBoundTypes) {
     Type *type;
     type = NEW(Type);
 
     type->kind = typeClassK;
     type->val.typeClass.classId = id;
+    type->val.typeClass.genericBoundValues = genericBoundTypes;
 
     return type;
 }

@@ -1,5 +1,9 @@
-class SomeClass[A, B] {
-    val a = 5;
+class ClassA {
+    val h = 5;
+};
+
+class ClassB[A : ClassA, B] {
+    var a: B;
 
     val f = (z: A, transformer: (A) -> B):B -> {
         return transformer(z);
@@ -7,4 +11,6 @@ class SomeClass[A, B] {
 };
 
 
-var a: class SomeClass;
+var a: class ClassB[ClassA, int];
+var b: int;
+b = a.a;

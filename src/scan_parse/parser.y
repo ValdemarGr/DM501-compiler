@@ -111,10 +111,12 @@ stm_list :
             {$$ = makeStatementList($1, $2);}
 ;
 
-generic_type_list : tIDENTIFIER ',' generic_type_list
-        {$$ = makeGenericTypeList($3, $1);}
+generic_type_list : tIDENTIFIER ':' tIDENTIFIER ',' generic_type_list
+        {$$ = makeGenericTypeList($5, $1, $3);}
+        | tIDENTIFIER ',' generic_type_list
+        {$$ = makeGenericTypeList($3, $1, NULL);}
         | tIDENTIFIER
-        {$$ = makeGenericTypeList(NULL, $1);}
+        {$$ = makeGenericTypeList(NULL, $1, NULL);}
         |
         {$$ = NULL;}
 ;
@@ -164,7 +166,9 @@ type_list : type ',' type_list
 type :  tIDENTIFIER
         {$$ = makeIdType($1); }
         | tCLASS tIDENTIFIER
-        {$$ = makeClassType($2); }
+        {$$ = makeClassType($2, NULL); }
+        | tCLASS tIDENTIFIER '[' type_list ']'
+        {$$ = makeClassType($2, $4); }
         | tINT
         {$$ = makeIntType(); }
         | tBOOL
