@@ -238,6 +238,15 @@ void dumpSymbolTable(SymbolTable *t) {
                         break;
                 }
 
+                tmptypeLen = tmpNameLen;
+
+                //For generic
+                if (current_symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                    if (current_symbol->value->val.typeD.tpe->val.typeGeneric.subType != NULL) {
+                        tmptypeLen = tmpNameLen + strlen(current_symbol->value->val.typeD.tpe->val.typeGeneric.subType) + strlen(": ");
+                    }
+                }
+
                 if (tmpNameLen > longestName) longestName = tmpNameLen;
                 if (tmptypeLen > longestType) longestType = tmptypeLen;
 
@@ -262,7 +271,9 @@ void dumpSymbolTable(SymbolTable *t) {
             printf("\t");
         }
 
-        printf("bucket\targuments\n");
+        printf("bucket\targuments");
+
+        printf("\n");
 
         //We print our while whole table bucket wise
         for (int i = 0; i < HashSize; i++) {
@@ -296,7 +307,23 @@ void dumpSymbolTable(SymbolTable *t) {
 
                         //For the arrow
                         printf(" : \t");
-                        printf("\033[0;36m%s", typeToString(current_symbol->value->val.typeD.tpe));
+                        printf("\033[0;36m");
+
+                        printf("%s", typeToString(current_symbol->value->val.typeD.tpe));
+
+                        if (current_symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                            if (current_symbol->value->val.typeD.tpe->val.typeGeneric.subType != NULL) {
+                                printf(": %s", current_symbol->value->val.typeD.tpe->val.typeGeneric.subType);
+                                typeTabsBetween = typeTabsBetween -
+                                        (strlen(current_symbol->value->val.typeD.tpe->val.typeGeneric.subType) +
+                                         strlen("generic: ")) / 8;
+                            } else {
+                                printf(": %s", current_symbol->value->val.typeD.tpe->val.typeGeneric.genericName);
+                                typeTabsBetween = typeTabsBetween -
+                                                  (strlen(current_symbol->value->val.typeD.tpe->val.typeGeneric.genericName) +
+                                                  strlen("generic: ")) / 8;
+                            }
+                        }
 
                         for (int j = 0; j < typeTabsBetween; j++) {
                             printf("\t");

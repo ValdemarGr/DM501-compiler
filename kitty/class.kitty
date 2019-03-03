@@ -4,8 +4,11 @@ class ClassA {
 
 class ClassB[A : ClassA, B] {
     var a: B;
+    var next: class ClassB;
 
     val f = (z: A, transformer: (A) -> B):B -> {
+        #This should not work
+        write z.h;
         return transformer(z);
     };
 };
@@ -14,3 +17,4 @@ class ClassB[A : ClassA, B] {
 var a: class ClassB[ClassA, int];
 var b: int;
 b = a.a;
+a.next = a;

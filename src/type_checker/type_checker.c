@@ -325,8 +325,34 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 return NULL;
             }
 
-            //We hack the record type to work with classes
-            if (innerType->kind == typeClassK) {
+            //If the vartype is a generic, and we are accessing it, we are trying to access the subtype
+            if (varType->kind == typeGenericK) {
+                //Get the class
+                symbol = getSymbol(symbolTable, varType->val.typeGeneric.subType);
+
+                if (symbol == NULL) {
+                    return NULL;
+                }
+
+                if (symbol->value->kind != symTypeClassK) {
+                    return NULL;
+                }
+
+                //Go through the decls and look for the right one
+                DeclarationList *declarationList = symbol->value->val.typeClassD.declarationList;
+
+                while (declarationList != NULL) {
+                    Type *ret = idMatchesDecl(declarationList->declaration, variable->val.recordLookupD.id);
+
+                    if (ret != NULL) {
+                        return ret;
+                    }
+
+                    declarationList = declarationList->next;
+                }
+
+            } else if (innerType->kind == typeClassK) {
+                //We hack the record type to work with classes
                 //Look the class up in the symbol table
                 symbol = getSymbol(symbolTable, innerType->val.typeClass.classId);
 
@@ -594,13 +620,24 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             unwrapped = unwrapVariable(variable, symbolTable);
 
+            //If unwrap fails, the record id does not exist
+            if (unwrapped == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.recordLookupD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                return e;
+            }
+
             symAsType = unwrapTypedef(unwrapped, symbolTable);
 
             if (areTypesEqual(unwrapTypedef(expectedType, symbolTable), symAsType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.recordLookupD.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
 
                 return e;
@@ -1322,39 +1359,60 @@ Error *checkDeclValidity(Declaration *declaration) {
     return NULL;
 }
 
+Error *typeCheckDeclaration(Declaration *declaration) {
+    DeclarationList *classDeclList;
+    Error *e = NULL;
+
+    switch (declaration->kind)  {
+        case declFuncK:
+            e = typeCheck(declaration->val.functionD.function->body,
+                          declaration->val.functionD.function->head->returnType);
+            if (e != NULL) return e;
+            break;
+        case declValK:
+            if (declaration->val.valD.tpe->kind == typeLambdaK) {
+                //We know expression is lambda
+                Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
+
+                e = typeCheck(lambda->body, lambda->returnType);
+                if (e != NULL) return e;
+            }
+            break;
+        case declClassK:
+            classDeclList = declaration->val.classD.declarationList;
+
+            while (classDeclList != NULL) {
+                e = typeCheckDeclaration(classDeclList->declaration);
+                if (e != NULL) return e;
+
+                classDeclList = classDeclList->next;
+            }
+
+            break;
+            //In any other case we want to check if the types they are assigned to even exist
+        default:
+            e = checkDeclValidity(declaration);
+            if (e != NULL) return e;
+            break;
+    }
+
+    return NULL;
+}
+
 //We want to unwrap the expression types and compare them, effectively folding the nest of types
 //An easy way to do this is to for every expression, we want to check the symbol table for a matching type
 //We have been preemptively smart and decorated the AST's statements with symbol pointers also!
 Error *typeCheck(Body *body, Type *functionReturnType) {
-    Error *e = NULL;
     DeclarationList *declarationList = body->declarationList;
     StatementList *statementList = body->statementList;
     SYMBOL *symbol;
     Declaration *declaration;
+    Error *e = NULL;
 
     while (declarationList != NULL) {
 
-        switch (declarationList->declaration->kind)  {
-            case declFuncK:
-                e = typeCheck(declarationList->declaration->val.functionD.function->body,
-                        declarationList->declaration->val.functionD.function->head->returnType);
-                if (e != NULL) return e;
-                break;
-            case declValK:
-                if (declarationList->declaration->val.valD.tpe->kind == typeLambdaK) {
-                    //We know expression is lambda
-                    Lambda *lambda = declarationList->declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
-
-                    e = typeCheck(lambda->body, lambda->returnType);
-                    if (e != NULL) return e;
-                }
-                break;
-            //In any other case we want to check if the types they are assigned to even exist
-            default:
-                e = checkDeclValidity(declarationList->declaration);
-                if (e != NULL) return e;
-                break;
-        }
+        e = typeCheckDeclaration(declarationList->declaration);
+        if (e != NULL) return e;
 
         declarationList = declarationList->next;
     }

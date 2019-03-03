@@ -18,8 +18,11 @@ void alterIdTypesToGenerics(Type *tpe, SymbolTable *symbolTable) {
         if (symbol != NULL) {
             if (symbol->value->kind == typeK) {
                 if (symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                    //Try to get subtype
+
                     tpe->kind = typeGenericK;
                     tpe->val.typeGeneric.genericName = tpe->val.idType.id;
+                    tpe->val.typeGeneric.subType = symbol->value->val.typeD.tpe->val.typeGeneric.subType;
                 }
             }
         }
@@ -85,12 +88,13 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                       VarDelList *params, Body *body, int stmDeclNum) {
     Value *value = NULL;
     SymbolTable *child = scopeSymbolTable(symbolTable);
+    VarDelList *vdl = params;
 
     //Put the function definition in the scope
     value = NEW(Value);
 
     value->kind = typeFunctionK;
-    value->val.typeFunctionD.tpe = params;
+    value->val.typeFunctionD.tpe = vdl;
     value->val.typeFunctionD.returnType = returnType;
 
     putSymbol(symbolTable,
@@ -99,19 +103,19 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
               stmDeclNum);
 
     //Put the parameters in the child scope
-    while (params != NULL) {
-        alterIdTypesToGenerics(params->type, symbolTable);
+    while (vdl != NULL) {
+        alterIdTypesToGenerics(vdl->type, symbolTable);
 
         value = NEW(Value);
 
         value->kind = typeK;
-        value->val.typeD.tpe = params->type;
+        value->val.typeD.tpe = vdl->type;
 
         putSymbol(child,
-                  params->identifier,
+                  vdl->identifier,
                   value, stmDeclNum);
 
-        params =params->next;
+        vdl = vdl->next;
     }
 
     //Recurse to body
@@ -323,12 +327,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //Also remember the generic type parameters
             TypeList *generics = declaration->val.classD.genericTypeParameters;
-            //The generics also need their indexes reversed
+
             while (generics != NULL) {
                 value = NEW(Value);
 
                 value->kind = typeK;
                 value->val.typeD.tpe = generics->type;
+
 
                 putSymbol(newSt,
                           generics->type->val.typeGeneric.genericName,
