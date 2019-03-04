@@ -173,6 +173,17 @@ Term *makeLambdaTerm(Lambda *lambda) {
     return returning;
 }
 
+Term *makeDowncastTerm(char* varId, char *downcastId) {
+    Term* returning = NEW(Term);
+
+    returning->kind = classDowncastk;
+    returning->val.classDowncastD.varId =varId;
+    returning->val.classDowncastD.downcastId =downcastId;
+
+    return returning;
+}
+
+
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     Expression *e = NEW(Expression);
 
@@ -606,7 +617,7 @@ Declaration *makeValDeclaration(char *id, Expression *rhs) {
     return declaration;
 }
 
-Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList) {
+Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList) {
     Declaration *declaration = NEW(Declaration);
     stmDeclNum++;
     declaration->internal_stmDeclNum = stmDeclNum;
@@ -615,6 +626,7 @@ Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, Ty
     declaration->val.classD.id = id;
     declaration->val.classD.declarationList = declarationList;
     declaration->val.classD.genericTypeParameters = typeList;
+    declaration->val.classD.extendedClasses = extensionList;
     typeIndex = 0;
 
     return declaration;
@@ -629,4 +641,22 @@ Type *makeClassType(char *id, TypeList *genericBoundTypes) {
     type->val.typeClass.genericBoundValues = genericBoundTypes;
 
     return type;
+}
+
+TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+
+    Type *type = NEW(Type);
+
+    type->kind = typeClassK;
+    type->val.typeClass.classId = class;
+    type->val.typeClass.genericBoundValues = boundTypes;
+    type->val.typeGeneric.typeIndex = typeIndex;
+    typeIndex++;
+
+    tpeLst->type = type;
+
+    return tpeLst;
 }

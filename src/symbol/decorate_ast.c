@@ -314,10 +314,77 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
         case declClassK:
             value = NEW(Value);
-            value->kind = symTypeClassK;
-            value->val.typeClassD.declarationList = declaration->val.classD.declarationList;
-
             SymbolTable *newSt = scopeSymbolTable(symbolTable);
+
+            //Apply inheritance mixin before the actual class
+            //For every mixin for every decl add the sym table
+            DeclarationList *newHead = NULL;
+            DeclarationList *newTail = NULL;
+            TypeList *extensions = declaration->val.classD.extendedClasses;
+
+            while (extensions != NULL) {
+                //A bit of early type checking
+                if (extensions->type->kind != typeClassK) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+
+                    return e;
+                }
+
+                SYMBOL *mixin = getSymbol(symbolTable, extensions->type->val.typeClass.classId);
+
+                if (mixin->value->kind != symTypeClassK) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+
+                    return e;
+                }
+
+                DeclarationList *internalDeclList = mixin->value->val.typeClassD.declarationList;
+
+                //If first non null encounter
+                if (newHead == NULL && internalDeclList != NULL) {
+                    newHead = internalDeclList;
+                }
+
+                while (internalDeclList != NULL) {
+                    //Set the decls scope
+                    e = decorateDeclaration(internalDeclList->declaration, newSt);
+                    if (e != NULL) return e;
+
+                    //If last non null encounter
+                    if (internalDeclList->next == NULL && extensions->next == NULL) {
+                        newTail = internalDeclList;
+                    }
+
+                    internalDeclList = internalDeclList->next;
+                }
+
+                extensions = extensions->next;
+            }
+
+            if (newHead != NULL) {
+                //Prepend the new mixins
+                if (newTail != NULL) {
+                    newTail->next = declaration->val.classD.declarationList;
+                } else {
+                    newHead->next = declaration->val.classD.declarationList;
+                }
+
+                value->val.typeClassD.declarationList = newHead;
+            } else {
+                value->val.typeClassD.declarationList = declaration->val.classD.declarationList;
+            }
+
+            value->kind = symTypeClassK;
+            value->val.typeClassD.extendedClasses = declaration->val.classD.extendedClasses;
+
 
             putSymbol(symbolTable,
                       declaration->val.classD.id,
@@ -344,6 +411,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             }
 
 
+
+
+            //And for the class body
             DeclarationList *declarationList = declaration->val.classD.declarationList;
 
             while (declarationList != NULL) {

@@ -66,6 +66,7 @@ void yyerror() {
 %token tLAMBDA_ARROW
 %token tVAL
 %token tCLASS
+%token tWITH
 
 %type <expression> expression
 %type <lambda> lambda
@@ -83,7 +84,7 @@ void yyerror() {
 %type <variable> variable
 %type <expressionList> act_list exp_list
 %type <term> term
-%type <typeList> type_list generic_type_list
+%type <typeList> type_list generic_type_list class_extension_list
 
 %start program
 
@@ -119,8 +120,16 @@ generic_type_list : tIDENTIFIER ':' tIDENTIFIER ',' generic_type_list
         {$$ = makeGenericTypeList(NULL, $1, NULL);}
         | tIDENTIFIER ':' tIDENTIFIER
         {$$ = makeGenericTypeList(NULL, $1, $3);}
-        |
-        {$$ = NULL;}
+;
+
+class_extension_list : tIDENTIFIER
+                {$$ = makeExtensionList(NULL, $1, NULL);}
+                | tIDENTIFIER '[' type_list ']'
+                {$$ = makeExtensionList(NULL, $1, $3);}
+                | tIDENTIFIER class_extension_list
+                {$$ = makeExtensionList($2, $1, NULL);}
+                | tIDENTIFIER class_extension_list '[' type_list ']'
+                {$$ = makeExtensionList($2, $1, $4);}
 ;
 
 declaration : tVAR var_decl_list ';'
@@ -132,9 +141,13 @@ declaration : tVAR var_decl_list ';'
               | tVAL tIDENTIFIER '=' expression ';'
               {$$ = makeValDeclaration($2, $4);}
               | tCLASS tIDENTIFIER '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $4, NULL);}
+              {$$ = makeClassDeclaration($2, $4, NULL, NULL);}
               | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $7, $4);}
+              {$$ = makeClassDeclaration($2, $7, $4, NULL);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' tWITH class_extension_list '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $9, $4, $7);}
+              | tCLASS tIDENTIFIER tWITH class_extension_list '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $6, NULL, $4);}
 ;
 
 statement : tRETURN expression ';'
@@ -287,6 +300,8 @@ term : variable
         {$$ = makeNullTerm();}
         | lambda
         {$$ = makeLambdaTerm($1);}
+        | tIDENTIFIER ':' tIDENTIFIER
+        {$$ = makeDowncastTerm($1, $3);}
 ;
 
 %%

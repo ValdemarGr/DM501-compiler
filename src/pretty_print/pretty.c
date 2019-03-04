@@ -142,6 +142,9 @@ void prettyTerm(Term *term) {
         case lambdaK:
             prettyLambda(term->val.lambdaD.lambda);
             break;
+        case classDowncastk:
+            printf("%s : %s", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
+            break;
     }
 }
 
@@ -330,7 +333,22 @@ void prettyDeclaration(Declaration *decl) {
                 }
 
                 printf("\033[0m]");
+            }
 
+            if (decl->val.classD.extendedClasses != NULL) {
+                prettyKeyword("with ");
+
+                TypeList *typeList = decl->val.classD.extendedClasses;
+
+                while (typeList != NULL) {
+
+                    printf("\033[0;36m%s", typeList->type->val.typeClass.classId);
+
+                    if (typeList->next != NULL) {
+                        printf(" \033[0m");
+                    }
+                    typeList = typeList->next;
+                }
 
             }
 

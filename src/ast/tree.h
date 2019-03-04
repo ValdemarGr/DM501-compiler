@@ -73,7 +73,11 @@ typedef struct Declaration {
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
         struct { char* id; Expression *rhs; Type *tpe; } valD;
-        struct { char* id; struct DeclarationList *declarationList; struct TypeList *genericTypeParameters; } classD;
+        struct { char* id;
+            struct DeclarationList *declarationList;
+            struct TypeList *genericTypeParameters;
+            struct TypeList *extendedClasses;
+        } classD;
     } val;
 } Declaration;
 
@@ -152,7 +156,7 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
@@ -161,6 +165,7 @@ typedef struct Term {
         struct { Expression* expression; } absD;
         struct { int num; } numD;
         struct { Lambda *lambda; } lambdaD;
+        struct { char* varId; char* downcastId; } classDowncastD;
     } val;
 } Term;
 
@@ -200,6 +205,8 @@ Term *makeFalseTerm();
 Term *makeNullTerm();
 
 Term *makeLambdaTerm(Lambda *lambda);
+
+Term *makeDowncastTerm(char* varId, char *downcastId);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -241,7 +248,7 @@ Declaration *makeVarDeclarations(VarDelList* vars);
 
 Declaration *makeValDeclaration(char* id, Expression *rhs);
 
-Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList);
+Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList);
 
 StatementList *makeStatementList(Statement *statement, StatementList *next);
 
@@ -292,5 +299,7 @@ FunctionTail *makeFunctionTail(char *identifier);
 Body *makeBody(DeclarationList *declarationList, StatementList *statementList);
 
 Declaration *makeFunctionDecleration(Function *function);
+
+TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes);
 
 #endif

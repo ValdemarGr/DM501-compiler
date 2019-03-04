@@ -241,9 +241,11 @@ void dumpSymbolTable(SymbolTable *t) {
                 tmptypeLen = tmpNameLen;
 
                 //For generic
-                if (current_symbol->value->val.typeD.tpe->kind == typeGenericK) {
-                    if (current_symbol->value->val.typeD.tpe->val.typeGeneric.subType != NULL) {
-                        tmptypeLen = tmpNameLen + strlen(current_symbol->value->val.typeD.tpe->val.typeGeneric.subType) + strlen(": ");
+                if (current_symbol->value->kind == typeK) {
+                    if (current_symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                        if (current_symbol->value->val.typeD.tpe->val.typeGeneric.subType != NULL) {
+                            tmptypeLen = tmpNameLen + strlen(current_symbol->value->val.typeD.tpe->val.typeGeneric.subType) + strlen(": ");
+                        }
                     }
                 }
 

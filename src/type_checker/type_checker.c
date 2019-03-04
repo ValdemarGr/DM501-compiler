@@ -20,6 +20,51 @@ Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 //Go all the way down through variable, then once at bottom get type
 //when we get type start returning, apply subscripting and such as we go up
 
+Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable) {
+    SYMBOL *symbol = getSymbol(symbolTable, varId);
+    SYMBOL *inner = NULL;
+
+    if (symbol == NULL) {
+        return NULL;
+    }
+
+    if (symbol->value->kind == typeK) {
+        if (symbol->value->val.typeD.tpe->kind == typeIdK) {
+            inner = getSymbol(symbolTable, symbol->value->val.typeD.tpe->val.idType.id);
+
+            if (inner == NULL) {
+                return NULL;
+            }
+
+            if (inner->value->kind == symTypeClassK) {
+                symbol = inner;
+            }
+        }
+    }
+
+    if (symbol->value->kind != symTypeClassK) {
+        return NULL;
+    }
+
+    TypeList *extended = symbol->value->val.typeClassD.extendedClasses;
+
+    while (extended != NULL) {
+
+        if (strcmp(subtype, extended->type->val.typeClass.classId) == 0) {
+            return extended->type;
+        }
+
+        //Check all subclasses of this subclass
+        Type *pot = getClassSubtype(extended->type->val.typeClass.classId, subtype, symbolTable);
+        if (pot != NULL) {
+            return pot;
+        }
+
+        extended = extended->next;
+    }
+
+    return NULL;
+}
 
 Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
     SYMBOL *symbol;
@@ -89,7 +134,11 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
 
             return type;
             break;
-            //Todo make class
+        case classDowncastk:
+            type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
+
+            return type;
+            break;
     }
 
     return NULL;
@@ -711,6 +760,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
     Type *typeMatch = NULL;
     Error *e = NULL;
     SYMBOL *symbol = NULL;
+    Type* type;
 
     switch (term->kind) {
         case variableK:
@@ -991,6 +1041,20 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
         case nullK:
             //Null satisfies all types
             return NULL_KITTY_VALUE_INDICATOR;
+            break;
+        case classDowncastk:
+            type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
+
+            if (areTypesEqual(type, expectedType, symbolTable) == false) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR; FIX ME";
+                e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+
+                return e;
+            }
+
             break;
         default:
             break;
