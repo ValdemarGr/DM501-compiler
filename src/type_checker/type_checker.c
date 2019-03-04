@@ -77,11 +77,21 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
         case functionCallK:
             symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
 
-            if (symbol == NULL || symbol->value->kind != typeFunctionK) {
+            if (symbol == NULL) {
                 return NULL;
             }
 
-            return symbol->value->val.typeFunctionD.returnType;
+            if (symbol->value->kind == typeFunctionK) {
+                return symbol->value->val.typeFunctionD.returnType;
+            }
+
+            if (symbol->value->kind == typeK) {
+                if (symbol->value->val.typeD.tpe->kind == typeLambdaK) {
+                    return symbol->value->val.typeD.tpe->val.typeLambdaK.returnType;
+                }
+            }
+
+            return NULL;
             break;
         case parenthesesK:
             return evaluateExpressionType(term->val.parenthesesD.expression, symbolTable);
@@ -349,13 +359,15 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
         case arrayIndexK:
             innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
 
+            varType = unwrapTypedef(innerType, symbolTable);
+
             //Check if expression is int
             e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
             if (e != NULL) return NULL;
 
             //Since we are in an array subscript, we want to subscript by removing a type layer
-            if (innerType->kind == typeArrayK) {
-                return innerType->val.arrayType.type;
+            if (varType->kind == typeArrayK) {
+                return varType->val.arrayType.type;
             } else {
                 return NULL;
             }
@@ -1183,7 +1195,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             e = typeCheckExpression(statement->val.returnD.exp,
                     functionReturnType,
                     statement->symbolTable);
-            if (e != NULL) return e;
+            if (e != NULL && e != NULL_KITTY_VALUE_INDICATOR) return e;
 
             //dumpSymbolTable(statement->symbolTable);
             break;
@@ -1311,7 +1323,6 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 iter = iter->next;
             }
 
-
             symbol = getSymbol(symbolTable, type->val.idType.id);
 
             if (symbol == NULL) {
@@ -1435,11 +1446,19 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             break;
         case declValK:
             if (declaration->val.valD.tpe->kind == typeLambdaK) {
-                //We know expression is lambda
-                Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
+                //Expression can be lambda or an id that references to a lambda
+                if (declaration->val.valD.rhs->val.termD.term->kind == variableK) {
+                    //Unpack the id and get the lambda
+                    /*Variable *var = declaration->val.valD.rhs->val.termD.term->val.variableD.var;
+                    Type *unwrapped = unwrapVariable(var, declaration->symbolTable);
+                    printf("Hello");*/
+                    //Actually, if the lambda has already been bound, no reason to type check its body.
+                } else {
+                    Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
 
-                e = typeCheck(lambda->body, lambda->returnType);
-                if (e != NULL) return e;
+                    e = typeCheck(lambda->body, lambda->returnType);
+                    if (e != NULL) return e;
+                }
             }
             break;
         case declClassK:

@@ -12,20 +12,63 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                      VarDelList *params, Body *body, int stmDeclNum);
 
 void alterIdTypesToGenerics(Type *tpe, SymbolTable *symbolTable) {
-    if (tpe->kind == typeIdK) {
-        SYMBOL *symbol = getSymbol(symbolTable, tpe->val.idType.id);
+    SYMBOL *symbol;
+    VarDelList *vdl;
+    TypeList *tpeLst;
 
-        if (symbol != NULL) {
-            if (symbol->value->kind == typeK) {
-                if (symbol->value->val.typeD.tpe->kind == typeGenericK) {
-                    //Try to get subtype
+    switch (tpe->kind) {
+        case typeIdK:
+            symbol = getSymbol(symbolTable, tpe->val.idType.id);
 
-                    tpe->kind = typeGenericK;
-                    tpe->val.typeGeneric.genericName = tpe->val.idType.id;
-                    tpe->val.typeGeneric.subType = symbol->value->val.typeD.tpe->val.typeGeneric.subType;
+            if (symbol != NULL) {
+                if (symbol->value->kind == typeK) {
+                    if (symbol->value->val.typeD.tpe->kind == typeGenericK) {
+                        //Try to get subtype
+
+                        tpe->kind = typeGenericK;
+                        tpe->val.typeGeneric.genericName = tpe->val.idType.id;
+                        tpe->val.typeGeneric.subType = symbol->value->val.typeD.tpe->val.typeGeneric.subType;
+                    }
                 }
             }
-        }
+            break;
+        //Unwrap
+        case typeArrayK:
+            alterIdTypesToGenerics(tpe->val.arrayType.type, symbolTable);
+            break;
+        case typeRecordK:
+            vdl = tpe->val.recordType.types;
+
+            while (vdl != NULL) {
+                alterIdTypesToGenerics(vdl->type, symbolTable);
+                vdl = vdl->next;
+            }
+
+            break;
+        case typeLambdaK:
+            tpeLst = tpe->val.typeLambdaK.typeList;
+
+            while (tpeLst != NULL) {
+                alterIdTypesToGenerics(tpeLst->type, symbolTable);
+                tpeLst = tpeLst->next;
+            }
+
+            alterIdTypesToGenerics(tpe->val.typeLambdaK.returnType, symbolTable);
+
+            break;
+        case typeClassK:
+            tpeLst = tpe->val.typeClass.genericBoundValues;
+
+            while (tpeLst != NULL) {
+                alterIdTypesToGenerics(tpeLst->type, symbolTable);
+                tpeLst = tpeLst->next;
+            }
+
+            break;
+        default:
+            return;
+            break;
+
     }
 }
 
@@ -289,7 +332,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             declaration->val.valD.tpe = valType;
 
             //If its a lambda, we want to decorate it
-            if (valType->kind == typeLambdaK) {
+            if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
 
                 decorateFunction(declaration->val.valD.id,
