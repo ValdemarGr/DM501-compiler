@@ -45,7 +45,6 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 
                 Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
 
-                dumpSymbolTable(symbolTable);
                 //Check if the lambda is a variable or an R-value
                 //If it is a variable,  we don't need to do any of the R-value decorating this time
                 if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
@@ -346,6 +345,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     return e;
                 }
 
+
+                //For true'er polymorphism, overriding can be added by traversing by collisions and always
+                //preferring the current classes version
                 DeclarationList *internalDeclList = mixin->value->val.typeClassD.declarationList;
 
                 //If first non null encounter

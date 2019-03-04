@@ -143,7 +143,7 @@ void prettyTerm(Term *term) {
             prettyLambda(term->val.lambdaD.lambda);
             break;
         case classDowncastk:
-            printf("%s : %s", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
+            printf("%s : \033[0;36m%s\033[0m", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
             break;
     }
 }
@@ -352,7 +352,7 @@ void prettyDeclaration(Declaration *decl) {
 
             }
 
-            printf(" { \n");
+            printf("\033[0m { \n");
             indentation++;
             DeclarationList *declarationList = decl->val.classD.declarationList;
 

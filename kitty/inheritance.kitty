@@ -11,3 +11,5 @@ class ClassC with ClassB {
 };
 
 var i: ClassC;
+val z = i : ClassA;
+write z.a;
