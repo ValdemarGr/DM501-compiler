@@ -60,7 +60,11 @@ class List[A] {
 };
 
 var lst: class List[int];
-val f = lst.map;
-val q = f((x: int): int -> {
+val mapper = lst.map;
+val filter = lst.filter;
+val mappedList = mapper((x: int): int -> {
     return x;
+});
+val filteredList = filter((x: int): int -> {
+    return x < 100;
 });
