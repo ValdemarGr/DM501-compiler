@@ -596,7 +596,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                     VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
                     //Compare the argument types sequentially
-                    while (typeList != NULL & varDelList != NULL) {
+                    while (typeList != NULL && varDelList != NULL) {
 
                         if (areTypesEqual(typeList->type, varDelList->type, symbolTable) == false) {
                             e = NEW(Error);
@@ -1013,7 +1013,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 return e;
             }
 
-            e = typeCheckTerm(term->val.negateD.term, expectedType, symbolTable);
+            e = typeCheckExpression(term->val.absD.expression, expectedType, symbolTable);
             if (e != NULL) return e;
 
             break;
@@ -1208,10 +1208,8 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                                     &intStaticType,
                                     statement->symbolTable);
 
-            if (e != NULL && e2 != NULL) {
-                if (e != NULL) return e;
-                if (e2 != NULL) return e2;
-            }
+            if (e != NULL) return e;
+            if (e2 != NULL) return e2;
 
             return NULL;
             break;
