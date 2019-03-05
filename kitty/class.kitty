@@ -11,7 +11,6 @@ class ClassC[A : ClassA] {
 
 class ClassB[A : ClassC, B] {
     var a: B;
-    var next: class ClassB;
 
     val f = (z: A, transformer: (A) -> B):B -> {
         #This should not work
@@ -22,7 +21,6 @@ class ClassB[A : ClassC, B] {
 };
 
 
-var a: class ClassB[ClassA, int];
+var a: class ClassB[ClassB, int];
 var b: int;
 b = a.a;
-a.next = a;

@@ -268,6 +268,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     switch (declaration->kind) {
         case declVarK:
             alterIdTypesToGenerics(declaration->val.varD.type, symbolTable);
+            declaration->symbolTable = symbolTable;
 
             value = NEW(Value);
 
@@ -429,7 +430,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             value->kind = symTypeClassK;
             value->val.typeClassD.extendedClasses = declaration->val.classD.extendedClasses;
-
+            value->val.typeClassD.generics = declaration->val.classD.genericTypeParameters;
 
             putSymbol(symbolTable,
                       declaration->val.classD.id,

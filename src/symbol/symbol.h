@@ -23,7 +23,7 @@ typedef struct Value {
     union {
         struct { struct Type *tpe; } typeD;
         struct { struct VarDelList *tpe; struct Type *returnType; } typeFunctionD;
-        struct { struct DeclarationList *declarationList; struct TypeList *extendedClasses; } typeClassD;
+        struct { struct DeclarationList *declarationList; struct TypeList *extendedClasses; struct TypeList *generics; } typeClassD;
     } val;
 } Value;
 

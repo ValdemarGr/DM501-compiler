@@ -366,7 +366,7 @@ Declaration *makeVarDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
     stmDeclNum++;
-result->internal_stmDeclNum = stmDeclNum;
+    result->internal_stmDeclNum = stmDeclNum;
 
     result->lineno = lineno;
     result->kind = declVarK;
