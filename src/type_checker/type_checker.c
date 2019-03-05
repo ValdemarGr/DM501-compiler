@@ -472,6 +472,11 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                             int it = ret->val.typeGeneric.typeIndex;
                             int counter = 0;
 
+                            while (it > 0) {
+                                boundTypes = boundTypes->next;
+                                it--;
+                            }
+/*
                             //Count all items
                             TypeList *boundCount = boundTypes;
                             while (boundCount != NULL) {
@@ -484,7 +489,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                                 boundTypes = boundTypes->next;
                                 counter--;
                             }
-
+*/
                             return boundTypes->type;
                         }
 
