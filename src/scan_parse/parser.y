@@ -59,6 +59,7 @@ void yyerror(char const *s) {
 %token tGEQ
 %token tLEQ
 %token tAND
+%token tOR
 %token tTRUE
 %token tFALSE
 %token tNULL
@@ -89,6 +90,7 @@ void yyerror(char const *s) {
 
 %left tEQ tINEQ
 %left  tLESS tGREATER tGEQ tLEQ
+%left tOR
 %left  tAND
 %left '+' '-'
 %left '*' '/'
@@ -252,8 +254,8 @@ expression : expression '*' expression
         {$$ = makeEXPOpEXP($1, makeLeqOp(), $3);}
         | expression tAND expression
         {$$ = makeEXPOpEXP($1, makeAndOp(), $3);}
-        | expression '|' '|' expression
-        {$$ = makeEXPOpEXP($1, makeOrOp(), $4);}
+        | expression tOR expression
+        {$$ = makeEXPOpEXP($1, makeOrOp(), $3);}
         | term
         {$$ = makeEXPFromTerm($1);}
 ;

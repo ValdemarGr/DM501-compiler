@@ -36,6 +36,7 @@ extern int fileno();
 ">="            return tGEQ;
 "<="            return tLEQ;
 "&&"            return tAND;
+"||"            return tOR;
 "|"             return '|';
 "("             return '(';
 ")"             return ')';
