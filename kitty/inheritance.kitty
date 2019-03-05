@@ -1,0 +1,15 @@
+class ClassA {
+    val a = 1;
+};
+
+class ClassB with ClassA {
+    val b = a;
+};
+
+class ClassC with ClassB {
+    val c = b;
+};
+
+var i: ClassC;
+val z = i : ClassA;
+write z.a;

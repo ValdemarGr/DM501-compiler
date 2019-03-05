@@ -1,15 +1,18 @@
+func sum(a: int, b: bool): bool
+    if true then return !b; else return b;
+    allocate a;
 
-func main(): int
-    var i : int;
+    return false;
+end sum
+
+func main(a: int): int
     var b : bool;
     var c : int;
 
-    i = sum(i, c);
+    var i : bool;
+
+    i = sum(c, b);
 
     return a + b;
 end main
 
-func sum(): int
-    if true then return a; else return b;
-    allocate a;
-end sum

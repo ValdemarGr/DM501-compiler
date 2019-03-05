@@ -6,7 +6,7 @@ extern int lineno;
 extern int fileno();
 %}
 
-%option noyywrap nounput noinput
+%option noyywrap
 %x comment
 
 %%
@@ -70,6 +70,10 @@ extern int fileno();
 "do"            return tDO;
 "of length"     return tOF_LEN;
 "else"          return tELSE;
+"->"            return tLAMBDA_ARROW;
+"val"           return tVAL;
+"class"         return tCLASS;
+"with"          return tWITH;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

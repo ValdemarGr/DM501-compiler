@@ -6,6 +6,7 @@
 #define HELLO_PRETTY_H
 
 #include "../ast/tree.h"
+#include "../utils/enum_to_string.h"
 
 void prettyBody(Body *body);
 void prettyEXP(Expression *e);

@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "../ast/tree.h"
-#include "../scan_parse/pretty.h"
+#include "../pretty_print/pretty.h"
 #include "../utils/enum_to_string.h"
 
 typedef struct Error {
@@ -25,6 +25,7 @@ typedef struct Error {
         TYPE_TERM_NOT_INTEGER,
         SYMBOL_NOT_FOUND,
         VARIABLE_UNEXPECTED_TYPE,
+        VARIABLE_COULD_NOT_FIND_RECORD_ITEM,
         SYMBOL_COULD_NOT_SCOPE
     } error;
     union {
@@ -35,11 +36,12 @@ typedef struct Error {
         struct { char* fid; int lineno;} TYPE_TERM_IS_NOT_FUNCTION_S;
         struct { char* fid; int lineno;} TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;
         struct { char* fid; int lineno; TypeKind expectedType; TypeKind foundType; int argNumber;} TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S;
-        struct { char* fid; int lineno; int foundCount;} TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S;
+        struct { char* fid; int lineno; int foundCount; int expectedCount;} TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S;
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_BOOLEAN_S;
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_INTEGER_S;
         struct { char *id; int lineno; } SYMBOL_NOT_FOUND_S;
         struct { char *id; int lineno; TypeKind expectedType; TypeKind foundType;} VARIABLE_UNEXPECTED_TYPE_S;
+        struct { int lineno; } VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S;
     } val;
 } Error;
 

@@ -4,6 +4,35 @@
 #include "tree.h"
 
 extern int lineno;
+extern int stmDeclNum;
+int typeIndex = 0;
+
+TypeList *makeTypeList(TypeList* next, Type *elem) {
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+    tpeLst->type = elem;
+
+    return tpeLst;
+}
+
+TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType){
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+
+    Type *tpe = NEW(Type);
+
+    tpe->kind = typeGenericK;
+    tpe->val.typeGeneric.genericName = id;
+    tpe->val.typeGeneric.subType = subType;
+    tpe->val.typeGeneric.typeIndex = typeIndex;
+    typeIndex++;
+
+    tpeLst->type = tpe;
+
+    return tpeLst;
+}
 
 Expression *makeEXPFromTerm(Term *term) {
     Expression *returning = NEW(Expression);
@@ -135,25 +164,25 @@ Term *makeNullTerm() {
     return returning;
 }
 
+Term *makeLambdaTerm(Lambda *lambda) {
+    Term* returning = NEW(Term);
 
-Expression *makeEXPid(char *id) {
-    Expression *e;
+    returning->kind = lambdaK;
+    returning->val.lambdaD.lambda = lambda;
 
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = idK;
-    e->val.idE = id;
-    return e;
+    return returning;
 }
 
-Expression *makeEXPintconst(int intconst) {
-    Expression *e;
-    e = NEW(Expression);
-    e->lineno = lineno;
-    e->kind = intconstK;
-    e->val.intconstE = intconst;
-    return e;
+Term *makeDowncastTerm(char* varId, char *downcastId) {
+    Term* returning = NEW(Term);
+
+    returning->kind = classDowncastk;
+    returning->val.classDowncastD.varId =varId;
+    returning->val.classDowncastD.downcastId =downcastId;
+
+    return returning;
 }
+
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     Expression *e = NEW(Expression);
@@ -306,6 +335,16 @@ Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail) {
     return function;
 }
 
+Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
+    Lambda *lambda = NEW(Lambda);
+
+    lambda->returnType = returnType;
+    lambda->body = body;
+    lambda->declarationList = varDelList;
+
+    return lambda;
+}
+
 VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next) {
     VarDelList *list;
     list = NEW(VarDelList);
@@ -326,6 +365,9 @@ DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *
 Declaration *makeVarDeclaration(char *id, Type *type) {
     Declaration *result;
     result = NEW(Declaration);
+    stmDeclNum++;
+    result->internal_stmDeclNum = stmDeclNum;
+
     result->lineno = lineno;
     result->kind = declVarK;
     result->val.varD.id = id;
@@ -343,6 +385,8 @@ StatementList *makeStatementList(Statement *statement, StatementList *next) {
 
 Statement *makeReturnStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statReturnK;
@@ -352,6 +396,8 @@ Statement *makeReturnStatement(Expression *exp) {
 
 Statement *makeIfStatement(Expression *exp, Statement *statement) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = statIfK;
@@ -362,6 +408,8 @@ Statement *makeIfStatement(Expression *exp, Statement *statement) {
 
 Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = statIfElK;
@@ -373,6 +421,8 @@ Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement 
 
 Statement *makeAssignment(Variable* variable, Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = assignmentK;
@@ -383,6 +433,8 @@ Statement *makeAssignment(Variable* variable, Expression *exp) {
 
 Statement *makeAllocateStatement(Variable *var) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statAllocateK;
@@ -392,6 +444,8 @@ Statement *makeAllocateStatement(Variable *var) {
 
 Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statAllocateLenK;
@@ -402,6 +456,8 @@ Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
 
 Statement *makeWriteStatement(Expression *exp) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statWriteK;
@@ -411,6 +467,8 @@ Statement *makeWriteStatement(Expression *exp) {
 
 Statement *makeWhileStatement(Expression *exp, Statement *stm) {
     Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
 
     statement->lineno = lineno;
     statement->kind = statWhileK;
@@ -421,6 +479,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm) {
 
 Statement *makeStatementFromList(StatementList *statementList) {
     Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
 
     returning->lineno = lineno;
     returning->kind = stmListK;
@@ -458,6 +518,10 @@ Declaration *makeVarDeclarations(VarDelList *vars) {
     Declaration *result;
     result = makeVarsDeclaration(vars->identifier, vars->type,
                                  makeVarDeclarations(vars->next));
+
+
+    stmDeclNum++;
+    result->internal_stmDeclNum = stmDeclNum;
     return result;
 }
 
@@ -471,6 +535,8 @@ Body *makeBody(DeclarationList *declarationList, StatementList *statementList) {
 
 Declaration *makeFunctionDecleration(Function *function) {
     Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
 
     declaration->lineno = lineno;
     declaration->kind = declFuncK;
@@ -486,6 +552,8 @@ Declaration *makeTypeDeclaration(char *id, Type *type) {
     result->kind = declTypeK;
     result->val.typeD.id = id;
     result->val.typeD.type = type;
+    stmDeclNum++;
+result->internal_stmDeclNum = stmDeclNum;
     return result;
 }
 
@@ -519,10 +587,76 @@ Type *makeRecordType(VarDelList *record) {
     return t;
 }
 
+Type *makeLambdaType(TypeList *typeList, Type *type) {
+    Type *t = NEW(Type);
+
+    t->kind = typeLambdaK;
+    t->val.typeLambdaK.typeList = typeList;
+    t->val.typeLambdaK.returnType = type;
+
+    return t;
+}
+
 ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
     ExpressionList *list = NEW(ExpressionList);
     list->lineno = lineno;
     list->expression = exp;
     list->next = next;
     return list;
+}
+
+Declaration *makeValDeclaration(char *id, Expression *rhs) {
+    Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
+
+    declaration->kind = declValK;
+    declaration->val.valD.id = id;
+    declaration->val.valD.rhs = rhs;
+
+    return declaration;
+}
+
+Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList) {
+    Declaration *declaration = NEW(Declaration);
+    stmDeclNum++;
+    declaration->internal_stmDeclNum = stmDeclNum;
+
+    declaration->kind = declClassK;
+    declaration->val.classD.id = id;
+    declaration->val.classD.declarationList = declarationList;
+    declaration->val.classD.genericTypeParameters = typeList;
+    declaration->val.classD.extendedClasses = extensionList;
+    typeIndex = 0;
+
+    return declaration;
+}
+
+Type *makeClassType(char *id, TypeList *genericBoundTypes) {
+    Type *type;
+    type = NEW(Type);
+
+    type->kind = typeClassK;
+    type->val.typeClass.classId = id;
+    type->val.typeClass.genericBoundValues = genericBoundTypes;
+
+    return type;
+}
+
+TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
+    TypeList *tpeLst = NEW(TypeList);
+
+    tpeLst->next = next;
+
+    Type *type = NEW(Type);
+
+    type->kind = typeClassK;
+    type->val.typeClass.classId = class;
+    type->val.typeClass.genericBoundValues = boundTypes;
+    type->val.typeGeneric.typeIndex = typeIndex;
+    typeIndex++;
+
+    tpeLst->type = type;
+
+    return tpeLst;
 }

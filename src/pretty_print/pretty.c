@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include "stdbool.h"
 #include "pretty.h"
-#include "scan_parse.h"
+#include "../ast/tree.h"
 
 static int indentation = 0;
 
 void prettyStatementList(StatementList *statementList);
+void prettyLambda(Lambda *lambda);
 
 void printCurrentIndent() {
     for (int i = 0; i < indentation; i++) {
@@ -134,11 +136,21 @@ void prettyTerm(Term *term) {
         case nullK:
             prettyKeyword("null");
             break;
-
+        case numK:
+            printf("%i", term->val.numD.num);
+            break;
+        case lambdaK:
+            prettyLambda(term->val.lambdaD.lambda);
+            break;
+        case classDowncastk:
+            printf("%s : \033[0;36m%s\033[0m", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
+            break;
     }
 }
 
 void prettyType(Type *type) {
+
+
     switch(type->kind) {
         case typeIdK:
             printf("\033[0;36m%s\033[0m", type->val.idType.id);
@@ -159,8 +171,48 @@ void prettyType(Type *type) {
             }
             printf("\b\b}");
             break;
+        case typeLambdaK:
+            printf("(");
+            TypeList *typeList = type->val.typeLambdaK.typeList;
+
+            while (typeList != NULL) {
+                prettyType(typeList->type);
+
+                if (typeList->next != NULL) {
+                    printf(", ");
+                }
+
+                typeList = typeList->next;
+            }
+            printf(") -> ");
+
+            prettyType(type->val.typeLambdaK.returnType);
+            break;
+        case typeClassK:
+            printf("\033[0mclass \033[36m%s\033[0m", type->val.typeClass.classId);
+
+            if (type->val.typeClass.genericBoundValues != NULL) {
+                TypeList *typeList = type->val.typeClass.genericBoundValues;
+                printf("\033[0m[");
+
+                while (typeList != NULL) {
+
+                    printf("\033[36m%s", typeToString(typeList->type));
+
+                    if (typeList->next != NULL) {
+                        printf("\033[0m, \033[36m");
+                    }
+
+                    typeList = typeList->next;
+                }
+                printf("\033[0m]");
+
+            }
+
+            break;
+
         default:
-            printf("\033[0;36m%s\033[0m", getTypeName(type));
+            printf("\033[0;36m%s\033[0m", typeToString(type));
             break;
     }
 }
@@ -195,6 +247,34 @@ void prettyFunction(Function *f) {
     printf("\n");
 }
 
+void prettyLambda(Lambda *lambda) {
+    printf("(");
+    VarDelList *dels = lambda->declarationList;
+    bool hasParameter = dels != NULL;
+
+    while (dels != NULL) {
+        prettyArgument(dels->identifier);
+        printf(" : ");
+        prettyType(dels->type);
+        printf(", ");
+        dels = dels->next;
+    }
+
+    if (hasParameter){
+        printf("\b\b");
+    }
+
+    printf(") : ");
+
+    prettyType(lambda->returnType);
+    printf(" -> {\n");
+    indentation++;
+    prettyBody(lambda->body);
+    indentation--;
+    printCurrentIndent();
+    printf("}");
+}
+
 void prettyDeclaration(Declaration *decl) {
     printCurrentIndent();
 
@@ -222,6 +302,67 @@ void prettyDeclaration(Declaration *decl) {
             indentation++;
             prettyFunction(decl->val.functionD.function);
             indentation--;
+            break;
+        case declValK:
+            prettyKeyword("val ");
+            printf("%s = ", decl->val.valD.id);
+            prettyEXP(decl->val.valD.rhs);
+            printf(";\n");
+            break;
+        case declClassK:
+            prettyKeyword("class ");
+            printf("%s ", decl->val.classD.id);
+
+            if (decl->val.classD.genericTypeParameters != NULL) {
+                printf("\033[0m[");
+
+                TypeList *typeList = decl->val.classD.genericTypeParameters;
+
+                while (typeList != NULL) {
+
+                    printf("\033[0;32m%s", typeList->type->val.typeGeneric.genericName);
+
+                    if (typeList->type->val.typeGeneric.subType != NULL) {
+                        printf("\033[0m: \033[0;36m%s", typeList->type->val.typeGeneric.subType);
+                    }
+
+                    if (typeList->next != NULL) {
+                        printf("\033[0m, \033[0m");
+                    }
+                    typeList = typeList->next;
+                }
+
+                printf("\033[0m]");
+            }
+
+            if (decl->val.classD.extendedClasses != NULL) {
+                prettyKeyword("with ");
+
+                TypeList *typeList = decl->val.classD.extendedClasses;
+
+                while (typeList != NULL) {
+
+                    printf("\033[0;36m%s", typeList->type->val.typeClass.classId);
+
+                    if (typeList->next != NULL) {
+                        printf(" \033[0m");
+                    }
+                    typeList = typeList->next;
+                }
+
+            }
+
+            printf("\033[0m { \n");
+            indentation++;
+            DeclarationList *declarationList = decl->val.classD.declarationList;
+
+            while (declarationList != NULL) {
+                prettyDeclaration(declarationList->declaration);
+                declarationList = declarationList->next;
+            }
+
+            indentation--;
+            printf("};\n");
             break;
         default:
             break;
@@ -356,12 +497,6 @@ void prettyBody(Body *body) {
 
 void prettyEXP(Expression *e) {
     switch (e->kind) {
-        case idK:
-            printf("%s", e->val.idE);
-            break;
-        case intconstK:
-            printf("%i", e->val.intconstE);
-            break;
         case opK:
             printf("(");
             prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);

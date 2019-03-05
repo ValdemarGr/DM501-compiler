@@ -1,10 +1,119 @@
 
-var a : int;
+type A = array of bool;
+type Coordinate = record of { x: int, y: int };
+type LinkedList = record of { k : int, value: int, next : LinkedList };
 
-var i : int, bar : bool;
+type TypeA = record of { k : int, next : TypeB };
+type TypeB = record of { k : int, next : TypeC };
+type TypeC = record of { k : int, next : TypeA };
+(*
+type List[A]   = union of { Nil, Cons[A] };
+type Nil       = record of {};
+type Cons[A]   = record of { x: int, xs: List[A] };
 
-func sum(): int
-    var a : bool;
-    var i : int;
-    return a + i;
+type Either[L,R] = union of { Left[L], Right[R] };
+type Left[L]   = record of { v: L };
+type Right[R]  = record of { v: R };
+*)
+
+
+# TypeQ is a homogenous record of TypeC
+type TypeQ = record of { k : int, next : TypeA };
+
+func boolTest(b: bool) : bool
+
+    if b == null then
+        return false;
+    else
+        return true;
+end boolTest
+
+func identity(a: int): int
+    return a;
+end identity
+
+func differentTypes(a: int): bool
+    if a == 5 then
+        return true;
+    else
+        return false;
+end differentTypes
+
+func sum(a : int, b : int): int
+    return a + b;
 end sum
+
+func doSmartStuff(x: int, z: int): int
+    return sum(x, z) - sum(x, z) + identity(sum(z, x));
+end doSmartStuff
+
+func returnCustomType(valueue: int): A
+    var v : A;
+
+    return v;
+end returnCustomType
+
+func doArrays(arrayOne : array of int): array of int
+    var arrayTwo : array of int;
+    arrayTwo = arrayOne;
+
+    return arrayTwo;
+end doArrays
+
+func recordTest(z: int, j: int): Coordinate
+    var point : Coordinate;
+    var t : int;
+    var o : int;
+
+    point.x = t;
+    point.y = o;
+
+    return point;
+
+end recordTest
+
+func linkedListTest(hello: A): LinkedList
+    var ll : LinkedList;
+    var anotherll : LinkedList;
+
+    var ll2 : LinkedList;
+    var ll3 : LinkedList;
+    var ll4 : LinkedList;
+    var ll5 : LinkedList;
+
+    ll.k = 1;
+    ll.value = 69;
+    ll.next = anotherll;
+    ll.next = ll2;
+    ll.next.next.next = ll3;
+    ll.next.next.next.next = ll4;
+    ll4.next = ll5;
+    ll5.next = ll;
+
+    return ll;
+
+end linkedListTest
+
+func recursiveLinkedListTail(lll: LinkedList): LinkedList
+    var ll : LinkedList;
+
+    if ll == null then
+        return ll;
+
+    return recursiveLinkedListTail(ll.next);
+end recursiveLinkedListTail
+
+func imATypeWizard(hello: A): int
+    var a: TypeA;
+    var b: TypeB;
+    var c: TypeC;
+
+    a.next = b;
+    b.next = c;
+    c.next = a;
+
+    a.next.next.next = a;
+
+    return 42;
+end imATypeWizard
+

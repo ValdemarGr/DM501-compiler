@@ -1,0 +1,70 @@
+
+class List[A] {
+    type AOA = array of A;
+
+    var internal: AOA;
+    var size: int;
+
+    val buildWithArray = (a: AOA): int -> {
+        var index: int;
+
+        index = 0;
+
+        while a[index] != null do {
+            index = index + 1;
+        }
+
+        size = index;
+
+        internal = a;
+
+        return size;
+    };
+
+    val map = (apply: (A) -> A): class List[A] -> {
+        var iterator: int;
+        var newList: class List[A];
+
+        allocate newList;
+
+        iterator = 0;
+        while iterator < size do {
+            newList.internal[iterator] = apply(internal[iterator]);
+            iterator = iterator + 1;
+        }
+        newList.size = size;
+
+        return newList;
+    };
+
+    val filter = (condition: (A) -> bool): class List[A] -> {
+        var iterator: int;
+        var filteredCounter: int;
+        var newList: class List[A];
+
+        allocate newList;
+
+        iterator = 0;
+        filteredCounter = 0;
+        while iterator < size do {
+            if condition(internal[iterator]) == true then {
+                newList.internal[filteredCounter] = internal[iterator];
+                filteredCounter = filteredCounter + 1;
+            }
+            iterator = iterator + 1;
+        }
+        newList.size = filteredCounter;
+
+        return newList;
+    };
+};
+
+var lst: class List[int];
+val mapper = lst.map;
+val filter = lst.filter;
+val mappedList = mapper((x: int): int -> {
+    return x;
+});
+val filteredList = filter((x: int): int -> {
+    return x < 100;
+});

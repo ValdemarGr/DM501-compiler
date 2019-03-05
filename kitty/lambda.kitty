@@ -1,0 +1,55 @@
+type ComplexFunction = (int, ComplexFunction) -> int;
+
+var t: (int, bool) -> int;
+
+func lambdaStuff(): int
+    var a: int;
+    var b: (int, bool) -> int;
+
+    b = (i: int, z: bool): int -> {
+        return i;
+    };
+
+    return 5;
+end lambdaStuff
+
+func advancedLambdaReturn(): (bool, int) -> int
+    var a: (bool, int) -> int;
+
+    a = (x: bool, y: int): int -> {
+        return y;
+    };
+
+    return a;
+end advancedLambdaReturn
+
+
+func callingLambda(a: (int) -> int): int
+    return a(5);
+end callingLambda
+
+func lambdaAsLambdaArg(a: () -> int): int
+    var b: (() -> int) -> int;
+
+    b = (f: () -> int): int -> {
+        return f();
+    };
+
+    return b(a);
+end lambdaAsLambdaArg
+
+func recursiveTypedFunction(a: ComplexFunction): int
+    var b: ComplexFunction;
+
+    b = (x: int, c: ComplexFunction): int -> {
+        return c(x, c);
+    };
+
+    return b(1, a);
+end recursiveTypedFunction
+
+t = (i: int, z: bool): int -> {
+    return i;
+};
+
+return t(1,false);

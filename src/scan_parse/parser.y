@@ -4,9 +4,10 @@
 
 extern char *yytext;
 extern Body *theexpression;
+extern int lineno;
 
-void yyerror(char const *s) {
-   printf("syntax error at %s: %s\n",yytext,s);
+void yyerror() {
+   printf("syntax error before %s, at line %i\n",yytext, lineno);
 }
 %}
 
@@ -20,6 +21,7 @@ void yyerror(char const *s) {
    struct Declaration *declaration;
    struct Type *type;
    struct Function *function;
+   struct Lambda *lambda;
    struct FunctionHead *functionHead;
    struct FunctionTail *functionTail;
    struct StatementList *statementList;
@@ -28,6 +30,7 @@ void yyerror(char const *s) {
    struct Variable *variable;
    struct ExpressionList *expressionList;
    struct Term *term;
+   struct TypeList *typeList;
 }
 
 %token <intconst> tINTCONST
@@ -60,8 +63,13 @@ void yyerror(char const *s) {
 %token tTRUE
 %token tFALSE
 %token tNULL
+%token tLAMBDA_ARROW
+%token tVAL
+%token tCLASS
+%token tWITH
 
 %type <expression> expression
+%type <lambda> lambda
 %type <body> program body
 %type <declarationList> decl_list
 %type <varDelList> var_decl_list par_decl_list
@@ -76,6 +84,7 @@ void yyerror(char const *s) {
 %type <variable> variable
 %type <expressionList> act_list exp_list
 %type <term> term
+%type <typeList> type_list generic_type_list class_extension_list
 
 %start program
 
@@ -103,12 +112,42 @@ stm_list :
             {$$ = makeStatementList($1, $2);}
 ;
 
+generic_type_list : tIDENTIFIER ':' tIDENTIFIER ',' generic_type_list
+        {$$ = makeGenericTypeList($5, $1, $3);}
+        | tIDENTIFIER ',' generic_type_list
+        {$$ = makeGenericTypeList($3, $1, NULL);}
+        | tIDENTIFIER
+        {$$ = makeGenericTypeList(NULL, $1, NULL);}
+        | tIDENTIFIER ':' tIDENTIFIER
+        {$$ = makeGenericTypeList(NULL, $1, $3);}
+;
+
+class_extension_list : tIDENTIFIER
+                {$$ = makeExtensionList(NULL, $1, NULL);}
+                | tIDENTIFIER '[' type_list ']'
+                {$$ = makeExtensionList(NULL, $1, $3);}
+                | tIDENTIFIER class_extension_list
+                {$$ = makeExtensionList($2, $1, NULL);}
+                | tIDENTIFIER class_extension_list '[' type_list ']'
+                {$$ = makeExtensionList($2, $1, $4);}
+;
+
 declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
               {$$ = makeFunctionDecleration($1); }
               | tTYPE tIDENTIFIER '=' type ';'
               {$$ = makeTypeDeclaration($2, $4); }
+              | tVAL tIDENTIFIER '=' expression ';'
+              {$$ = makeValDeclaration($2, $4);}
+              | tCLASS tIDENTIFIER '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $4, NULL, NULL);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $7, $4, NULL);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' tWITH class_extension_list '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $9, $4, $7);}
+              | tCLASS tIDENTIFIER tWITH class_extension_list '{' decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $6, NULL, $4);}
 ;
 
 statement : tRETURN expression ';'
@@ -131,8 +170,20 @@ statement : tRETURN expression ';'
         {$$ = makeStatementFromList($2);}
 ;
 
+type_list : type ',' type_list
+        {$$ = makeTypeList($3, $1);}
+        | type
+        {$$ = makeTypeList(NULL, $1);}
+        |
+        {$$ = NULL;}
+;
+
 type :  tIDENTIFIER
         {$$ = makeIdType($1); }
+        | tCLASS tIDENTIFIER
+        {$$ = makeClassType($2, NULL); }
+        | tCLASS tIDENTIFIER '[' type_list ']'
+        {$$ = makeClassType($2, $4); }
         | tINT
         {$$ = makeIntType(); }
         | tBOOL
@@ -141,6 +192,12 @@ type :  tIDENTIFIER
         {$$ = makeArrayType($2); }
         | tRECORD_OF '{' var_decl_list '}'
         {$$ = makeRecordType($3); }
+        | '(' type_list ')' tLAMBDA_ARROW type
+        {$$ = makeLambdaType($2, $5);}
+;
+
+lambda : '(' par_decl_list ')' ':' type tLAMBDA_ARROW '{' body '}'
+        {$$ = makeLambda($2, $5, $8);}
 ;
 
 function :  head body tail
@@ -167,9 +224,7 @@ var_decl_list :  tIDENTIFIER ':' type ',' par_decl_list
                     {$$ = makeVarDelList($1, $3, NULL); }
 ;
 
-expression : tINTCONST
-        {$$ = makeEXPintconst($1);}
-        | '(' expression ')'
+expression : '(' expression ')'
         {$$ = $2;}
 ;
 
@@ -243,6 +298,10 @@ term : variable
         {$$ = makeFalseTerm();}
         | tNULL
         {$$ = makeNullTerm();}
+        | lambda
+        {$$ = makeLambdaTerm($1);}
+        | tIDENTIFIER ':' tIDENTIFIER
+        {$$ = makeDowncastTerm($1, $3);}
 ;
 
 %%

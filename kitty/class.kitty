@@ -1,0 +1,26 @@
+
+class ClassA {
+    val h = 5;
+};
+
+class ClassC[A : ClassA] {
+    val g = 2;
+    var t: A;
+};
+
+
+class ClassB[A : ClassC, B] {
+    var a: B;
+
+    val f = (z: A, transformer: (A) -> B):B -> {
+        #This should not work
+        write z.g;
+        write z.t.h;
+        return transformer(z);
+    };
+};
+
+
+var a: class ClassB[ClassB, int];
+var b: int;
+b = a.a;

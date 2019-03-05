@@ -6,7 +6,8 @@ typedef struct Type Type;
 typedef struct Term Term;
 typedef struct Variable Variable;
 typedef struct SymbolTable SymbolTable;
-
+typedef struct TypeList TypeList;
+typedef struct Expression Expression;
 
 typedef struct VarDelList {
     char *identifier;
@@ -15,7 +16,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK
 } TypeKind;
 
 typedef struct Type {
@@ -24,8 +25,16 @@ typedef struct Type {
         struct { char *id; } idType;
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
+        struct { TypeList *typeList; Type *returnType; } typeLambdaK;
+        struct { char *classId; TypeList *genericBoundValues; } typeClass;
+        struct { char *genericName; char *subType; int typeIndex; } typeGeneric;
     } val;
 } Type;
+
+typedef struct TypeList {
+    Type *type;
+    struct TypeList *next;
+} TypeList;
 
 typedef struct FunctionHead {
     SymbolTable *symbolTable;
@@ -40,6 +49,12 @@ typedef struct FunctionTail {
     char *indentifier;
 } FunctionTail;
 
+typedef struct Lambda {
+    VarDelList *declarationList;
+    Type *returnType;
+    Body *body;
+} Lambda;
+
 typedef struct Function {
     FunctionHead *head;
     Body *body;
@@ -48,14 +63,21 @@ typedef struct Function {
 
 typedef struct Declaration {
     SymbolTable *symbolTable;
+    int internal_stmDeclNum;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK } kind;
+    enum { declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK } kind;
     union {
         struct { char* id; Type *type; } varD;
         struct { struct Declaration *var; struct Declaration *next; } varsD;
         struct { char* id; Type *type; } typeD;
         struct { Function *function; } functionD;
+        struct { char* id; Expression *rhs; Type *tpe; } valD;
+        struct { char* id;
+            struct DeclarationList *declarationList;
+            struct TypeList *genericTypeParameters;
+            struct TypeList *extendedClasses;
+        } classD;
     } val;
 } Declaration;
 
@@ -66,15 +88,11 @@ typedef struct DeclarationList {
 } DeclarationList;
 
 typedef struct Expression {
-    SymbolTable *symbolTable;
-
     int lineno;
     enum {
-        idK, intconstK, opK, termK//, functionK
+        opK, termK//, functionK
     } kind;
     union {
-        char *idE;
-        int intconstE;
         struct {
             struct Expression *left;
             struct Operator *operator;
@@ -92,6 +110,8 @@ typedef struct Expression {
 
 typedef struct Statement {
     int lineno;
+    int internal_stmDeclNum;
+
     enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
     SymbolTable *symbolTable;
     union {
@@ -99,11 +119,11 @@ typedef struct Statement {
         struct { Expression* exp; } writeD;
         struct { Variable* var; } allocateD;
         struct { Variable* var; Expression* len; } allocateLenD;
-        struct { Variable* var; Expression* exp; } assignmentD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
         struct { Expression* exp; struct Statement* statement; } whileD;
         struct { struct StatementList* statementList; } stmListD;
+        struct { Variable* var; Expression* exp; } assignmentD;
     } val;
 } Statement;
 
@@ -136,7 +156,7 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
@@ -144,6 +164,8 @@ typedef struct Term {
         struct { Term* term; } negateD;
         struct { Expression* expression; } absD;
         struct { int num; } numD;
+        struct { Lambda *lambda; } lambdaD;
+        struct { char* varId; char* downcastId; } classDowncastD;
     } val;
 } Term;
 
@@ -151,6 +173,10 @@ typedef struct Body {
     DeclarationList *declarationList;
     StatementList *statementList;
 } Body;
+
+TypeList *makeTypeList(TypeList* next, Type *elem);
+
+TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType);
 
 Expression *makeEXPFromTerm(Term *term);
 
@@ -178,9 +204,9 @@ Term *makeFalseTerm();
 
 Term *makeNullTerm();
 
-Expression *makeEXPid(char *id);
+Term *makeLambdaTerm(Lambda *lambda);
 
-Expression *makeEXPintconst(int intconst);
+Term *makeDowncastTerm(char* varId, char *downcastId);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -220,6 +246,10 @@ Declaration *makeTypeDeclaration(char* id, Type* type);
 
 Declaration *makeVarDeclarations(VarDelList* vars);
 
+Declaration *makeValDeclaration(char* id, Expression *rhs);
+
+Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList);
+
 StatementList *makeStatementList(Statement *statement, StatementList *next);
 
 Statement *makeReturnStatement(Expression *exp);
@@ -242,6 +272,8 @@ Statement *makeStatementFromList(StatementList *statementList);
 
 Type *makeIdType(char* id);
 
+Type *makeClassType(char* id, TypeList *genericBoundTypes);
+
 Type *makeIntType();
 
 Type *makeBoolType();
@@ -250,11 +282,15 @@ Type *makeArrayType(Type *type);
 
 Type *makeRecordType(VarDelList *record);
 
+Type *makeLambdaType(TypeList *typeList, Type *type);
+
 Expression *makeEXPfunction(char *identifier, Expression *body);
 
 VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next);
 
 Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail);
+
+Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body);
 
 FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type);
 
@@ -263,5 +299,7 @@ FunctionTail *makeFunctionTail(char *identifier);
 Body *makeBody(DeclarationList *declarationList, StatementList *statementList);
 
 Declaration *makeFunctionDecleration(Function *function);
+
+TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes);
 
 #endif
