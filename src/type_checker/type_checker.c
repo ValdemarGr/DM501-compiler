@@ -1208,11 +1208,10 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                                     &intStaticType,
                                     statement->symbolTable);
 
-            if (e == NULL && e==NULL) {
-
+            if (e != NULL && e2 != NULL) {
+                if (e != NULL) return e;
+                if (e2 != NULL) return e2;
             }
-            if (e != NULL) return e;
-            if (e2 != NULL) return e2;
 
             return NULL;
             break;
