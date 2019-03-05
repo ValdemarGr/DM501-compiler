@@ -7,13 +7,9 @@ class ClassC[A : ClassA] {
     val g = 2;
     var t: A;
 };
-
-class ClassD with ClassC {
-    var d: int;
-};
-
 class ClassB[A : ClassC, B] {
     var a: B;
+    var b: A;
 
     val f = (z: A, transformer: (A) -> B):B -> {
         #This should not work
@@ -24,6 +20,10 @@ class ClassB[A : ClassC, B] {
 };
 
 
-var a: class ClassB[ClassD, int];
+var a: class ClassB[class ClassC[class ClassA], int];
+var no: class ClassB[class ClassC[bool], int];
 var b: int;
+var z: int;
+z = a.b.t.h;
+
 b = a.a;

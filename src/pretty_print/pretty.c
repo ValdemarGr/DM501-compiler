@@ -197,7 +197,8 @@ void prettyType(Type *type) {
 
                 while (typeList != NULL) {
 
-                    printf("\033[36m%s", typeToString(typeList->type));
+                    //printf("\033[36m%s", typeToString(typeList->type));
+                    prettyType(typeList->type);
 
                     if (typeList->next != NULL) {
                         printf("\033[0m, \033[36m");
