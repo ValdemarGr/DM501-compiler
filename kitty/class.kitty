@@ -8,6 +8,9 @@ class ClassC[A : ClassA] {
     var t: A;
 };
 
+class ClassD with ClassC {
+    var d: int;
+};
 
 class ClassB[A : ClassC, B] {
     var a: B;
@@ -21,6 +24,6 @@ class ClassB[A : ClassC, B] {
 };
 
 
-var a: class ClassB[ClassB, int];
+var a: class ClassB[ClassD, int];
 var b: int;
 b = a.a;

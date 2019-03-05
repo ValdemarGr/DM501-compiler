@@ -280,6 +280,10 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
                     return NULL;
                 }
 
+                if (symbol->value->kind == typeFunctionK) {
+                    symbol->value->val.typeFunctionD;
+                }
+
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
             break;
         default:
@@ -1394,56 +1398,55 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
     }
 }
 
-bool isSubtypeOf(Type* super, Type* satisfier, SymbolTable *symbolTable) {
-    Type *unwrapped = unwrapTypedef(super, symbolTable);
+SYMBOL *unwrapTypedefToClassId(Type *type, SymbolTable *symbolTable) {
+    SYMBOL *symbol = NULL;
+    switch (type->kind) {
+        case typeIdK:
+            symbol = getSymbol(symbolTable, type->val.idType.id);
 
-    if (strcmp(satisfier->val.typeGeneric.subType, unwrapped->val.typeClass.classId) == 0) {
-        return NULL;
-    } else {
-        //Downcast
-        SYMBOL *symbol = getSymbol(symbolTable, unwrapped->val.typeClass.classId);
-        TypeList *extended = symbol->value->val.typeClassD.extendedClasses;
-
-        while (extended != NULL) {
-            if (isSubtypeOf(extended->type, satisfier, symbolTable) == true) {
-                return true;
+            if (symbol == NULL) {
+                return NULL;
             }
 
-            extended = extended->next;
-        }
-        return false;
+            if (symbol->value->kind != symTypeClassK) {
+                return NULL;
+            }
+
+            return symbol;
+            break;
+        default:
+            return NULL;
+            break;
     }
 }
 
-Error *boundTypeSatisfiesGeneric(Type* boundType, Type* genericType, SymbolTable *symbolTable) {
-    Error *e = NULL;
-    Type *unwrapped = unwrapTypedef(boundType, symbolTable);
+bool checkIfIsSubtype(TypeList *extended, char *subType, SymbolTable *symbolTable) {
+    TypeList *ext = extended;
 
-    //If the generic type has a subtype constraint, then we check the boundtype and traverse it
-    if (genericType->val.typeGeneric.subType != NULL) {
-        if (unwrapped->kind != typeClassK) {
-            e = NEW(Error);
+    while (ext != NULL) {
+        //If the extension name matches the id
+        if (strcmp(subType, extended->type->val.idType.id) == 0) {
+            return true;
+        }
+        //Check all extensions of this extension
+        SYMBOL *symbol = getSymbol(symbolTable, extended->type->val.idType.id);
 
-            e->error = SYMBOL_NOT_FOUND;
-            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1407";
-            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
-
-            return e;
+        if (symbol == NULL) {
+            return false;
         }
 
-        if (isSubtypeOf(boundType, genericType, symbolTable)) {
-            return NULL;
-        } else {
-            e = NEW(Error);
-
-            e->error = SYMBOL_NOT_FOUND;
-            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1448";
-            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
-
-            return e;
+        if (symbol->value->kind != symTypeClassK) {
+            return false;
         }
+
+        if (checkIfIsSubtype(symbol->value->val.typeClassD.extendedClasses, subType, symbolTable) == true) {
+            return true;
+        }
+
+        ext = ext->next;
     }
-    return NULL;
+
+    return false;
 }
 
 Error *checkDeclValidity(Declaration *declaration) {
@@ -1456,8 +1459,8 @@ Error *checkDeclValidity(Declaration *declaration) {
             e = checkTypeExist(declaration->val.varD.type, declaration->symbolTable, lineno, NULL);
             if (e != NULL) return e;
             //Todo FIX THIS CODE FOR GENERIC BINDINGS
-            return NULL;
-            //If its type is a class, check the generic bindings validity
+            //return NULL;
+            //If its type is a class, check the generic bindings' validity
             if (declaration->val.varD.type->kind == typeClassK) {
                 TypeList *boundVars = declaration->val.varD.type->val.typeClass.genericBoundValues;
                 SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.varD.type->val.typeClass.classId);
@@ -1486,8 +1489,50 @@ Error *checkDeclValidity(Declaration *declaration) {
 
                 while (boundVars != NULL && classGenerics != NULL) {
                     //Check if bound var is of allowed type
-                    e = boundTypeSatisfiesGeneric(boundVars->type, classGenerics->type, declaration->symbolTable);
-                    if (e != NULL) return e;
+
+                    if (classGenerics->type->val.typeGeneric.subType != NULL) {
+                        if (strcmp(classGenerics->type->val.typeGeneric.subType, boundVars->type->val.idType.id) == 0) {
+                            return NULL;
+                        }
+
+                        SYMBOL *symbols = getSymbol(declaration->symbolTable, boundVars->type->val.typeClass.classId);
+
+                        if (symbols == NULL) {
+                            e = NEW(Error);
+
+                            e->error = SYMBOL_NOT_FOUND;
+                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1504";
+                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+
+                            return e;
+                        }
+
+                        if (symbols->value->kind != symTypeClassK) {
+                            e = NEW(Error);
+
+                            e->error = SYMBOL_NOT_FOUND;
+                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1514";
+                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+
+                            return e;
+                        }
+
+                        if (symbols->value->val.typeClassD.extendedClasses == NULL) {
+                            e = NEW(Error);
+
+                            e->error = SYMBOL_NOT_FOUND;
+                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1524";
+                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+
+                            return e;
+                        }
+
+                        if (checkIfIsSubtype(symbols->value->val.typeClassD.extendedClasses,
+                                classGenerics->type->val.typeGeneric.subType,
+                                declaration->symbolTable) == true) {
+                            return NULL;
+                        }
+                    }
 
                     classGenerics = classGenerics->next;
                     boundVars = boundVars->next;
@@ -1498,7 +1543,7 @@ Error *checkDeclValidity(Declaration *declaration) {
                     e = NEW(Error);
 
                     e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1444";
+                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1536";
                     e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
 
                     return e;
@@ -1509,7 +1554,7 @@ Error *checkDeclValidity(Declaration *declaration) {
                     e = NEW(Error);
 
                     e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1444";
+                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1547";
                     e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
 
                     return e;
@@ -1521,7 +1566,8 @@ Error *checkDeclValidity(Declaration *declaration) {
             decl = declaration;
 
             while (decl != NULL) {
-                checkDeclValidity(decl->val.varsD.var);
+                e = checkDeclValidity(decl->val.varsD.var);
+                if (e != NULL) return e;
 
                 decl = decl->val.varsD.next;
             }
