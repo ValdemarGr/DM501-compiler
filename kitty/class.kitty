@@ -3,27 +3,20 @@ class ClassA {
     val h = 5;
 };
 
-class ClassC[A : ClassA] {
+type ROXY = record of { x: int, y: int };
+
+class ClassC {
     val g = 2;
-    var t: A;
-};
-class ClassB[A : ClassC, B] {
-    var a: B;
-    var b: A;
 
-    val f = (z: A, transformer: (A) -> B):B -> {
-        #This should not work
-        write z.g;
-        write z.t.h;
-        return transformer(z);
-    };
+};
+class ClassB[C : ClassC] {
+    var b: C;
 };
 
 
-var a: class ClassB[class ClassC[class ClassA], int];
-var no: class ClassB[class ClassC[bool], int];
-var b: int;
+var a: class ClassB[class ClassC];
 var z: int;
-z = a.b.t.h;
-
-b = a.a;
+var p: int;
+var roxy: ROXY;
+z = a.b.g;
+#p = a.b.t.h;
