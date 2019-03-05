@@ -2,6 +2,7 @@
 // Created by valde on 2/23/19.
 //
 #include "error.h"
+#include "../utils/memory.h"
 
 int writeError(Error *e) {
     if (e == NULL) {
@@ -93,4 +94,18 @@ int writeError(Error *e) {
     }
 
     return e->error;
+}
+
+Error *makeExpressionNotAsExpectedError(int lineno, Expression *expThatCausedError, TypeKind expectedType,
+                                        TypeKind expressionType) {
+    Error *e;
+    e = NEW(Error);
+
+    e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
+    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno = lineno;
+    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expThatCausedError;
+    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType;
+    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType = expressionType;
+
+    return NULL;
 }

@@ -12,7 +12,7 @@ struct Type intStaticType = {.kind = typeIntK};
 //This is a hack, it is very hacky. Do not do this at home.
 #define NULL_KITTY_VALUE_INDICATOR ((void *)1)
 
-Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
+TypeCheckType *typeCheckExpression(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
@@ -499,58 +499,20 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
     return NULL;
 }
 
-/*
-Type *unwrapNestedType(Type *type, Variable *variable, SymbolTable *symbolTable) {
-    SYMBOL *symbol;
-    Variable *base;
-    VarDelList *varDelList;
+TypeCheckType *typeCheckExpressionRequireType(Expression *expression, SymbolTable *symbolTable, Type *type, TypeCheckType *t) {
+    t = typeCheckExpression(expression, symbolTable);
+    if (t->err != NULL) return t;
 
-    switch (type->kind) {
-        case typeIdK:
-            symbol = getSymbol(symbolTable, type->val.idType.id);
-            return unwrapNestedType(symbol->value->val.typeD.tpe, variable, symbolTable);
-            break;
-        case typeIntK:
-            return type;
-            break;
-        case typeBoolK:
-            return type;
-            break;
-        case typeArrayK:
-
-            if (variable->kind == arrayIndexK) {
-                return unwrapNestedType(type->val.arrayType.type, variable->val.arrayIndexD.var, symbolTable);
-            } else {
-                return type;
-            }
-            break;
-        case typeRecordK:
-
-            if (variable->kind == recordLookupK) {
-                varDelList = type->val.recordType.types;
-
-                while (varDelList != NULL) {
-
-                    if (strcmp(variable->val.recordLookupD.id, varDelList->identifier) == 0) {
-                        //ID
-                        return unwrapNestedType(varDelList->type, variable->val.recordLookupD.var, symbolTable);
-                    }
-
-                    varDelList = varDelList->next;
-                }
-
-
-                return NULL;
-            } else {
-                return type;
-            }
-            break;
+    if (areTypesEqual(type, t->type, symbolTable) == false) {
+        t->err = makeExpressionNotAsExpectedError(expression->lineno, expression, type->kind, t->type->kind);
+        return t;
     }
-    return NULL;
-}
-*/
 
-Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *symbolTable) {
+    return t;
+}
+
+Error *typeCheckVariable(Variable* variable, SymbolTable *symbolTable) {
+    TypeCheckType *t = NULL;
     Error *e = NULL;
     SYMBOL *symbol = NULL;
     VarDelList *recordItems = NULL;
@@ -574,8 +536,10 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             }
 
             if (symbol->value->kind == typeK) {
-                symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+                t = NEW(TypeCheckType);
+                t->type = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
+/*
                 if (areTypesEqual(symAsType, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
                     e = NEW(Error);
 
@@ -588,6 +552,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
                     return e;
                 }
+                */
             } else {
                 if (expectedType->kind == typeLambdaK) {
                     Type *returnType = unwrapTypedef(expectedType->val.typeLambdaK.returnType, symbolTable);
@@ -768,7 +733,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
     return NULL;
 }
 
-Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
+TypeCheckType *typeCheckTerm(Term *term, SymbolTable *symbolTable) {
+    TypeCheckType *t = NULL;
     Type *typeMatch = NULL;
     Error *e = NULL;
     SYMBOL *symbol = NULL;
@@ -788,13 +754,15 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
 
             if (symbol == NULL) {
+                t = NEW(TypeCheckType);
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = term->val.functionCallD.functionId;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
 
-                return e;
+                t->err = e;
+                return t;
             }
 
             if (symbol->value->kind != typeFunctionK) {
@@ -802,26 +770,39 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 Type *ret = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
                 if (ret == NULL) {
+                    t = NEW(TypeCheckType);
                     e = NEW(Error);
 
                     e->error = SYMBOL_NOT_FOUND;
                     e->val.SYMBOL_NOT_FOUND_S.id = "userType";
                     e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
 
-                    return e;
+                    t->err = e;
+                    return t;
                 }
 
                 if (ret->kind != typeLambdaK) {
+                    t = NEW(TypeCheckType);
                     e = NEW(Error);
 
                     e->error = TYPE_TERM_IS_NOT_FUNCTION;
                     e->val.TYPE_TERM_IS_NOT_FUNCTION_S.lineno = term->lineno;
                     e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid = term->val.functionCallD.functionId;
 
-                    return e;
+                    t->err = e;
+                    return t;
                 }
             }
 
+            TypeCheckType *t_return = NULL;
+            t_return = NEW(TypeCheckType);
+
+            if (symbol->value->kind == typeFunctionK) {
+                t_return->type = symbol->value->val.typeFunctionD.returnType;
+            } else if (symbol->value->val.typeD.tpe->kind == typeLambdaK) {
+                t_return->type = symbol->value->val.typeD.tpe->val.typeLambdaK.returnType;
+            }
+/*
             if ((symbol->value->kind == typeFunctionK &&
                areTypesEqual(symbol->value->val.typeFunctionD.returnType, expectedType, symbolTable) == false) ||
                (symbol->value->val.typeD.tpe->kind == typeLambdaK &&
@@ -834,7 +815,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
                 return e;
             }
-
+*/
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
 
             if (symbol->value->kind == typeFunctionK) {
@@ -843,8 +824,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 int paramNum = 0;
 
                 while (expressionList != NULL && varDelList != NULL) {
-                    e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
-                    if (e != NULL) return e;
+                    t = typeCheckExpressionRequireType(expressionList->expression, symbolTable, varDelList->type, t);
+                    if (t != NULL) return t;
 
                     expressionList = expressionList->next;
                     varDelList = varDelList->next;
@@ -854,6 +835,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
                     //Error
                     e = NEW(Error);
+                    t = NEW(TypeCheckType);
 
                     int expectedCount = paramNum;
 
@@ -875,7 +857,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
 
-                    return e;
+                    t->err = e;
+                    return t;
                 }
             } else {
                 TypeList *varDelList;
@@ -883,12 +866,14 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     varDelList = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable)->val.typeLambdaK.typeList;
                     if (varDelList == NULL) {
                         e = NEW(Error);
+                        t = NEW(TypeCheckType);
 
                         e->error = SYMBOL_NOT_FOUND;
                         e->val.SYMBOL_NOT_FOUND_S.id = "userType";
                         e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
 
-                        return e;
+                        t->err = e;
+                        return t;
                     }
                 } else {
                     varDelList = symbol->value->val.typeD.tpe->val.typeLambdaK.typeList;
@@ -897,8 +882,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 int paramNum = 0;
 
                 while (expressionList != NULL && varDelList != NULL) {
-                    e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
-                    if (e != NULL) return e;
+                    t = typeCheckExpressionRequireType(expressionList->expression, symbolTable, varDelList->type, t);
+                    if (t->err != NULL) return t;
 
                     expressionList = expressionList->next;
                     varDelList = varDelList->next;
@@ -908,6 +893,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
                     //Error
                     e = NEW(Error);
+                    t = NEW(TypeCheckType);
 
                     int expectedCount = paramNum;
 
@@ -929,11 +915,13 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
 
-                    return e;
+                    t->err = e;
+                    return t;
                 }
 
             }
 
+            return t_return;
             break;
         case lambdaK:
             typeMatch = NEW(Type);
@@ -963,7 +951,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     vdl = vdl->next;
                 }
             }
-
+            /*
             //Check if lhs and rhs are same type
             if (areTypesEqual(expectedType, typeMatch, symbolTable) == false) {
                 //Better error please
@@ -978,46 +966,53 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
                 return e;
             }
+             */
 
-            e = typeCheck(term->val.lambdaD.lambda->body, term->val.lambdaD.lambda->returnType);
-            if (e != NULL) return e;
+            t = typeCheck(term->val.lambdaD.lambda->body, term->val.lambdaD.lambda->returnType);
+            if (t->err != NULL) return t;
 
             break;
         case parenthesesK:
-            e = typeCheckExpression(term->val.parenthesesD.expression, expectedType, symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpression(term->val.parenthesesD.expression, symbolTable);
+            if (t->err != NULL) return t;
             break;
         case negateK:
-            if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
+            t = typeCheckTerm(term->val.negateD.term, symbolTable);
+            if (t->err != NULL) return t;
+
+            if (areTypesEqual(&booleanStaticType, t->type, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
 
-                return e;
+                t->err = e;
+                return t;
             }
-
-            e = typeCheckTerm(term->val.negateD.term, expectedType, symbolTable);
-            if (e != NULL) return e;
 
             break;
         case absK:
-            if (areTypesEqual(&intStaticType, expectedType, symbolTable) == false) {
+            t = typeCheckExpression(term->val.absD.expression, symbolTable);
+            if (t->err != NULL) return t;
+
+            if (areTypesEqual(&intStaticType, t->type, symbolTable) == false) {
                 e = NEW(Error);
+                t = NEW(TypeCheckType);
 
                 e->error = TYPE_TERM_NOT_INTEGER;
                 e->val.TYPE_TERM_NOT_INTEGER_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
 
-                return e;
+                t->err = e;
+                return t;
             }
-
-            e = typeCheckExpression(term->val.absD.expression, expectedType, symbolTable);
-            if (e != NULL) return e;
 
             break;
         case numK:
+            t = NEW(TypeCheckType);
+            t->type = &intStaticType;
+            /*
             if (areTypesEqual(&intStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
@@ -1026,9 +1021,12 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
 
                 return e;
-            }
+            }*/
             break;
         case trueK:
+            t = NEW(TypeCheckType);
+            t->type = &booleanStaticType;
+            /*
             if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
@@ -1038,8 +1036,12 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
                 return e;
             }
+             */
             break;
         case falseK:
+            t = NEW(TypeCheckType);
+            t->type = &booleanStaticType;
+            /*
             if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
@@ -1049,14 +1051,17 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
                 return e;
             }
+             */
             break;
         case nullK:
             //Null satisfies all types
-            return NULL_KITTY_VALUE_INDICATOR;
+            t = NEW(TypeCheckType);
+            t->type = NULL_KITTY_VALUE_INDICATOR;
             break;
         case classDowncastk:
-            type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
-
+            t = NEW(TypeCheckType);
+            t->type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
+/*
             if (areTypesEqual(type, expectedType, symbolTable) == false) {
                 e = NEW(Error);
 
@@ -1066,34 +1071,23 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
                 return e;
             }
-
+*/
             break;
         default:
             break;
     }
 
-    return NULL;
+    return t;
 }
 
-Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable) {
-
+TypeCheckType *typeCheckExpression(Expression *expression, SymbolTable *symbolTable) {
+    TypeCheckType *t = NEW(TypeCheckType);
     Error *e = NULL;
     SYMBOL *symbol;
     bool isBoolean;
     Type *expressionType;
 
     switch (expression->kind) {
-        /*case idK:
-            symbol = getSymbol(expression->symbolTable, expression->val.idE);
-
-            if (expression->val->)
-
-            break;
-        case intconstK:
-
-            if (expectedType)
-
-            break;*/
         case opK:
             //We want to check if the operator is boolean or not
             expressionType = &booleanStaticType;
@@ -1110,21 +1104,8 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                     break;
             }
 
-            //Check if the operator matches the expected return type
-            if (areTypesEqual(expectedType, expressionType, symbolTable) == false) {
-                e = NEW(Error);
-
-                e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
-                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno = expression->lineno;
-                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expression;
-                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType->kind;
-                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType = expressionType->kind;
-
-                return e;
-            }
-
-            Error *e1 = NULL;
-            Error *e2 = NULL;
+            TypeCheckType *t1 = NULL;
+            TypeCheckType *t2 = NULL;
 
             //The idea here is that either one of the sides are null or they are both integer or both boolean.
 
@@ -1132,31 +1113,21 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             if (expression->val.op.operator->kind == opEqualityK ||
                     expression->val.op.operator->kind == opInequalityK) {
                 //Check for int
-                e1 = typeCheckExpression(expression->val.op.left, &intStaticType, symbolTable);
-                e2 = typeCheckExpression(expression->val.op.right, &intStaticType, symbolTable);
+                t1 = typeCheckExpression(expression->val.op.left, symbolTable);
+                if (t1->err != NULL) return t1;
 
-                if (e1 == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
-                    return NULL;
+                t2 = typeCheckExpression(expression->val.op.right, symbolTable);
+                if (t2->err != NULL) return t2;
+
+                if (t1->err == NULL_KITTY_VALUE_INDICATOR || t2->err == NULL_KITTY_VALUE_INDICATOR) {
+                    return t;
                 }
 
-                if (e1 == NULL && e2 == NULL) {
-                    return NULL;
+                if ((areTypesEqual(&intStaticType, t1->type, symbolTable) == false && areTypesEqual(&intStaticType, t2->type, symbolTable) == false) ||
+                        (areTypesEqual(&booleanStaticType, t1->type, symbolTable) == false && areTypesEqual(&booleanStaticType, t2->type, symbolTable) == false)) {
+                    t->err = makeExpressionNotAsExpectedError(expression->lineno, expression, intStaticType.kind, t->type->kind);
+                    return t;
                 }
-
-                //Also check for bool
-                e1 = typeCheckExpression(expression->val.op.left, &booleanStaticType, symbolTable);
-                e2 = typeCheckExpression(expression->val.op.right, &booleanStaticType, symbolTable);
-
-                if (e1 == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
-                    return NULL;
-                }
-
-                if (e1 == NULL && e2 == NULL) {
-                    return NULL;
-                }
-
-                if (e1 != NULL) return e1;
-                if (e2 != NULL) return e2;
             }
 
             break;
@@ -1175,8 +1146,11 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
     return NULL;
 }
 
+TypeCheckType *typeCheckExpressionRequireType(Expression *expression, SymbolTable *symbolTable, Type *type, TypeCheckType *t);
+
 //We need to track the return type, since we can have deeeeeeeep dwelling return statements
-Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
+TypeCheckType *typeCheckStatement(Statement *statement, Type *functionReturnType) {
+    TypeCheckType *t = NULL;
     Error *e = NULL;
     Error *e2 = NULL;
     StatementList *statementList;
@@ -1188,82 +1162,66 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
     switch (statement->kind) {
         case statReturnK:
-            e = typeCheckExpression(statement->val.returnD.exp,
-                    functionReturnType,
+            t = typeCheckExpression(statement->val.returnD.exp,
                     statement->symbolTable);
-            if (e != NULL && e != NULL_KITTY_VALUE_INDICATOR) return e;
-
-            //dumpSymbolTable(statement->symbolTable);
+            if (t->err != NULL) return t;
             break;
         case statWriteK:
-            e = typeCheckExpression(statement->val.writeD.exp,
-                                    &booleanStaticType,
+            t = typeCheckExpression(statement->val.writeD.exp,
                                     statement->symbolTable);
 
-            e2 = typeCheckExpression(statement->val.writeD.exp,
-                                    &intStaticType,
-                                    statement->symbolTable);
+            if (t->err != NULL) return t;
 
-            if (e == NULL && e==NULL) {
-
+            if (areTypesEqual(&intStaticType, t->type, statement->symbolTable) == false ||
+                    areTypesEqual(&booleanStaticType, t->type, statement->symbolTable) == false) {
+                t->err = makeExpressionNotAsExpectedError(statement->lineno, statement->val.writeD.exp, intStaticType.kind, t->type->kind);
+                return t;
             }
-            if (e != NULL) return e;
-            if (e2 != NULL) return e2;
-
-            return NULL;
             break;
-        /*case statAllocateK:
-            e = typeCheckExpression(statement->val.allocateD.exp,);
-            if (e != NULL) return e;
-            break;*/
         case statAllocateLenK:
-            e = typeCheckExpression(statement->val.allocateLenD.len,
-                                    &intStaticType,
-                                    statement->symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpressionRequireType(statement->val.allocateLenD.len,
+                                    statement->symbolTable, &intStaticType, t);
+            if (t->err != NULL) return t;
             break;
         case statIfK:
-            e = typeCheckExpression(statement->val.ifD.exp,
-                                    &booleanStaticType,
-                                    statement->symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpressionRequireType(statement->val.allocateLenD.len,
+                                    statement->symbolTable, &booleanStaticType, t);
+            if (t->err != NULL) return t;
 
-            e = typeCheckStatement(statement->val.ifD.statement,
+            t = typeCheckStatement(statement->val.ifD.statement,
                                    functionReturnType);
-            if (e != NULL) return e;
+            if (t->err != NULL) return t;
             break;
         case statIfElK:
-            e = typeCheckExpression(statement->val.ifElD.exp,
-                                    &booleanStaticType,
-                                    statement->symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpressionRequireType(statement->val.ifElD.exp,
+                                    statement->symbolTable, &booleanStaticType, t);
+            if (t != NULL) return t;
 
-            e = typeCheckStatement(statement->val.ifElD.statement,
+            t = typeCheckStatement(statement->val.ifElD.statement,
                                    functionReturnType);
-            if (e != NULL) return e;
+            if (t != NULL) return t;
 
-            e = typeCheckStatement(statement->val.ifElD.elseStatement,
+            t = typeCheckStatement(statement->val.ifElD.elseStatement,
                                    functionReturnType);
-            if (e != NULL) return e;
+            if (t->err != NULL) return t;
             break;
         case statWhileK:
-            e = typeCheckExpression(statement->val.whileD.exp,
-                                    &booleanStaticType,
-                                    statement->symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpressionRequireType(statement->val.whileD.exp,
+                                    statement->symbolTable, &booleanStaticType, t);
+            if (t->err != NULL) return t;
 
-            e = typeCheckStatement(statement->val.whileD.statement,
+            t = typeCheckStatement(statement->val.whileD.statement,
                                    functionReturnType);
-            if (e != NULL) return e;
+            if (t->err != NULL) return t;
             break;
         case stmListK:
             statementList = statement->val.stmListD.statementList;
 
             while (statementList != NULL) {
 
-                e = typeCheckStatement(statementList->statement,
+                t = typeCheckStatement(statementList->statement,
                                        functionReturnType);
-                if (e != NULL) return e;
+                if (t->err != NULL) return t;
 
                 statementList = statementList->next;
             }
@@ -1276,24 +1234,26 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             lhsType = unwrapVariable(statement->val.assignmentD.var, statement->symbolTable);
 
             if (lhsType == NULL) {
+                t = NEW(TypeCheckType);
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = "";
                 e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
 
-                return e;
+                t->err = e;
+                return t;
             }
 
-            e = typeCheckExpression(statement->val.assignmentD.exp, lhsType, statement->symbolTable);
-            if (e != NULL) return e;
+            t = typeCheckExpressionRequireType(statement->val.assignmentD.exp, statement->symbolTable, lhsType, t);
+            if (t->err != NULL) return t;
 
             break;
         default:
             break;
     }
 
-    return NULL;
+    return t;
 }
 
 typedef struct TypedefEncounteredLL {

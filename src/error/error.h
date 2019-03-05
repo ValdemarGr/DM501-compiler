@@ -45,6 +45,13 @@ typedef struct Error {
     } val;
 } Error;
 
+typedef struct TypeCheckType {
+    Type *type;
+    Error *err;
+} TypeCheckType;
+
+Error *makeExpressionNotAsExpectedError(int lineno, Expression *expThatCausedError, TypeKind expectedType, TypeKind expressionType);
+
 int writeError(Error *e);
 
 #endif //HELLO_ERROR_H
