@@ -33,6 +33,12 @@ int main(int argc, char *argv[]) {
 
         lineno = 1;
         yyparse();
+
+        if (theexpression == NULL) {
+            perror("Failed to parse.");
+            return 1;
+        }
+
         prettyBody(theexpression);
 
         e = weedFunctionNames(theexpression);
