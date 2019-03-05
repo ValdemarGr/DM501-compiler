@@ -26,6 +26,7 @@ int writeError(Error *e) {
                     e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno,
                     typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType));
             prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError);
+            printf(" is of type %s", typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType));
             printf("\n");
 
             break;

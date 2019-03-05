@@ -23,6 +23,7 @@ extern int fileno();
 <comment>\n              lineno++;
 <comment>"("+"*"         { comment_depth++;}
 <comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);}}
+<comment><<EOF>>         { yyerror("unterminated comment"); BEGIN(INITIAL); }
 
 "*"             return '*';
 "/"             return '/';
@@ -36,6 +37,7 @@ extern int fileno();
 "<="            return tLEQ;
 "&&"            return tAND;
 "||"            return tOR;
+"|"             return '|';
 "("             return '(';
 ")"             return ')';
 "{"             return '{';
@@ -48,7 +50,6 @@ extern int fileno();
 "="             return '=';
 ":"             return ':';
 "!"             return '!';
-"|"             return '|';
 "true"          return tTRUE;
 "false"         return tFALSE;
 "null"          return tNULL;
@@ -79,5 +80,5 @@ extern int fileno();
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char *)malloc(strlen(yytext)+1);
                          sprintf(yylval.stringconst,"%s",yytext);
                          return tIDENTIFIER; }
-.               /* ignore */;
+.                       { yyerror("unexpected character"); }/* ignore */;
 %%

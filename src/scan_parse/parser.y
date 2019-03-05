@@ -6,8 +6,8 @@ extern char *yytext;
 extern Body *theexpression;
 extern int lineno;
 
-void yyerror() {
-   printf("syntax error before %s, at line %i\n",yytext, lineno);
+void yyerror(char const *s) {
+   printf("syntax error before %s, near line %d: %s\n",yytext,lineno,s);
 }
 %}
 
@@ -88,6 +88,10 @@ void yyerror() {
 
 %start program
 
+%left tEQ tINEQ
+%left  tLESS tGREATER tGEQ tLEQ
+%left tOR
+%left  tAND
 %left '+' '-'
 %left '*' '/'
 
@@ -228,8 +232,30 @@ expression : '(' expression ')'
         {$$ = $2;}
 ;
 
-expression : expression operator expression
-        {$$ = makeEXPOpEXP($1, $2, $3);}
+expression : expression '*' expression
+        {$$ = makeEXPOpEXP($1, makeMultOp(), $3);}
+        | expression '/' expression
+        {$$ = makeEXPOpEXP($1, makeDivOp(), $3);}
+        | expression '+' expression
+        {$$ = makeEXPOpEXP($1, makePlusOp(), $3);}
+        | expression '-' expression
+        {$$ = makeEXPOpEXP($1, makeMinusOp(), $3);}
+        | expression tEQ expression
+        {$$ = makeEXPOpEXP($1, makeEqualityOp(), $3);}
+        | expression tINEQ expression
+        {$$ = makeEXPOpEXP($1, makeInequalityOp(), $3);}
+        | expression tGREATER expression
+        {$$ = makeEXPOpEXP($1, makeGreaterOp(), $3);}
+        | expression tLESS expression
+        {$$ = makeEXPOpEXP($1, makeLessOp(), $3);}
+        | expression tGEQ expression
+        {$$ = makeEXPOpEXP($1, makeGeqOp(), $3);}
+        | expression tLEQ expression
+        {$$ = makeEXPOpEXP($1, makeLeqOp(), $3);}
+        | expression tAND expression
+        {$$ = makeEXPOpEXP($1, makeAndOp(), $3);}
+        | expression tOR expression
+        {$$ = makeEXPOpEXP($1, makeOrOp(), $3);}
         | term
         {$$ = makeEXPFromTerm($1);}
 ;
@@ -268,7 +294,7 @@ operator : '*'
         {$$ = makeLeqOp();}
         | tAND
         {$$ = makeAndOp();}
-        | tOR
+        | '|' '|'
         {$$ = makeOrOp();}
 ;
 

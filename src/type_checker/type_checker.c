@@ -600,7 +600,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                     VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
 
                     //Compare the argument types sequentially
-                    while (typeList != NULL & varDelList != NULL) {
+                    while (typeList != NULL && varDelList != NULL) {
 
                         if (areTypesEqual(typeList->type, varDelList->type, symbolTable) == false) {
                             e = NEW(Error);
@@ -1017,7 +1017,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 return e;
             }
 
-            e = typeCheckTerm(term->val.negateD.term, expectedType, symbolTable);
+            e = typeCheckExpression(term->val.absD.expression, expectedType, symbolTable);
             if (e != NULL) return e;
 
             break;
@@ -1084,6 +1084,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
     Error *e = NULL;
     SYMBOL *symbol;
     bool isBoolean;
+    Type *expressionType;
 
     switch (expression->kind) {
         /*case idK:
@@ -1099,34 +1100,29 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             break;*/
         case opK:
             //We want to check if the operator is boolean or not
-            isBoolean = true;
+            expressionType = &booleanStaticType;
 
             switch (expression->val.op.operator->kind) {
+                /* GIT BLAME: MADS */
                 case opMultK:
-                    isBoolean = false;
-                    break;
                 case opDivK:
-                    isBoolean = false;
-                    break;
                 case opPlusK:
-                    isBoolean = false;
-                    break;
                 case opMinusK:
-                    isBoolean = false;
+                    expressionType = &intStaticType;
                     break;
                 default:
                     break;
             }
 
             //Check if the operator matches the expected return type
-            if ((isBoolean == true && areTypesEqual(expectedType, &booleanStaticType, symbolTable) == false) ||
-                    (isBoolean == false && areTypesEqual(expectedType, &intStaticType, symbolTable) == false)) {
+            if (areTypesEqual(expectedType, expressionType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno = expression->lineno;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expression;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType->kind;
+                e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType = expressionType->kind;
 
                 return e;
             }
@@ -1212,10 +1208,11 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                                     &intStaticType,
                                     statement->symbolTable);
 
-            if (e != NULL && e2 != NULL) {
-                if (e != NULL) return e;
-                if (e2 != NULL) return e2;
+            if (e == NULL && e==NULL) {
+
             }
+            if (e != NULL) return e;
+            if (e2 != NULL) return e2;
 
             return NULL;
             break;

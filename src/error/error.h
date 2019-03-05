@@ -31,7 +31,7 @@ typedef struct Error {
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
         struct { char* fid; } WEED_FUNC_HAS_NO_RETURN_S;
-        struct { struct Expression *expThatCausedError; int lineno; TypeKind expectedType; } TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S;
+        struct { struct Expression *expThatCausedError; int lineno; TypeKind expectedType; TypeKind expressionType; } TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S;
         struct { char* fid; int lineno;} TYPE_TERM_FUNCTION_NOT_FOUND_S;
         struct { char* fid; int lineno;} TYPE_TERM_IS_NOT_FUNCTION_S;
         struct { char* fid; int lineno;} TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;

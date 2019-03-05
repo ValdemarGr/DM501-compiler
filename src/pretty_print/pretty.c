@@ -498,7 +498,9 @@ void prettyBody(Body *body) {
 void prettyEXP(Expression *e) {
     switch (e->kind) {
         case opK:
+            printf("(");
             prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);
+            printf(")");
             break;
         case termK:
             prettyTerm(e->val.termD.term);
