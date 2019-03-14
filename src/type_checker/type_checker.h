@@ -12,6 +12,10 @@
 #include "../symbol/symbol.h"
 #include "../symbol/decorate_ast.h"
 
-Error *typeCheck(Body *body, Type *functionReturnType);
+#define NULL_KITTY_VALUE_INDICATOR ((void *)1)
 
+typedef struct Error Error;
+
+Error *typeCheck(Body *body, Type *functionReturnType);
+Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 #endif //HELLO_TYPE_CHECKER_H

@@ -17,7 +17,7 @@ char *typeToString(Type *type) {
             return type->val.typeClass.classId;
             break;
         case typeGenericK:
-            return "generic";
+            return type->val.typeGeneric.genericName;
         default:
             return typeEnumToString(type->kind);
             break;

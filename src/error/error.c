@@ -25,7 +25,7 @@ int writeError(Error *e) {
             printf("Type error at %i, expected type is %s, expression: ",
                     e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno,
                     typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType));
-            prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError);
+            prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError, NULL);
             printf(" is of type %s", typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType));
             printf("\n");
 
@@ -63,13 +63,13 @@ int writeError(Error *e) {
         case TYPE_TERM_NOT_BOOLEAN:
             printf("Type error at %i, expected boolean, term: ",
                    e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno);
-            prettyTerm(e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError);
+            prettyTerm(e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError, NULL);
             printf("\n");
             break;
         case TYPE_TERM_NOT_INTEGER:
             printf("Type error at %i, expected int, term: ",
                    e->val.TYPE_TERM_NOT_INTEGER_S.lineno);
-            prettyTerm(e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError);
+            prettyTerm(e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError, NULL);
             printf("\n");
             break;
         case SYMBOL_NOT_FOUND:

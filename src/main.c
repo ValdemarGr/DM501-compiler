@@ -39,8 +39,6 @@ int main(int argc, char *argv[]) {
             return 1;
         }
 
-        prettyBody(theexpression);
-
         e = weedFunctionNames(theexpression);
         ei = writeError(e); if (ei != 0) return ei;
         e = weedFunctionReturns(theexpression);
@@ -49,6 +47,8 @@ int main(int argc, char *argv[]) {
         ei = writeError(e); if (ei != 0) return ei;
         e = typeCheck(theexpression, &intStaticType);
         ei = writeError(e); if (ei != 0) return ei;
+
+        prettyBody(theexpression);
 
         printf("\n");
 

@@ -12,6 +12,8 @@
 
 #define LAMBDA_SUFFIX "_lambda"
 
+typedef struct Error Error;
+
 Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable);
 
 #endif //HELLO_SYMBOL_FROM_AST_H

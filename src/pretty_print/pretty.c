@@ -14,8 +14,8 @@ void printCurrentIndent() {
     }
 }
 
-void prettyTwoExpOperation(Expression *lhs, Operator *operator, Expression *rhs) {
-    prettyEXP(lhs);
+void prettyTwoExpOperation(Expression *lhs, Operator *operator, Expression *rhs, SymbolTable *symbolTable) {
+    prettyEXP(lhs, symbolTable);
 
     switch(operator->kind) {
         case opMultK:
@@ -56,7 +56,7 @@ void prettyTwoExpOperation(Expression *lhs, Operator *operator, Expression *rhs)
             break;
     }
 
-    prettyEXP(rhs);
+    prettyEXP(rhs, symbolTable);
 }
 
 void prettyArgument(char *id) {
@@ -67,12 +67,12 @@ void prettyFunctionName(char *id) {
     printf("\033[0;31m%s\033[0m", id);
 }
 
-void prettyExpressionList(ExpressionList *expressionList) {
+void prettyExpressionList(ExpressionList *expressionList, SymbolTable *symbolTable) {
     ExpressionList *el = expressionList;
     bool isEmpty = el == NULL;
 
     while(el != NULL) {
-        prettyEXP(el->expression);
+        prettyEXP(el->expression, symbolTable);
         printf(", ");
         el = el->next;
     }
@@ -88,43 +88,43 @@ void prettyKeyword(char *keyword) {
     printf("\033[1;34m%s\033[0m", keyword);
 }
 
-void prettyVariable(Variable* variable) {
+void prettyVariable(Variable* variable, SymbolTable *symbolTable) {
     switch(variable->kind) {
         case varIdK:
-            printf("%s", variable->val.idD);
+            printf("%s", variable->val.idD.id);
             break;
         case arrayIndexK:
-            prettyVariable(variable->val.arrayIndexD.var);
+            prettyVariable(variable->val.arrayIndexD.var, symbolTable);
             printf("[");
-            prettyEXP(variable->val.arrayIndexD.idx);
+            prettyEXP(variable->val.arrayIndexD.idx, symbolTable);
             printf("]");
             break;
         case recordLookupK:
-            prettyVariable(variable->val.recordLookupD.var);
+            prettyVariable(variable->val.recordLookupD.var, symbolTable);
             printf(".");
-            printf(variable->val.recordLookupD.id);
+            printf("%s", variable->val.recordLookupD.id);
             break;
     }
 }
 
-void prettyTerm(Term *term) {
+void prettyTerm(Term *term, SymbolTable *symbolTable) {
     switch(term->kind) {
         case variableK:
-            prettyVariable(term->val.variableD.var);
+            prettyVariable(term->val.variableD.var, symbolTable);
             break;
         case functionCallK:
             prettyFunctionName(term->val.functionCallD.functionId);
             printf("(");
-            prettyExpressionList(term->val.functionCallD.expressionList);
+            prettyExpressionList(term->val.functionCallD.expressionList, symbolTable);
             printf(")");
             break;
         case negateK:
             printf("!");
-            prettyTerm(term->val.negateD.term);
+            prettyTerm(term->val.negateD.term, symbolTable);
             break;
         case absK:
             printf("|");
-            prettyEXP(term->val.absD.expression);
+            prettyEXP(term->val.absD.expression, symbolTable);
             printf("|");
             break;
         case trueK:
@@ -149,7 +149,15 @@ void prettyTerm(Term *term) {
 }
 
 void prettyType(Type *type) {
+    if (type == NULL_KITTY_VALUE_INDICATOR) {
+        printf("\033[0;36mnull\033[0m");
+        return;
+    }
 
+    if (type == NULL) {
+        printf("IDK MAN");
+        return;
+    }
 
     switch(type->kind) {
         case typeIdK:
@@ -307,7 +315,7 @@ void prettyDeclaration(Declaration *decl) {
         case declValK:
             prettyKeyword("val ");
             printf("%s = ", decl->val.valD.id);
-            prettyEXP(decl->val.valD.rhs);
+            prettyEXP(decl->val.valD.rhs, decl->symbolTable);
             printf(";\n");
             break;
         case declClassK:
@@ -377,35 +385,35 @@ void prettyStatement(Statement *statement) {
     switch (statement->kind) {
         case statReturnK:
             prettyKeyword("return ");
-            prettyEXP(statement->val.returnD.exp);
+            prettyEXP(statement->val.returnD.exp, statement->symbolTable);
             printf(";\n");
             break;
         case statWriteK:
             prettyKeyword("write ");
-            prettyEXP(statement->val.writeD.exp);
+            prettyEXP(statement->val.writeD.exp, statement->symbolTable);
             printf(";\n");
             break;
         case assignmentK:
-            prettyVariable(statement->val.assignmentD.var);
+            prettyVariable(statement->val.assignmentD.var, statement->symbolTable);
             prettyKeyword(" = ");
-            prettyEXP(statement->val.assignmentD.exp);
+            prettyEXP(statement->val.assignmentD.exp, statement->symbolTable);
             printf(";\n");
             break;
         case statAllocateK:
             prettyKeyword("allocate ");
-            prettyVariable(statement->val.allocateD.var);
+            prettyVariable(statement->val.allocateD.var, statement->symbolTable);
             printf(";\n");
             break;
         case statAllocateLenK:
             prettyKeyword("allocate ");
-            prettyVariable(statement->val.allocateLenD.var);
+            prettyVariable(statement->val.allocateLenD.var, statement->symbolTable);
             prettyKeyword(" of length ");
-            prettyEXP(statement->val.allocateLenD.len);
+            prettyEXP(statement->val.allocateLenD.len, statement->symbolTable);
             printf(";\n");
             break;
         case statIfK:
             prettyKeyword("if ");
-            prettyEXP(statement->val.ifD.exp);
+            prettyEXP(statement->val.ifD.exp, statement->symbolTable);
             prettyKeyword(" then ");
             printf("{\n");
             indentation++;
@@ -416,7 +424,7 @@ void prettyStatement(Statement *statement) {
             break;
         case statIfElK:
             prettyKeyword("if ");
-            prettyEXP(statement->val.ifElD.exp);
+            prettyEXP(statement->val.ifElD.exp, statement->symbolTable);
             prettyKeyword(" then ");
             printf("{\n");
             indentation++;
@@ -434,7 +442,7 @@ void prettyStatement(Statement *statement) {
             break;
         case statWhileK:
             prettyKeyword("while ");
-            prettyEXP(statement->val.whileD.exp);
+            prettyEXP(statement->val.whileD.exp, statement->symbolTable);
             prettyKeyword(" do ");
             printf("{\n");
             indentation++;
@@ -496,15 +504,22 @@ void prettyBody(Body *body) {
     }
 }
 
-void prettyEXP(Expression *e) {
+void prettyEXP(Expression *e, SymbolTable *symbolTable) {
+    Type *ret = NULL;
     switch (e->kind) {
         case opK:
-            printf("(");
-            prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right);
+            ret = evaluateExpressionType(e, symbolTable);
+            prettyType(ret);
+            printf(":(");
+            prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right, symbolTable);
             printf(")");
             break;
         case termK:
-            prettyTerm(e->val.termD.term);
+            ret = evaluateExpressionType(e, symbolTable);
+            prettyType(ret);
+            printf(":(");
+            prettyTerm(e->val.termD.term, symbolTable);
+            printf(")");
             break;
     }
 }

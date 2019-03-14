@@ -12,6 +12,7 @@ func main(a: int): int
     var i : bool;
 
     i = sum(c, b);
+    c = 1 + 4;
 
     return a + b;
 end main

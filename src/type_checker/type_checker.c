@@ -10,7 +10,6 @@
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
 //This is a hack, it is very hacky. Do not do this at home.
-#define NULL_KITTY_VALUE_INDICATOR ((void *)1)
 
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -1169,8 +1168,21 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             Error *e1 = NULL;
             Error *e2 = NULL;
 
-            //The idea here is that either one of the sides are null or they are both integer or both boolean.
+            //We also want to check if try to perform an integer operation on a null, this we cannot do
+            if (expressionType->kind == intStaticType.kind) {
+                if (evaluateExpressionType(expression->val.op.left, symbolTable) == NULL_KITTY_VALUE_INDICATOR ||
+                        evaluateExpressionType(expression->val.op.right, symbolTable) == NULL_KITTY_VALUE_INDICATOR){
+                    e = NEW(Error);
 
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1178";
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+
+                    return e;
+                }
+            }
+
+            //The idea here is that either one of the sides are null or they are both integer or both boolean.
             //Equality and inequality works on both booleans and integers
             if (expression->val.op.operator->kind == opEqualityK ||
                     expression->val.op.operator->kind == opInequalityK) {
