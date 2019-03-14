@@ -1123,6 +1123,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
     SYMBOL *symbol;
     bool isBoolean;
     Type *expressionType;
+    Type *returnType;
 
     switch (expression->kind) {
         /*case idK:
@@ -1137,23 +1138,34 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
             break;*/
         case opK:
-            //We want to check if the operator is boolean or not
+            //Check if the operator takes boolean or integer as rhs/lhs
             expressionType = &booleanStaticType;
 
             switch (expression->val.op.operator->kind) {
                 /* GIT BLAME: MADS */
-                case opMultK:
-                case opDivK:
-                case opPlusK:
-                case opMinusK:
+                case opGreaterK:
+                case opLessK:
+                case opGeqK:
+                case opLeqK:
                     expressionType = &intStaticType;
                     break;
                 default:
                     break;
             }
 
-            //Check if the operator matches the expected return type
-            if (areTypesEqual(expectedType, expressionType, symbolTable) == false) {
+            //We want to check if the operation returns the expected type
+            returnType = &booleanStaticType;
+
+            switch (expression->val.op.operator->kind) {
+                case opMultK:
+                case opDivK:
+                case opPlusK:
+                case opMinusK:
+                    returnType = &intStaticType;
+            }
+
+
+            if (areTypesEqual(expectedType, returnType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = TYPE_EXPRESSION_IS_NOT_AS_EXPECTED;
@@ -1180,6 +1192,27 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
                     return e;
                 }
+            }
+
+            //If we have and or or we have to check that both sides are boolean
+            if (expression->val.op.operator->kind == opAndK ||
+            expression->val.op.operator->kind == opOrK) {
+                //Check if lhs is boolean expression
+                e = typeCheckExpression(expression->val.op.left, &booleanStaticType, symbolTable);
+                e2 = typeCheckExpression(expression->val.op.right, &booleanStaticType, symbolTable);
+
+                if (e == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1200";
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = expression->lineno;
+
+                    return e;
+                }
+
+                if (e != NULL) return e;
+                if (e2 != NULL) return e2;
             }
 
             //The idea here is that either one of the sides are null or they are both integer or both boolean.
