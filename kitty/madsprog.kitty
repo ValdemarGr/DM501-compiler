@@ -1,0 +1,24 @@
+class A {
+    var a : int;
+};
+
+class B [T : A] {
+    var h: T;
+    val wrt = (): int -> {
+        write h.a;
+        return 0;
+    };
+};
+
+class C with A {};
+
+var b: class B[C];
+var c: class C;
+
+val writer = b.wrt;
+
+c.a = 3;
+b.h = c;
+
+return writer();
+(* Would write '3' *)

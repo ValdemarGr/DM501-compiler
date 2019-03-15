@@ -349,7 +349,39 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
                 }
 
                 if (symbol->value->kind == typeFunctionK) {
-                    symbol->value->val.typeFunctionD;
+                    //Create dummy type
+                    Type *dummy = NEW(Type);
+
+                    dummy->kind = typeLambdaK;
+                    dummy->val.typeLambdaK.returnType = symbol->value->val.typeFunctionD.returnType;
+                    VarDelList *vdl = symbol->value->val.typeFunctionD.tpe;
+                    TypeList *tpeListHead = NULL;
+                    TypeList *tpeListCurrent = NULL;
+
+                    while (vdl != NULL) {
+
+                        if (tpeListHead == NULL) {
+                            tpeListHead = NEW(TypeList);
+                            tpeListCurrent = tpeListHead;
+                        } else {
+                            tpeListCurrent->next = NEW(TypeList);
+                            tpeListCurrent = tpeListCurrent->next;
+                        }
+
+                        tpeListCurrent->type = vdl->type;
+                        tpeListCurrent->next = NULL;
+
+                        vdl = vdl->next;
+                    }
+
+                    dummy->val.typeLambdaK.typeList = tpeListHead;
+
+                    return dummy;
+                } else if (symbol->value->kind == symTypeClassK) {
+                    Type *dummy = NEW(Type);
+
+                    dummy->kind = typeClassK;
+                    //dummy->val.typeClass.
                 }
 
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
@@ -792,6 +824,34 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             if (symbol->value->kind == typeK) {
                 symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
                 Type *unwrapped = unwrapTypedef(expectedType, symbolTable);
+
+                //If unwrapped is null, this might be a class
+                if (unwrapped == NULL && expectedType->kind == typeIdK) {
+                    SYMBOL *second = getSymbol(symbolTable, expectedType->val.idType.id);
+
+                    if (second == NULL) {
+                        e = NEW(Error);
+
+                        e->error = SYMBOL_NOT_FOUND;
+                        e->val.SYMBOL_NOT_FOUND_S.id = "FIX ME WRONG ERROR 836";
+                        e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                        return e;
+                    }
+
+
+                    if (strcmp(symAsType->val.typeClass.classId, second->name) == 0) {
+                        return NULL;
+                    } else {
+                        e = NEW(Error);
+
+                        e->error = SYMBOL_NOT_FOUND;
+                        e->val.SYMBOL_NOT_FOUND_S.id = "FIX ME WRONG ERROR 848";
+                        e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+
+                        return e;
+                    }
+                }
 
                 if (areTypesEqual(symAsType, unwrapped, symbolTable) == false) {
                     e = NEW(Error);
@@ -1283,7 +1343,10 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
         case classDowncastk:
             type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
 
-            if (areTypesEqual(type, expectedType, symbolTable) == false) {
+            if (areTypesEqual(type, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
+                if (strcmp(type->val.typeClass.classId, expectedType->val.idType.id) == 0) {
+                    return 0;
+                }
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
