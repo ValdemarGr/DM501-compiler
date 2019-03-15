@@ -41,11 +41,22 @@ Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable) {
         }
     }
 
-    if (symbol->value->kind != symTypeClassK) {
+    TypeList *extended;
+
+    if (symbol->value->kind == symTypeClassK) {
+        extended = symbol->value->val.typeClassD.extendedClasses;
+    } else if (symbol->value->val.typeD.tpe->kind == typeClassK) {
+        SYMBOL* nested = getSymbol(symbolTable, symbol->value->val.typeD.tpe->val.typeClass.classId);
+
+        if (nested == NULL) {
+            return NULL;
+        }
+
+        extended = nested->value->val.typeClassD.extendedClasses;
+
+    } else {
         return NULL;
     }
-
-    TypeList *extended = symbol->value->val.typeClassD.extendedClasses;
 
     while (extended != NULL) {
 
