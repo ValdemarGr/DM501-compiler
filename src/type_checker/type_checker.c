@@ -434,6 +434,116 @@ Type *findTypeThroughGenericWithSubtype(SymbolTable *symbolTable, char *subType,
     }
 }
 
+typedef struct BoundAndGenericPair {
+    Type *generic;
+    Type *bound;
+    struct BoundAndGenericPair *next;
+} BoundAndGenericPair;
+
+Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTable *symbolTable) {
+    switch (typeToBindOn->kind) {
+        case typeIdK:
+            return bindGenericTypes(bagp, unwrapTypedef(typeToBindOn, symbolTable), symbolTable);
+            break;
+        case typeIntK:
+            return typeToBindOn;
+            break;
+        case typeBoolK:
+            return typeToBindOn;
+            break;
+        case typeArrayK:
+            //Create new array type with bounded type
+            {
+                Type *inner = bindGenericTypes(bagp, typeToBindOn->val.arrayType.type, symbolTable);
+
+                Type *bound = NEW(Type);
+
+                bound->kind = typeArrayK;
+                bound->val.arrayType.type = inner;
+
+                return bound;
+            }
+            break;
+        case typeRecordK:
+            //Check if contains generic
+            {
+                Type *boundRecord = NEW(Type);
+                boundRecord->kind = typeRecordK;
+
+                VarDelList *varDelList = typeToBindOn->val.recordType.types;
+                VarDelList *boundList = NULL;
+
+                while (varDelList != NULL) {
+                    if (boundList == NULL) {
+                        boundList = NEW(VarDelList);
+                        boundRecord->val.recordType.types = boundList;
+                    } else {
+                        boundList->next = NEW(VarDelList);
+                        boundList = boundList->next;
+                    }
+
+                    boundList->type = bindGenericTypes(bagp, varDelList->type, symbolTable);
+                    boundList->next = NULL;
+
+                    varDelList = varDelList->next;
+                }
+
+                return boundRecord;
+            }
+            break;
+        case typeLambdaK:
+            //Check if contains generic
+            {
+                Type *boundLambda = NEW(Type);
+                boundLambda->kind = typeLambdaK;
+
+                TypeList *params = typeToBindOn->val.typeLambdaK.typeList;
+                TypeList *boundParams = NULL;
+
+                while (params != NULL) {
+                    if (boundParams == NULL) {
+                        boundParams = NEW(TypeList);
+                        boundLambda->val.typeLambdaK.typeList = boundParams;
+                    } else {
+                        boundParams->next = NEW(TypeList);
+                        boundParams = boundParams->next;
+                    }
+
+                    boundParams->next = NULL;
+                    boundParams->type = bindGenericTypes(bagp, params->type, symbolTable);
+
+
+                    params = params->next;
+                }
+
+                boundLambda->val.typeLambdaK.returnType = bindGenericTypes(bagp, typeToBindOn->val.typeLambdaK.returnType, symbolTable);
+
+                return boundLambda;
+            }
+            break;
+        case typeClassK:
+            return typeToBindOn;
+            break;
+        case typeGenericK:
+            {
+                //Find the bound type by generic type index
+
+                //We are looking for the (counter - it) element
+                int it = typeToBindOn->val.typeGeneric.typeIndex;
+                int counter = 0;
+
+                while (it > 0) {
+                    bagp = bagp->next;
+                    it--;
+                }
+                return bagp->bound;
+            }
+            break;
+    }
+
+    return NULL;
+}
+
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
     SYMBOL *symbol;
     Type *varType;
@@ -516,41 +626,36 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
                 //Find same bound index as the one of the ret
                 TypeList *boundTypes = innerType->val.typeClass.genericBoundValues;
+                TypeList *generics = symbol->value->val.typeClassD.generics;
+                BoundAndGenericPair *head = NULL;
+                BoundAndGenericPair *current = NULL;
+
+                //Length has been checked earlier
+                while (generics != NULL && boundTypes != NULL) {
+                    if (head == NULL) {
+                        head = NEW(BoundAndGenericPair);
+                        current = head;
+                    } else {
+                        current->next = NEW(BoundAndGenericPair);
+                        current = current->next;
+                    }
+
+                    current->bound = boundTypes->type;
+                    current->generic = generics->type;
+                    current->next = NULL;
+
+                    boundTypes = boundTypes->next;
+                    generics = generics->next;
+                }
+
+
 
                 while (classBody != NULL) {
 
                     Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
 
                     if (ret != NULL) {
-                        if (ret->kind == typeGenericK) {
-                            //Find the bound type by generic type index
-
-                            //We are looking for the (counter - it) element
-                            int it = ret->val.typeGeneric.typeIndex;
-                            int counter = 0;
-
-                            while (it > 0) {
-                                boundTypes = boundTypes->next;
-                                it--;
-                            }
-/*
-                            //Count all items
-                            TypeList *boundCount = boundTypes;
-                            while (boundCount != NULL) {
-                                counter++;
-                                boundCount = boundCount->next;
-                            }
-
-                            while (counter - it - 1 > 0) {
-                                //Todo check for out of bounds (arg count invalid) error
-                                boundTypes = boundTypes->next;
-                                counter--;
-                            }
-*/
-                            return boundTypes->type;
-                        }
-
-                        return ret;
+                        return bindGenericTypes(head, ret, symbolTable);
                     }
 
                     classBody = classBody->next;
@@ -678,7 +783,6 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 Type *unwrapped = unwrapTypedef(expectedType, symbolTable);
 
                 if (areTypesEqual(symAsType, unwrapped, symbolTable) == false) {
-                    areTypesEqual(symAsType, unwrapped, symbolTable);
                     e = NEW(Error);
 
                     e->error = VARIABLE_UNEXPECTED_TYPE;
@@ -927,10 +1031,12 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
 
             if ((symbol->value->kind == typeFunctionK &&
-               areTypesEqual(symbol->value->val.typeFunctionD.returnType, expectedType, symbolTable) == false) ||
+               areTypesEqual(unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable),
+                       unwrapTypedef(expectedType, symbolTable), symbolTable) == false) ||
                (symbol->value->kind == typeK &&
                symbol->value->val.typeD.tpe->kind == typeLambdaK &&
-               areTypesEqual(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, expectedType, symbolTable) == false)) {
+               areTypesEqual(unwrapTypedef(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, symbolTable),
+                       unwrapTypedef(expectedType, symbolTable), symbolTable) == false)) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
@@ -1170,7 +1276,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR; FIX ME";
+                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR; FIX ME 1173";
                 e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
 
                 return e;
@@ -1872,6 +1978,9 @@ Error *typeCheckDeclaration(Declaration *declaration) {
                     e = typeCheck(lambda->body, lambda->returnType);
                     if (e != NULL) return e;
                 }
+            } else {
+                e = typeCheckExpression(declaration->val.valD.rhs, declaration->val.valD.tpe, declaration->symbolTable);
+                if (e != NULL) return e;
             }
             break;
         case declClassK:

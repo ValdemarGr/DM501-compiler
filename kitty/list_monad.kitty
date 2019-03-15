@@ -65,6 +65,6 @@ val filter = lst.filter;
 val mappedList = mapper((x: int): int -> {
     return x;
 });
-val filteredList = filter((x: int): int -> {
+val filteredList = filter((x: int): bool -> {
     return x < 100;
 });

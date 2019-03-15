@@ -1,0 +1,13 @@
+class A {
+    val a = 1;
+};
+
+class B with A {
+    val b = a;
+};
+
+var x: class B;
+val f = (b: class A): int -> {
+    return 5;
+};
+val q = f(x: A);
