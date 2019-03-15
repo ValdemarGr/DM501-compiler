@@ -1,6 +1,8 @@
 #ifndef __tree_h
 #define __tree_h
 
+#include "stdbool.h"
+
 typedef struct Body Body;
 typedef struct Type Type;
 typedef struct Term Term;
@@ -22,7 +24,7 @@ typedef enum {
 typedef struct Type {
     TypeKind kind;
     union {
-        struct { char *id; } idType;
+        struct { char *id;} idType;
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
         struct { TypeList *typeList; Type *returnType; } typeLambdaK;

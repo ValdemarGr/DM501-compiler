@@ -14,6 +14,7 @@ int lineno;
 int stmDeclNum;
 Body *theexpression;
 extern FILE *yyin;
+bool printWithTypes = false;
 
 int main(int argc, char *argv[]) {
     for (int i = 1; i < argc; i++) {
@@ -21,6 +22,20 @@ int main(int argc, char *argv[]) {
         struct Type intStaticType = {.kind = typeIntK};
 
         char* arg = argv[i];
+
+        //Parse arg
+        if (arg[0] == '-') {
+            switch (arg[1]) {
+                case 't':
+                    printWithTypes = true;
+                    break;
+                default:
+                    printf("Please supply the correct argument for %s\n", arg);
+                    break;
+            }
+
+            continue;
+        }
 
         printf("File name: %s\n", arg);
 

@@ -7,6 +7,9 @@
 #include "../error/error.h"
 #include "symbol.h"
 
+int lambdaCount = 0;
+
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                      VarDelList *params, Body *body, int stmDeclNum);
@@ -152,6 +155,7 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
 
         value->kind = typeK;
         value->val.typeD.tpe = vdl->type;
+        value->val.typeD.isTypedef = false;
 
         putSymbol(child,
                   vdl->identifier,
@@ -257,11 +261,113 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
     return NULL;
 }
 
+void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable) {
+
+
+    switch (expression->kind) {
+        case opK:
+            findAndDecorateFunctionCall(expression->val.op.left, symbolTable);
+            findAndDecorateFunctionCall(expression->val.op.right, symbolTable);
+            break;
+        case termK:
+            if (expression->val.termD.term->kind == functionCallK) {
+                //Go though all the items
+                ExpressionList *expressionList = expression->val.termD.term->val.functionCallD.expressionList;
+
+                while (expressionList != NULL) {
+
+                    findAndDecorateFunctionCall(expressionList->expression, symbolTable);
+
+                    expressionList = expressionList->next;
+                }
+
+            } else if (expression->val.termD.term->kind == lambdaK) {
+                Lambda *lambda = expression->val.termD.term->val.lambdaD.lambda;
+                char intToString[16];
+
+                sprintf(intToString, "%i", lambdaCount);
+                lambdaCount++;
+
+                //Give the lambda a unique id
+                int suffix_len = strlen(LAMBDA_SUFFIX);
+
+                char *lambda_id = (char*)malloc(sizeof(char) * (suffix_len) + 16);
+
+                strcat(lambda_id, LAMBDA_SUFFIX);
+                strcat(lambda_id, intToString);
+
+                decorateFunction(lambda_id,
+                                 lambda->returnType,
+                                 symbolTable,
+                                 lambda->declarationList,
+                                 lambda->body,
+                                 0);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+typedef struct IdKindPair {
+    char *id;
+    TypeKind kind;
+    struct IdKindPair *next;
+} IdKindPair;
+
+IdKindPair *pairForDeclaration(Declaration *declaration) {
+    IdKindPair *head = NULL;
+
+    switch (declaration->kind) {
+        case declVarK:
+            head = NEW(IdKindPair);
+
+            head->next = NULL;
+            head->id = declaration->val.varD.id;
+            head->kind = declaration->val.varD.type->kind;
+
+            break;
+        case declVarsK:
+            head = NEW(IdKindPair);
+
+            head->id = declaration->val.varsD.var->val.varD.id;
+            head->kind = declaration->val.varsD.var->val.varD.type->kind;
+
+            head->next = pairForDeclaration(declaration->val.varsD.next);
+
+            break;
+        case declTypeK:
+            head = NEW(IdKindPair);
+
+            head->id = declaration->val.typeD.id;
+            head->kind = declaration->val.typeD.type->kind;
+
+            head->next = NULL;
+
+            break;
+        case declFuncK:
+            return NULL;
+            break;
+        case declValK:
+            head = NEW(IdKindPair);
+
+            head->id = declaration->val.valD.id;
+            head->kind = evaluateExpressionType(declaration->val.valD.rhs, declaration->symbolTable)->kind;
+
+            head->next = NULL;
+            break;
+        case declClassK:
+            return NULL;
+            break;
+    }
+
+    return head;
+}
+
 Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
     Error *e = NULL;
     Declaration *varList = NULL;
     SymbolTable *child = NULL;
-    VarDelList *functionParams = NULL;
     Value *value = NULL;
     Type* valType;
 
@@ -274,6 +380,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             value->kind = typeK;
             value->val.typeD.tpe = declaration->val.varD.type;
+            value->val.typeD.isTypedef = false;
 
 
             putSymbol(symbolTable,
@@ -304,6 +411,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             value = NEW(Value);
 
             value->kind = typeK;
+            value->val.typeD.isTypedef = true;
             value->val.typeD.tpe = declaration->val.typeD.type;
 
             putSymbol(symbolTable,
@@ -325,12 +433,15 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
         case declValK:
             //Determine the type by the rhs type
-            valType = evaluateExpressionType(declaration->val.valD.rhs, symbolTable);
+            valType = unwrapTypedef(evaluateExpressionType(declaration->val.valD.rhs, symbolTable), symbolTable);
 
             alterIdTypesToGenerics(valType, symbolTable);
 
             //Update the decl
             declaration->val.valD.tpe = valType;
+
+            //Ensure that we decorate all r-value lambdas in function calls
+            findAndDecorateFunctionCall(declaration->val.valD.rhs, symbolTable);
 
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
@@ -342,11 +453,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                                  lambda->declarationList,
                                  lambda->body,
                                  declaration->internal_stmDeclNum);
-            } else {
+            } else  {
                 value = NEW(Value);
 
                 value->kind = typeK;
                 value->val.typeD.tpe = valType;
+                value->val.typeD.isTypedef = false;
+
 
                 putSymbol(symbolTable,
                           declaration->val.valD.id,
@@ -389,25 +502,32 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     return e;
                 }
 
-
                 //For true'er polymorphism, overriding can be added by traversing by collisions and always
                 //preferring the current classes version
                 DeclarationList *internalDeclList = mixin->value->val.typeClassD.declarationList;
 
-                //If first non null encounter
-                if (newHead == NULL && internalDeclList != NULL) {
-                    newHead = internalDeclList;
-                }
-
                 while (internalDeclList != NULL) {
-                    //Set the decls scope
-                    e = decorateDeclaration(internalDeclList->declaration, newSt);
-                    if (e != NULL) return e;
+                    //Check if declaration collides with current classes
 
-                    //If last non null encounter
-                    if (internalDeclList->next == NULL && extensions->next == NULL) {
-                        newTail = internalDeclList;
+                    if (newHead == NULL) {
+                        newHead = NEW(DeclarationList);
+
+                        newHead->declaration = internalDeclList->declaration;
+
+                        newHead->declaration = NEW(Declaration);
+                        memcpy(newHead->declaration, internalDeclList->declaration, sizeof(Declaration));
+
+                        newHead->next = NULL;
+
+                        newTail = newHead;
+                    } else {
+                        newTail->next = NEW(DeclarationList);
+                        newTail = newTail->next;
+                        newTail->next = NULL;
+                        newTail->declaration = NEW(Declaration);
+                        memcpy(newTail->declaration, internalDeclList->declaration, sizeof(Declaration));
                     }
+
 
                     internalDeclList = internalDeclList->next;
                 }
@@ -416,16 +536,21 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             }
 
             if (newHead != NULL) {
-                //Prepend the new mixins
-                if (newTail != NULL) {
-                    newTail->next = declaration->val.classD.declarationList;
-                } else {
-                    newHead->next = declaration->val.classD.declarationList;
-                }
+                newTail->next = declaration->val.classD.declarationList;
 
+                declaration->val.classD.declarationList = newHead;
                 value->val.typeClassD.declarationList = newHead;
             } else {
+                newHead = declaration->val.classD.declarationList;
                 value->val.typeClassD.declarationList = declaration->val.classD.declarationList;
+            }
+
+            //Set all the sym tables
+            DeclarationList *symSetter = newHead;
+
+            while (symSetter != NULL) {
+                symSetter->declaration->symbolTable = newSt;
+                symSetter = symSetter->next;
             }
 
             value->kind = symTypeClassK;
@@ -437,7 +562,6 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                       value,
                       declaration->internal_stmDeclNum);
 
-
             //Also remember the generic type parameters
             TypeList *generics = declaration->val.classD.genericTypeParameters;
 
@@ -446,6 +570,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
                 value->kind = typeK;
                 value->val.typeD.tpe = generics->type;
+                value->val.typeD.isTypedef = false;
 
 
                 putSymbol(newSt,
@@ -456,16 +581,10 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 generics = generics->next;
             }
 
-
-
-
             //And for the class body
-            DeclarationList *declarationList = declaration->val.classD.declarationList;
+            DeclarationList *declarationList = newHead;
 
             while (declarationList != NULL) {
-                //Set the decls scope
-                declarationList->declaration->symbolTable = symbolTable;
-
                 e = decorateDeclaration(declarationList->declaration, newSt);
                 if (e != NULL) return e;
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 ./cmake-build-debug/src/Compiler \
+	-t \
 	$(pwd)/kitty/decl_test.kitty \
 	$(pwd)/kitty/functions_only.kitty \
 	$(pwd)/kitty/lots_of_nests.kitty \

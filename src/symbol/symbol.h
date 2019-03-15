@@ -21,9 +21,12 @@
 typedef struct Value {
     enum { typeK, typeFunctionK, symTypeClassK } kind;
     union {
-        struct { struct Type *tpe; } typeD;
+        struct { struct Type *tpe; bool isTypedef; } typeD;
         struct { struct VarDelList *tpe; struct Type *returnType; } typeFunctionD;
-        struct { struct DeclarationList *declarationList; struct TypeList *extendedClasses; struct TypeList *generics; } typeClassD;
+        struct {
+            struct DeclarationList *declarationList;
+            struct TypeList *extendedClasses;
+            struct TypeList *generics; } typeClassD;
     } val;
 } Value;
 

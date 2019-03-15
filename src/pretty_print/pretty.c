@@ -4,6 +4,7 @@
 #include "../ast/tree.h"
 
 static int indentation = 0;
+extern bool printWithTypes;
 
 void prettyStatementList(StatementList *statementList);
 void prettyLambda(Lambda *lambda);
@@ -227,7 +228,10 @@ void prettyType(Type *type) {
 }
 
 void prettyFunction(Function *f) {
-    prettyKeyword("\nfunc");
+    printf("\n");
+    printCurrentIndent();
+    indentation++;
+    prettyKeyword("func");
     printf(" ");
     prettyFunctionName(f->head->indentifier);
     printf("(");
@@ -251,6 +255,8 @@ void prettyFunction(Function *f) {
     prettyType(f->head->returnType);
     printf("\n");
     prettyBody(f->body);
+    indentation--;
+    printCurrentIndent();
     prettyKeyword("end ");
     prettyFunctionName(f->tail->indentifier);
     printf("\n");
@@ -308,9 +314,7 @@ void prettyDeclaration(Declaration *decl) {
             printf(";\n");
             break;
         case declFuncK:
-            indentation++;
             prettyFunction(decl->val.functionD.function);
-            indentation--;
             break;
         case declValK:
             prettyKeyword("val ");
@@ -505,21 +509,30 @@ void prettyBody(Body *body) {
 }
 
 void prettyEXP(Expression *e, SymbolTable *symbolTable) {
+    Type *o = evaluateExpressionType(e, symbolTable);
     Type *ret = NULL;
     switch (e->kind) {
         case opK:
-            ret = evaluateExpressionType(e, symbolTable);
-            prettyType(ret);
-            printf(":(");
+            if (printWithTypes == true) {
+                ret = evaluateExpressionType(e, symbolTable);
+                prettyType(ret);
+                printf(":(");
+            } else {
+                printf("(");
+            }
             prettyTwoExpOperation(e->val.op.left, e->val.op.operator, e->val.op.right, symbolTable);
             printf(")");
             break;
         case termK:
-            ret = evaluateExpressionType(e, symbolTable);
-            prettyType(ret);
-            printf(":(");
+            if (printWithTypes == true) {
+                ret = evaluateExpressionType(e, symbolTable);
+                prettyType(ret);
+                printf(":(");
+            }
             prettyTerm(e->val.termD.term, symbolTable);
-            printf(")");
+            if (printWithTypes == true) {
+                printf(")");
+            }
             break;
     }
 }
