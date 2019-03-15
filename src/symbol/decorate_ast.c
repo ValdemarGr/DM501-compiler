@@ -9,6 +9,7 @@
 
 int lambdaCount = 0;
 
+void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
@@ -252,7 +253,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             decorateRValue(statement->val.assignmentD.exp, statement->symbolTable);
             break;
         case statReturnK:
-            decorateRValue(statement->val.returnD.exp, statement->symbolTable);
+            //decorateRValue(statement->val.returnD.exp, statement->symbolTable);
+            findAndDecorateFunctionCall(statement->val.returnD.exp, statement->symbolTable);
             break;
         default:
             break;

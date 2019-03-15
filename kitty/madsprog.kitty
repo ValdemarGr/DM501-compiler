@@ -1,24 +1,15 @@
-class A {
-    var a : int;
-};
+func slowOperation(a: int): int
+    return a*2;
+end slowOperation
 
-class B [T : A] {
-    var h: T;
-    val wrt = (): int -> {
-        write h.a;
-        return 0;
-    };
-};
+func doSlowThing(a: int, callback: (int) -> int): bool
+    val x = slowOperation(a); (* Some function that takes a long time *)
+    val res = callback(x);
+    return true;
+end doSlowThing
 
-class C with A {};
-
-var b: class B[C];
-var c: class C;
-
-val writer = b.wrt;
-
-c.a = 3;
-b.h = c;
-
-return writer();
-(* Would write '3' *)
+(* The 'callback' argument is given using a lambda function *)
+val r = doSlowThing(2, (a: int): int -> {
+    write a;
+    return a;
+});
