@@ -8,7 +8,6 @@
 #include "symbol/symbol.h"
 #include "symbol/decorate_ast.h"
 #include "type_checker/type_checker.h"
-#include "../cmake-build-debug/src/scan_parse/parser.h"
 
 int lineno;
 int stmDeclNum;
