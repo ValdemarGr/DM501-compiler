@@ -7,6 +7,6 @@ add_subdirectory(weeder)
 add_subdirectory(type_checker)
 add_subdirectory(pretty_print)
 
-add_executable(Compiler main.c ${SOURCES})
+add_executable(compiler main.c ${SOURCES})
 
-target_link_libraries(Compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker)
+target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker)

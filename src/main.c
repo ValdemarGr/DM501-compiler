@@ -15,11 +15,43 @@ Body *theexpression;
 extern FILE *yyin;
 bool printWithTypes = false;
 
-int main(int argc, char *argv[]) {
-    for (int i = 1; i < argc; i++) {
-        SymbolTable *globalScope = initSymbolTable();
-        struct Type intStaticType = {.kind = typeIntK};
+int compile_file(FILE *file) {
+    SymbolTable *globalScope = initSymbolTable();
+    struct Type intStaticType = {.kind = typeIntK};
 
+    yyin = file;
+
+    int ei;
+    Error *e;
+
+    lineno = 1;
+    yyparse();
+
+    if (theexpression == NULL) {
+        perror("Failed to parse.");
+        return 1;
+    }
+
+    e = weedFunctionNames(theexpression);
+    ei = writeError(e); if (ei != 0) return ei;
+    e = weedFunctionReturns(theexpression);
+    ei = writeError(e); if (ei != 0) return ei;
+    e = decorateAstWithSymbols(theexpression, globalScope);
+    ei = writeError(e); if (ei != 0) return ei;
+    e = typeCheck(theexpression, &intStaticType);
+    ei = writeError(e); if (ei != 0) return ei;
+
+    prettyBody(theexpression);
+
+    printf("\n");
+
+    return 0;
+}
+
+int main(int argc, char *argv[]) {
+    bool gotFile = false;
+    int r = 0;
+    for (int i = 1; i < argc; i++) {
         char* arg = argv[i];
 
         //Parse arg
@@ -40,33 +72,18 @@ int main(int argc, char *argv[]) {
 
         //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
-        yyin = fp;
+        r = compile_file(fp);
 
-        int ei;
-        Error *e;
-
-        lineno = 1;
-        yyparse();
-
-        if (theexpression == NULL) {
-            perror("Failed to parse.");
-            return 1;
+        if (r != 0) {
+            return r;
         }
 
-        e = weedFunctionNames(theexpression);
-        ei = writeError(e); if (ei != 0) return ei;
-        e = weedFunctionReturns(theexpression);
-        ei = writeError(e); if (ei != 0) return ei;
-        e = decorateAstWithSymbols(theexpression, globalScope);
-        ei = writeError(e); if (ei != 0) return ei;
-        e = typeCheck(theexpression, &intStaticType);
-        ei = writeError(e); if (ei != 0) return ei;
-
-        prettyBody(theexpression);
-
-        printf("\n");
-
+        gotFile = true;
     }
 
-    return 0;
+    if (!gotFile) {
+        r = compile_file(stdin);
+    }
+
+    return r;
 }
