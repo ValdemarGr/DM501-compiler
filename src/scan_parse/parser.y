@@ -7,7 +7,7 @@ extern Body *theexpression;
 extern int lineno;
 
 void yyerror(char const *s) {
-   printf("syntax error before %s, near line %d: %s\n",yytext,lineno,s);
+   fprintf(stderr, "syntax error before %s, near line %d: %s\n",yytext,lineno,s);
 }
 %}
 

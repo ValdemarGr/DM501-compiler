@@ -1,0 +1,11 @@
+var A: int, B: int;
+
+func f(): int
+    if 2 > 2 then
+        return 0;
+    else
+        return 1;
+end f
+
+write A+B;
+return 0;
