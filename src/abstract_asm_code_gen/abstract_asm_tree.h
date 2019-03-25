@@ -1,7 +1,7 @@
 #ifndef HELLO_ABSTRACT_ASM_TREE_H
 #define HELLO_ABSTRACT_ASM_TREE_H
 
-typedef union Value Value;
+typedef struct Value Value;
 
 typedef struct Jump {
     char* label;
@@ -17,10 +17,28 @@ typedef struct Add {
     Value* right;
 } Add;
 
-typedef union Value {
+typedef enum {
+    VALUE_UID, VALUE_ADD
+} ValueKind;
 
-    int identifier;
-    Add add;
-} Code;
+typedef struct Value {
+    ValueKind kind;
+    union {
+        int identifier;
+        Add add;
+    } val;
+} Value;
+
+typedef enum {
+    INSTRUCTION_ADD
+} InstructionKind;
+
+typedef struct Instructions {
+    struct Instructions* next;
+    InstructionKind kind;
+    union {
+        Add add;
+    } val;
+} Instructions;
 
 #endif //HELLO_ABSTRACT_ASM_TREE_H
