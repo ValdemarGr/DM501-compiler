@@ -13,3 +13,10 @@ void generate_value(FILE* out, Value value) {
 void generate_add(FILE* out, Add add) {
     fprintf(out, "")
 }
+
+char *generateAsm() {
+    char* ret = (char*)malloc(sizeof(char) * strlen(ASM_HEADER) + strlen(ASM_TAIL));
+    strcat(ret, ASM_HEADER);
+    strcat(ret, ASM_TAIL);
+    return ret;
+}
