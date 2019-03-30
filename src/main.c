@@ -9,6 +9,7 @@
 #include "symbol/decorate_ast.h"
 #include "type_checker/type_checker.h"
 #include "asm_code_gen/asm_code_gen.h"
+#include "abstract_asm_code_gen/abstract_asm_tree.h"
 
 int lineno;
 int stmDeclNum;
@@ -43,6 +44,54 @@ int compile_file(FILE *file) {
     ei = writeError(e); if (ei != 0) return ei;
 
     prettyBody(theexpression);
+
+    Instructions *head = NEW(Instructions);
+    head->next = NULL;
+    head->kind = INSTRUCTION_PROGRAM_BEGIN;
+
+    generateInstructionTree(theexpression, head);
+
+    //DEBUG STUFF BEGIN
+    Instructions *iterator = head;
+
+    while(iterator != NULL) {
+
+        switch (iterator->kind) {
+            case INSTRUCTION_ADD:
+                printf("Add\n");
+                break;
+            case METADATA_BEGIN_BODY_BLOCK:
+                printf("BEGIN BODY\n");
+                break;
+            case METADATA_END_BODY_BLOCK:
+                printf("END BODY\n");
+                break;
+            case INSTRUCTION_PROGRAM_BEGIN:
+                printf("PROGRAM BEGIN\n");
+                break;
+            case INSTRUCTION_VAR:
+                printf("VAR: id %i\n", iterator->val.var);
+                break;
+            case INSTRUCTION_FUNCTION_LABEL:
+                printf("FUNCTION LABEL: label %s\n", iterator->val.label);
+                break;
+            case INSTRUCTION_FUNCTION_END:
+                printf("FUNCTION END: label %s\n", iterator->val.label);
+                break;
+            case INSTRUCTION_RETURN:
+                printf("INSTRUCTION RETURN\n");
+                break;
+            case METADATA_FUNCTION_ARGUMENT:
+                printf("ARGUMENT: %i\n", iterator->val.argNum);
+                break;
+        }
+
+        iterator = iterator->next;
+    }
+    //DEBUG STUFF END
+
+    //Code gen
+    generate(stdout, head);
 
     printf("\n");
 

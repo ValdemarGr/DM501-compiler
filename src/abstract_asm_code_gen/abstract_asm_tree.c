@@ -7,11 +7,18 @@ Instructions *createVariable() {
 
 }
 
-Instructions *generateInstructionTreeForStatement(Statement *statement) {
+Instructions *generateInstructionTreeForStatement(Statement *statement, Instructions *last) {
 
 
     switch (statement->kind) {
-        case statReturnK:
+        case statReturnK: {
+            Instructions *instructions = NEW(Instructions);
+            instructions->next = NULL;
+            instructions->kind = INSTRUCTION_RETURN;
+
+            last->next = instructions;
+            return instructions;
+        }
             break;
         case statWriteK:
             break;
@@ -34,7 +41,7 @@ Instructions *generateInstructionTreeForStatement(Statement *statement) {
     return NULL;
 }
 
-Instructions *generateInstructionTreeForDeclaration(Declaration *declaration) {
+Instructions *generateInstructionTreeForDeclaration(Declaration *declaration, Instructions *last) {
 
     switch (declaration->kind) {
         case declVarK: {
@@ -43,81 +50,112 @@ Instructions *generateInstructionTreeForDeclaration(Declaration *declaration) {
             ret->next = NULL;
             ret->kind = INSTRUCTION_VAR;
             ret->val.var = symbol->uniqueId;
+
+
+            last->next = ret;
+
             return ret;
         }
         break;
         case declVarsK: {
-            Instructions *head = NULL;
-            Instructions *current = NULL;
-
-            Declaration *declCurrent = declaration;
-            while (declCurrent->kind == declVarsK) {
-                if (head == NULL) {
-                    head = NEW(Instructions);
-                    current = head;
-                } else {
-
-                }
-
-                declCurrent->val.varsD.var;
-
-                declCurrent = declCurrent->val.varsD.next;
-            }
-
+            //For current var
             Declaration *thisVar = declaration->val.varsD.var;
 
             SYMBOL *symbol = getSymbol(declaration->symbolTable, thisVar->val.varD.id);
-
-            head->next = NULL;
-
-            Instructions *out = generateInstructionTreeForDeclaration(declaration->val.varsD.next);
-
+            Instructions *ret = NEW(Instructions);
             ret->next = NULL;
             ret->kind = INSTRUCTION_VAR;
             ret->val.var = symbol->uniqueId;
 
+            last->next = ret;
 
-
-            return ret;
+            if (declaration->val.varsD.next == NULL) {
+                return ret;
+            } else {
+                return generateInstructionTreeForDeclaration(declaration->val.varsD.next, ret);
+            }
         }
         break;
         case declTypeK:
+            //SKIP
+            return last;
             break;
-        case declFuncK:
+        case declFuncK: {
+            //For function label
+            Instructions *label = NEW(Instructions);
+            label->next = NULL;
+            label->val.label = declaration->val.functionD.function->head->indentifier;
+            label->kind = INSTRUCTION_FUNCTION_LABEL;
+
+            //Readjust arg
+            last->next = label;
+
+            //For args we generate metadata for later (maybe this is useless, who knows)
+            DeclarationList *declarationList = declaration->val.functionD.function->head->declarationList;
+            Instructions *current = label;
+            int counter = 0;
+
+            while (declarationList != NULL) {
+                //Create arg instr for this argument
+                Instructions *arg = NEW(Instructions);
+                arg->next = NULL;
+                arg->kind = METADATA_FUNCTION_ARGUMENT;
+                arg->val.argNum = counter;
+                current->next = arg;
+
+                current = current->next;
+                declarationList = declarationList->next;
+                counter++;
+            }
+
+            current = generateInstructionTree(declaration->val.functionD.function->body, current);
+
+            Instructions *tail = NEW(Instructions);
+            tail->next = NULL;
+            tail->kind = INSTRUCTION_FUNCTION_END;
+            tail->val.label = declaration->val.functionD.function->tail->indentifier;
+            current->next = tail;
+
+            return tail;
+        }
             break;
         case declValK:
             break;
         case declClassK:
             break;
     }
+
+    return NULL;
 }
 
-Instructions *generateInstructionTree(Body *body) {
+Instructions *generateInstructionTree(Body *body, Instructions *preBodyLast) {
     DeclarationList *declarationList = body->declarationList;
     StatementList *statementList = body->statementList;
-    Instructions *head = NULL;
-    Instructions *current = NULL;
+    Instructions *head = NEW(Instructions);
+    head->next = NULL;
+    head->kind = METADATA_BEGIN_BODY_BLOCK;
+    preBodyLast->next = head;
+
+    Instructions *last = head;
+
+    //Functions will take tail and return the new tail, head must be pre-inited
 
     while (declarationList != NULL) {
-        if (head == NULL) {
-            head = generateInstructionTreeForDeclaration(declarationList->declaration);
-            current = head;
-        } else {
-            current = generateInstructionTreeForDeclaration(declarationList->declaration);
-        }
+        last = generateInstructionTreeForDeclaration(declarationList->declaration, last);
 
         declarationList = declarationList->next;
     }
 
     while (statementList != NULL) {
-        if (head == NULL) {
-            head = generateInstructionTreeForStatement(statementList->statement);
-            current = head;
-        } else {
-            current = generateInstructionTreeForStatement(statementList->statement);
-        }
+        last = generateInstructionTreeForStatement(statementList->statement, last);
 
         statementList = statementList->next;
     }
 
+    last->next = NEW(Instructions);
+    last = last->next;
+    last->next = NULL;
+    last->kind = METADATA_END_BODY_BLOCK;
+
+    return last;
 }

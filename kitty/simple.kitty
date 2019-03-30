@@ -1,1 +1,7 @@
 var a: int;
+
+func horse(z: int): int
+    var q: int;
+    var o: int;
+    return z;
+end horse

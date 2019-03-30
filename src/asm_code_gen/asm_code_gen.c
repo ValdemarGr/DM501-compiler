@@ -30,6 +30,10 @@ void generateValue(FILE *out, AsmValue *value) {
         case VALUE_UID:
             generateLoadIdentifier(out, value->val.identifier);
             break;
+        case VALUE_ADD:
+            break;
+        case VALUE_CONST:
+            break;
     }
 }
 
@@ -44,7 +48,29 @@ void generateAdd(FILE *out, Add add) {
 void generateInstruction(FILE *out, Instructions* instruction) {
     switch (instruction->kind) {
         case INSTRUCTION_ADD:
-            //generateAdd(out, generateAdd(out, instruction->val.add))
+            generateAdd(out, instruction->val.add);
+            break;
+        case METADATA_BEGIN_BODY_BLOCK:
+            //SKIP
+            break;
+        case METADATA_END_BODY_BLOCK:
+            //SKIP
+            break;
+        case INSTRUCTION_PROGRAM_BEGIN:
+            //SKIP
+            break;
+        case INSTRUCTION_FUNCTION_LABEL:
+            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\npush %%rax\n", instruction->val.label, instruction->val.label);
+            break;
+        case INSTRUCTION_VAR:
+            fprintf(out, "mov $0,%s\n", getUidLocation(instruction->val.var));
+            break;
+        case INSTRUCTION_FUNCTION_END:
+            fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
+            break;
+        case INSTRUCTION_RETURN:
+            break;
+        case METADATA_FUNCTION_ARGUMENT:
             break;
     }
 }

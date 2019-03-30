@@ -23,7 +23,7 @@ typedef struct Add {
 } Add;
 
 typedef enum {
-    VALUE_UID, VALUE_ADD
+    VALUE_UID, VALUE_ADD, VALUE_CONST
 } ValueKind;
 
 typedef struct AsmValue {
@@ -31,13 +31,22 @@ typedef struct AsmValue {
     union {
         int identifier;
         Add add;
+        int constant;
     } val;
 } AsmValue;
 
 
 typedef enum {
     INSTRUCTION_ADD,
-    INSTRUCTION_VAR
+    INSTRUCTION_PROGRAM_BEGIN,
+    INSTRUCTION_FUNCTION_LABEL,
+    INSTRUCTION_VAR,
+    INSTRUCTION_FUNCTION_END,
+    INSTRUCTION_RETURN,
+
+    METADATA_BEGIN_BODY_BLOCK,
+    METADATA_END_BODY_BLOCK,
+    METADATA_FUNCTION_ARGUMENT
 } InstructionKind;
 
 typedef struct Instructions {
@@ -46,9 +55,11 @@ typedef struct Instructions {
     union {
         Add add;
         int var;
+        char* label;
+        int argNum;
     } val;
 } Instructions;
 
-Instructions *generateInstructionTree(Body* body);
+Instructions *generateInstructionTree(Body* body, Instructions *preBodyLast);
 
 #endif //HELLO_ABSTRACT_ASM_TREE_H
