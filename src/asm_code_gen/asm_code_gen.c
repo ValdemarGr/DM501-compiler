@@ -1,6 +1,5 @@
 #include "asm_code_gen.h"
 #include "../abstract_asm_code_gen/abstract_asm_tree.h"
-#include <stdio.h>
 
 #define ADD_RESULT_STORE "%rax"
 #define VALUE_STORE "%rdx"
@@ -22,14 +21,14 @@ char *getUidLocation(int identifier) {
 
 
 void generateLoadIdentifier(FILE *out, int identifier) {
-    char *uidLocation = getUidLocation(identifer);
+    char *uidLocation = getUidLocation(identifier);
     fprintf(out, "mov %s,%s", uidLocation, VALUE_STORE);
 }
 
-void generateValue(FILE *out, Value *value) {
+void generateValue(FILE *out, AsmValue *value) {
     switch (value->kind) {
         case VALUE_UID:
-            generateLoadIdentifier(out, value->identifier);
+            generateLoadIdentifier(out, value->val.identifier);
             break;
     }
 }
@@ -45,7 +44,7 @@ void generateAdd(FILE *out, Add add) {
 void generateInstruction(FILE *out, Instructions* instruction) {
     switch (instruction->kind) {
         case INSTRUCTION_ADD:
-            generateAdd(out, generateAdd(out, instruction->val.add))
+            //generateAdd(out, generateAdd(out, instruction->val.add))
             break;
     }
 }
@@ -56,7 +55,7 @@ void generate(FILE *file, Instructions* instructions) {
     Instructions* current_instruction = instructions;
 
     while (current_instruction != NULL) {
-        generateInstruction(current_instruction);
+        generateInstruction(file, current_instruction);
         current_instruction = current_instruction->next;
     }
 

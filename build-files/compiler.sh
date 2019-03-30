@@ -1,10 +1,10 @@
 #!/bin/bash
 
 cmake ../CMakeLists.txt 
-make -C .. Compiler
+make -C .. compiler
 rm ../CMakeCache.txt
 rm ../cmake_install.cmake
 rm ../CTestTestfile.cmake
 rm ../CMakeFiles -r
-mv ../src/Compiler .
+mv ../src/compiler .
 rm ../Makefile

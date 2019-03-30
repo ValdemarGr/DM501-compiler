@@ -8,6 +8,7 @@
 #include "symbol/symbol.h"
 #include "symbol/decorate_ast.h"
 #include "type_checker/type_checker.h"
+#include "asm_code_gen/asm_code_gen.h"
 
 int lineno;
 int stmDeclNum;
@@ -49,6 +50,8 @@ int compile_file(FILE *file) {
 }
 
 int main(int argc, char *argv[]) {
+    generate(stdout, NULL);
+
     bool gotFile = false;
     int r = 0;
     for (int i = 1; i < argc; i++) {

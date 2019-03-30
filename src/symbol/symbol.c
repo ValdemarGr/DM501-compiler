@@ -5,6 +5,8 @@
 #include "symbol.h"
 #include "../ast/tree.h"
 
+static int uniqueId = 0;
+
 int Hash(char *str){
     //If garbage is given
     if (str == NULL) {
@@ -141,6 +143,8 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_st
 
     current_node->value = value;
     current_node->symbol_stmDeclNum = symbol_stmDeclNum;
+    current_node->uniqueId = uniqueId;
+    uniqueId = uniqueId + 1;
 
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {

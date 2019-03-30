@@ -32,6 +32,7 @@ typedef struct Value {
 
 typedef struct SYMBOL {
   char *name;
+  int uniqueId;
   int symbol_stmDeclNum;
   Value *value;
   struct SYMBOL *next;

@@ -11,4 +11,4 @@ add_subdirectory(asm_code_gen)
 
 add_executable(compiler main.c ${SOURCES})
 
-target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AbstractAsmCodeGen)
+target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AbstractAsmCodeGen AsmCodeGen)
