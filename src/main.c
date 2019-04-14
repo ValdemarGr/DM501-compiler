@@ -9,7 +9,7 @@
 #include "symbol/decorate_ast.h"
 #include "type_checker/type_checker.h"
 #include "asm_code_gen/asm_code_gen.h"
-#include "abstract_asm_code_gen/abstract_asm_tree.h"
+#include "utils/stack.h"
 
 int lineno;
 int stmDeclNum;
@@ -44,12 +44,37 @@ int compile_file(FILE *file) {
     ei = writeError(e); if (ei != 0) return ei;
 
     prettyBody(theexpression);
+/*
+    char *a = "a";
+    char *b = "b";
+    char *c = "c";
+    char *d = "d";
 
-    Instructions *head = NEW(Instructions);
+    Stack *s = initStack();
+
+    push(s, a);
+    push(s, b);
+    push(s, c);
+
+    char *expectedC = pop(s);
+    char *expectedB = pop(s);
+    push(s, d);
+    char* expectedD = pop(s);
+    char *expectedA = pop(s);
+
+
+    printf("c %s\n", expectedC);
+    printf("b %s\n", expectedB);
+    printf("a %s\n", expectedA);
+    printf("d %s\n", expectedD);*/
+
+
+    /*Instructions *head = NEW(Instructions);
     head->next = NULL;
     head->kind = INSTRUCTION_PROGRAM_BEGIN;
 
     generateInstructionTree(theexpression, head);
+
 
     //DEBUG STUFF BEGIN
     Instructions *iterator = head;
@@ -93,7 +118,7 @@ int compile_file(FILE *file) {
     //Code gen
     generate(stdout, head);
 
-    printf("\n");
+    printf("\n");*/
 
     return 0;
 }
