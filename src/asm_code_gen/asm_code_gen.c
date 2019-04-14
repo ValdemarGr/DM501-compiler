@@ -1,5 +1,4 @@
 #include "asm_code_gen.h"
-#include "../abstract_asm_code_gen/abstract_asm_tree.h"
 
 #define ADD_RESULT_STORE "%rax"
 #define VALUE_STORE "%rdx"

@@ -1,12 +1,6 @@
 #include "abstract_asm_tree.h"
 #include "../ast/tree.h"
 
-static int uniqueId = 0;
-
-Instructions *createVariable() {
-
-}
-
 Instructions *generateInstructionTreeForStatement(Statement *statement, Instructions *last) {
 
 

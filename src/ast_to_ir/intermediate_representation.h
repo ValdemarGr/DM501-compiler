@@ -1,5 +1,9 @@
-#ifndef HELLO_ABSTRACT_ASM_TREE_H
-#define HELLO_ABSTRACT_ASM_TREE_H
+//
+// Created by valde on 4/12/19.
+//
+
+#ifndef HELLO_INTERMEDIATE_REPRESENTATION_H
+#define HELLO_INTERMEDIATE_REPRESENTATION_H
 
 #include <stdio.h>
 #include "../ast/tree.h"
@@ -7,6 +11,10 @@
 #include "../symbol/symbol.h"
 
 typedef struct AsmValue AsmValue;
+
+typedef struct Inc {
+    AsmValue *val;
+} Inc;
 
 typedef struct Jump {
     char* label;
@@ -60,6 +68,4 @@ typedef struct Instructions {
     } val;
 } Instructions;
 
-Instructions *generateInstructionTree(Body* body, Instructions *preBodyLast);
-
-#endif //HELLO_ABSTRACT_ASM_TREE_H
+#endif //HELLO_INTERMEDIATE_REPRESENTATION_H

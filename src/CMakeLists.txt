@@ -8,7 +8,8 @@ add_subdirectory(type_checker)
 add_subdirectory(pretty_print)
 add_subdirectory(abstract_asm_code_gen)
 add_subdirectory(asm_code_gen)
+add_subdirectory(ast_to_ir)
 
 add_executable(compiler main.c ${SOURCES})
 
-target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AbstractAsmCodeGen AsmCodeGen)
+target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AbstractAsmCodeGen AsmCodeGen AstToIR)

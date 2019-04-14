@@ -6,7 +6,7 @@
 #define HELLO_AMS_CODE_GEN_H
 
 #include "consts.h"
-#include "../abstract_asm_code_gen/abstract_asm_tree.h"
+#include "../ast_to_ir/intermediate_representation.h"
 #include <stdio.h>
 
 char *getUidLocation(int identifier);
