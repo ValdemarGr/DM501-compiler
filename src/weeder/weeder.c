@@ -6,8 +6,8 @@
 Error *weeder(Body *body) {
     Error *e = NULL;
 
-    if (e == NULL) e = weedFunctionNames(body);
-    if (e == NULL) e = weedFunctionReturns(body);
-
+    e = weedFunctionNames(body);
+    if (e != NULL) return e;
+    e = weedFunctionReturns(body);
     return e;
 }

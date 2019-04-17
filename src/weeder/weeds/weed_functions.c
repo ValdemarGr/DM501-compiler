@@ -17,7 +17,7 @@ Error *weedFunctionNames(Body *body) {
 
             while (innerDeclarationList != NULL) {
                 if (innerDeclarationList->declaration->kind == declFuncK) {
-                    return WEED_FUNC_HAS_NO_END;
+                    return WEED_FUNC_HAS_NO_END; //TODO
                 }
 
                 innerDeclarationList = innerDeclarationList->next;

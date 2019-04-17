@@ -461,7 +461,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 value->kind = typeK;
                 value->val.typeD.tpe = valType;
                 value->val.typeD.isTypedef = false;
-
+                value->val.typeD.lhsIsConst = true;
 
                 putSymbol(symbolTable,
                           declaration->val.valD.id,
