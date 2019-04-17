@@ -31,14 +31,17 @@ typedef struct Value {
 } Value;
 
 typedef struct SYMBOL {
-  char *name;
-  int uniqueId;
-  int symbol_stmDeclNum;
-  Value *value;
-  struct SYMBOL *next;
+    char *name;
+    size_t distanceFromRoot;
+    size_t uniqueIdForScope;
+    int symbol_stmDeclNum;
+    Value *value;
+    struct SYMBOL *next;
 } SYMBOL;
 
 typedef struct SymbolTable {
+    size_t distanceFromRoot;
+    size_t nextSymbolId;
     SYMBOL *table[HashSize];
     struct SymbolTable *next;
 } SymbolTable;

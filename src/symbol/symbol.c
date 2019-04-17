@@ -5,8 +5,6 @@
 #include "symbol.h"
 #include "../ast/tree.h"
 
-static int uniqueId = 0;
-
 int Hash(char *str){
     //If garbage is given
     if (str == NULL) {
@@ -40,6 +38,9 @@ SymbolTable *initSymbolTable() {
     //Set next to null
     table->next = NULL;
 
+    table->nextSymbolId = 0;
+    table->distanceFromRoot = 0;
+
     //Set all entries to NULL
     for (int i = 0; i < HashSize; i++) {
         (table->table)[i] = NULL;
@@ -56,6 +57,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
 
     //New table and put old table in new tables next
     SymbolTable* htable = initSymbolTable();
+    htable->distanceFromRoot = t->distanceFromRoot + 1;
     htable->next = t;
     return htable;
 }
@@ -143,8 +145,9 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_st
 
     current_node->value = value;
     current_node->symbol_stmDeclNum = symbol_stmDeclNum;
-    current_node->uniqueId = uniqueId;
-    uniqueId = uniqueId + 1;
+    current_node->uniqueIdForScope = t->nextSymbolId;
+    t->nextSymbolId++;
+    current_node->distanceFromRoot = t->distanceFromRoot;
 
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {
