@@ -626,11 +626,7 @@ Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable) {
         statementList = statementList->next;
     }
 
-    if (e == NULL) {
-        return NULL;
-    } else {
-        return e;
-    }
+    return NULL;
 }
 
 
