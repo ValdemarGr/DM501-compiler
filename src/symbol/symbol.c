@@ -109,7 +109,7 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     return current_node;
 }*/
 
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum) {
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum, bool isConst) {
     //Error decorateFunction
     if (t == NULL || name == NULL) {
         return NULL;
@@ -148,6 +148,7 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_st
     current_node->uniqueIdForScope = t->nextSymbolId;
     t->nextSymbolId++;
     current_node->distanceFromRoot = t->distanceFromRoot;
+    current_node->isConst = isConst;
 
     //If parent node is not NULL we have to adjust the parent's next
     if (parent_node != NULL) {

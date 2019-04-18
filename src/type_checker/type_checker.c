@@ -1537,6 +1537,13 @@ bool isTypedef(char* id, SymbolTable *symbolTable) {
     return false;
 }
 
+bool isConst(char* id, SymbolTable *symbolTable) {
+
+    SYMBOL *symbol = getSymbol(symbolTable, id);
+
+    return symbol->isConst;
+}
+
 //We need to track the return type, since we can have deeeeeeeep dwelling return statements
 Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
     Error *e = NULL;
@@ -1639,6 +1646,16 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
         case assignmentK:
             //Assignment is a bit funny, we have to check if the LHS and RHS are the same
             //We have to find out what the LHS is first
+            //We also cannot re assign a const
+            if (isConst(statement->val.assignmentD.var->val.idD.id, statement->symbolTable)) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1654";
+                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
+
+                return e;
+            }
 
             if (statement->val.assignmentD.var->kind == varIdK &&
             isTypedef(statement->val.assignmentD.var->val.idD.id, statement->symbolTable) == true) {

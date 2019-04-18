@@ -13,7 +13,7 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
-                     VarDelList *params, Body *body, int stmDeclNum);
+                     VarDelList *params, Body *body, int stmDeclNum, bool isConst);
 
 void alterIdTypesToGenerics(Type *tpe, SymbolTable *symbolTable) {
     SYMBOL *symbol;
@@ -117,7 +117,8 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                                      symbolTable,
                                      lambda->declarationList,
                                      lambda->body,
-                                     0);
+                                     0,
+                                     false);
                 }
 
                 expressionList = expressionList->next;
@@ -131,7 +132,7 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 }
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
-                      VarDelList *params, Body *body, int stmDeclNum) {
+                      VarDelList *params, Body *body, int stmDeclNum, bool isConst) {
     Value *value = NULL;
     SymbolTable *child = scopeSymbolTable(symbolTable);
     VarDelList *vdl = params;
@@ -146,7 +147,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
     putSymbol(symbolTable,
               id,
               value,
-              stmDeclNum);
+              stmDeclNum,
+              isConst);
 
     //Put the parameters in the child scope
     while (vdl != NULL) {
@@ -160,7 +162,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
 
         putSymbol(child,
                   vdl->identifier,
-                  value, stmDeclNum);
+                  value, stmDeclNum,
+                  true);
 
         vdl = vdl->next;
     }
@@ -245,7 +248,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                             symbolTable,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->declarationList,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body,
-                            statement->internal_stmDeclNum);
+                            statement->internal_stmDeclNum,
+                            false);
                 }
             }
             //If the rhs is an expression that contains a function call we have to check if the call itself
@@ -303,7 +307,8 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
                                  symbolTable,
                                  lambda->declarationList,
                                  lambda->body,
-                                 0);
+                                 0,
+                                 false);
             }
             break;
         default:
@@ -388,7 +393,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             putSymbol(symbolTable,
                       declaration->val.varD.id,
                       value,
-                      declaration->internal_stmDeclNum);
+                      declaration->internal_stmDeclNum,
+                      false);
             break;
         case declVarsK:
             varList = declaration;
@@ -419,7 +425,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             putSymbol(symbolTable,
                       declaration->val.typeD.id,
                       value,
-                      declaration->internal_stmDeclNum);
+                      declaration->internal_stmDeclNum,
+                      true);
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
@@ -430,7 +437,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                              symbolTable,
                              declaration->val.functionD.function->head->declarationList,
                              declaration->val.functionD.function->body,
-                             declaration->internal_stmDeclNum);
+                             declaration->internal_stmDeclNum,
+                             true);
 
             break;
         case declValK:
@@ -454,19 +462,20 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                                  symbolTable,
                                  lambda->declarationList,
                                  lambda->body,
-                                 declaration->internal_stmDeclNum);
+                                 declaration->internal_stmDeclNum,
+                                 true);
             } else  {
                 value = NEW(Value);
 
                 value->kind = typeK;
                 value->val.typeD.tpe = valType;
                 value->val.typeD.isTypedef = false;
-                value->val.typeD.lhsIsConst = true;
 
                 putSymbol(symbolTable,
                           declaration->val.valD.id,
                           value,
-                          declaration->internal_stmDeclNum);
+                          declaration->internal_stmDeclNum,
+                          true);
             }
 
             break;
@@ -562,7 +571,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             putSymbol(symbolTable,
                       declaration->val.classD.id,
                       value,
-                      declaration->internal_stmDeclNum);
+                      declaration->internal_stmDeclNum,
+                      false);
 
             //Also remember the generic type parameters
             TypeList *generics = declaration->val.classD.genericTypeParameters;
@@ -578,7 +588,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 putSymbol(newSt,
                           generics->type->val.typeGeneric.genericName,
                           value,
-                          declaration->internal_stmDeclNum);
+                          declaration->internal_stmDeclNum,
+                          false);
 
                 generics = generics->next;
             }

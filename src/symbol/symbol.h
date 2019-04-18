@@ -21,7 +21,7 @@
 typedef struct Value {
     enum { typeK, typeFunctionK, symTypeClassK } kind;
     union {
-        struct { struct Type *tpe; bool isTypedef; bool lhsIsConst; } typeD;
+        struct { struct Type *tpe; bool isTypedef; } typeD;
         struct { struct VarDelList *tpe; struct Type *returnType; } typeFunctionD;
         struct {
             struct DeclarationList *declarationList;
@@ -34,6 +34,7 @@ typedef struct SYMBOL {
     char *name;
     size_t distanceFromRoot;
     size_t uniqueIdForScope;
+    bool isConst;
     int symbol_stmDeclNum;
     Value *value;
     struct SYMBOL *next;
@@ -53,7 +54,7 @@ SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
 //SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum, bool isConst);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 
