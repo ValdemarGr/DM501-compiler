@@ -44,6 +44,11 @@ int compile_file(FILE *file) {
     ei = writeError(e); if (ei != 0) return ei;
 
     prettyBody(theexpression);
+
+    Instructions *instructions = generateInstructionTree(theexpression);
+
+    generate(stdout, instructions);
+
 /*
     char *a = "a";
     char *b = "b";

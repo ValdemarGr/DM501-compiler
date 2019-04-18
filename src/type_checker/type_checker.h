@@ -16,6 +16,7 @@
 
 typedef struct Error Error;
 
+Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
 Error *typeCheck(Body *body, Type *functionReturnType);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 #endif //HELLO_TYPE_CHECKER_H

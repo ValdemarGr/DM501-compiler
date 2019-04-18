@@ -8,6 +8,7 @@
 #include "../symbol/symbol.h"
 #include "./intermediate_representation.h"
 #include "../utils/stack.h"
+#include "../type_checker/type_checker.h"
 
 typedef enum {
     ACCUMULATE
@@ -20,6 +21,6 @@ typedef struct Context {
     } val;
 } Context;
 
-void generateInstructionTree(Body* body);
+struct Instructions *generateInstructionTree(Body* body);
 
 #endif //HELLO_ABSTRACT_ASM_TREE_H

@@ -40,7 +40,6 @@ typedef enum {
     INSTRUCTION_PROGRAM_BEGIN,
     INSTRUCTION_FUNCTION_LABEL,
     INSTRUCTION_VAR,
-    INSTRUCTION_VAL,
     INSTRUCTION_FUNCTION_END,
     INSTRUCTION_RETURN,
     INSTRUCTION_WRITE,
@@ -55,22 +54,23 @@ typedef enum {
 
     COMPLEX_CONSTRAIN_BOOLEAN,
     COMPLEX_FETCH_VARIABLE_FROM_PARENT_SCOPE_FRAME,
+    COMPLEX_ALLOCATE,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
-    METADATA_FUNCTION_ARGUMENT
+    METADATA_FUNCTION_ARGUMENT,
+    METADATA_CREATE_MAIN
 } InstructionKind;
 
 typedef struct Instructions {
     struct Instructions* next;
-    Context context;
     InstructionKind kind;
     union {
         Arithmetic2 arithmetic2; //INSTRUCTION_ADD..
         Arithmetic3 arithmetic3;
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
-        int var; //INSTRUCTION_VAR
-        int val; //INSTRUCTION_VAL
+        SYMBOL *var; //INSTRUCTION_VAR
+        struct { size_t accessTemp; size_t timesTemp; Type* tpe;} allocate;
         char* label; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         int argNum; //METADATA_FUNCTION_ARGUMENT

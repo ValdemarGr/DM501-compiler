@@ -14,7 +14,6 @@ struct Type intStaticType = {.kind = typeIntK};
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
-Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 //Go all the way down through variable, then once at bottom get type
 //when we get type start returning, apply subscripting and such as we go up

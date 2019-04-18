@@ -5,9 +5,10 @@
 
 static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
+static bool mainCreated = false;
 
 //If the context stack contains something we need to apply the instructions in the current context
-static Stack *contextStack = NULL;
+//static Stack *contextStack = NULL;
 static size_t currentTemporary = 0;
 
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable);
@@ -16,7 +17,7 @@ Instructions *newInstruction() {
     Instructions *ret = NEW(Instructions);
 
     ret->next = NULL;
-    ret->context = NULL;
+    //ret->context = NULL;
 
     return ret;
 }
@@ -371,7 +372,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             currentContext->kind = ACCUMULATE;
             currentContext->val.temp = currentTemporary;
 
-            push(contextStack, currentContext);
+            //push(contextStack, currentContext);
 
             size_t resultingTemporary = generateInstructionsForExpression(statement->val.returnD.exp, statement->symbolTable);
 
@@ -380,7 +381,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             instructions->val.tempToReturn = resultingTemporary;
             appendInstructions(instructions);
 
-            pop(contextStack);
+            //pop(contextStack);
 
             currentTemporary++;
         }
@@ -389,21 +390,51 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Instructions *instructions = newInstruction();
             instructions->kind = INSTRUCTION_WRITE;
             instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+            appendInstructions(instructions);
         }
             break;
-        case statAllocateK:
-            break;
-        case statAllocateLenK:
-            break;
+        case statAllocateK: {
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = 1;
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+
+            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
+            Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            Instructions *ret = newInstruction();
+            ret->kind = COMPLEX_ALLOCATE;
+            ret->val.allocate.timesTemp = currentTemporary - 1;
+            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.tpe = type;
+            appendInstructions(ret);
+        } break;
+        case statAllocateLenK: {
+            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateLenD.var, statement->symbolTable);
+            Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
+            size_t times = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+            Instructions *ret = newInstruction();
+            ret->kind = COMPLEX_ALLOCATE;
+            ret->val.allocate.timesTemp = times;
+            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.tpe = type;
+            appendInstructions(ret);
+        } break;
         case statIfK:
+            //TODO
             break;
         case statIfElK:
+            //TODO
             break;
         case statWhileK:
+            //TODO
             break;
         case stmListK:
+            //TODO
             break;
         case assignmentK:
+            //TODO
             break;
     }
 }
@@ -415,7 +446,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.varD.id);
             Instructions *ret = newInstruction();
             ret->kind = INSTRUCTION_VAR;
-            ret->val.var = symbol->uniqueId;
+            ret->val.var = symbol;
 
             appendInstructions(ret);
         }
@@ -427,7 +458,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             SYMBOL *symbol = getSymbol(declaration->symbolTable, thisVar->val.varD.id);
             Instructions *ret = newInstruction();
             ret->kind = INSTRUCTION_VAR;
-            ret->val.var = symbol->uniqueId;
+            ret->val.var = symbol;
 
             if (declaration->val.varsD.next == NULL) {
                 appendInstructions(ret);
@@ -474,10 +505,10 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
         case declValK: {
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.valD.id);
             Instructions *ret = newInstruction();
-            ret->kind = INSTRUCTION_VAL;
-            ret->val.val = symbol->uniqueId;
-
+            ret->kind = INSTRUCTION_VAR;
+            ret->val.var = symbol;
             appendInstructions(ret);
+            //TODO RHS evaluation needed for this
         }
             break;
         case declClassK:
@@ -486,8 +517,15 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
     }
 }
 
-void generateInstructionTree(Body *body) {
+Instructions* generateInstructionTree(Body *body) {
     //Save temporary counter
+    bool createMain = false;
+
+    if (!mainCreated) {
+        createMain = true;
+        mainCreated = true;
+    }
+
     size_t restoreTemporary = currentTemporary;
 
     DeclarationList *declarationList = body->declarationList;
@@ -500,15 +538,22 @@ void generateInstructionTree(Body *body) {
         currentInstruction = instructionHead;
     }
 
-    if (contextStack == NULL) {
-        contextStack = initStack();
-    }
+    //if (contextStack == NULL) {
+      //  contextStack = initStack();
+    //}
 
     //Functions will take tail and return the new tail, head must be pre-inited
 
     while (declarationList != NULL) {
         generateInstructionTreeForDeclaration(declarationList->declaration);
         declarationList = declarationList->next;
+    }
+
+
+    if (createMain) {
+        Instructions *declsEnd = newInstruction();
+        declsEnd->kind = METADATA_CREATE_MAIN;
+        appendInstructions(declsEnd);
     }
 
     while (statementList != NULL) {
@@ -522,4 +567,6 @@ void generateInstructionTree(Body *body) {
 
     //Restore temporary counter
     currentTemporary = restoreTemporary;
+
+    return instructionHead;
 }
