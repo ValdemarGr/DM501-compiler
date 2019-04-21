@@ -16,7 +16,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //SKIP
             break;
         case INSTRUCTION_FUNCTION_LABEL:
-            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\npush %%rax\n", instruction->val.label, instruction->val.label);
+            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.label, instruction->val.label);
             break;
         case INSTRUCTION_VAR:{
             SYMBOL *var = instruction->val.var;
@@ -27,7 +27,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //SKIP
             break;
         case INSTRUCTION_RETURN: {
-            fprintf(out, "mov TEMPORARY#%zu, %rax\n", instruction->val.tempToReturn);
+            fprintf(out, "mov TEMPORARY#%zu, %%rax\n", instruction->val.tempToReturn);
             fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
         } break;
         case METADATA_FUNCTION_ARGUMENT: {
@@ -72,8 +72,20 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_CONSTRAIN_BOOLEAN: {
 
         } break;
-        case COMPLEX_FETCH_VARIABLE_FROM_PARENT_SCOPE_FRAME: {
-
+        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
+            fprintf(out, "movq scopeFrames+%zu(%%rip), TEMPORARY#%zu\n",
+                    instruction->val.loadTempFromParentScope.scopeToFindFrame * POINTER_SIZE,
+                    instruction->val.loadTempFromParentScope.outputTemp);
+            //We now have a pointer to the stack frame at temporary
+            //We want to move the stack frame + offset into temporary
+            fprintf(out, "movq -%zu(TEMPORARY#%zu), TEMPORARY#%zu\n",
+                    instruction->val.loadTempFromParentScope.uniqueVariableId * POINTER_SIZE,
+                    instruction->val.loadTempFromParentScope.outputTemp,
+                    instruction->val.loadTempFromParentScope.outputTemp);
+            //The pointer to the value is now in the temp
+            fprintf(out, "mov (TEMPORARY#%zu), TEMPORARY#%zu\n",
+                    instruction->val.loadTempFromParentScope.outputTemp,
+                    instruction->val.loadTempFromParentScope.outputTemp);
         } break;
         case COMPLEX_ALLOCATE: {
 
@@ -83,15 +95,39 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
             SYMBOL *var = instruction->val.ptrLoad.var;
-            fprintf(out, "mov -%zu(%%rbp), TEMPORARY#%zu\n", (var->uniqueIdForScope + 1) * POINTER_SIZE, instruction->val.ptrLoad.temporary);
+            fprintf(out, "movq -%zu(%%rbp), TEMPORARY#%zu\n", (var->uniqueIdForScope + 1) * POINTER_SIZE, instruction->val.ptrLoad.temporary);
         } break;
         case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER: {
-            fprintf(out, "mov TEMPORARY#%zu, (TEMPORARY#%zu)\n", instruction->val.ptrSave.tempValue, instruction->val.ptrSave.tempPtr);
+            fprintf(out, "mov TEMPORARY#%zu, -%zu(%%rbp)\n", instruction->val.ptrSave.tempValue, (instruction->val.ptrSave.sym->uniqueIdForScope + 1) * POINTER_SIZE);
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE: {
+            fprintf(out, "movq scopeFrames+%zu(%%rip), TEMPORARY#%zu\n",
+                    instruction->val.saveTempFromParentScope.scopeToFindFrame * POINTER_SIZE,
+                    instruction->val.saveTempFromParentScope.intermediateTemp);
+            //We now have a pointer to the stack frame at temporary
+            //We want to move the stack frame + offset into temporary
+            fprintf(out, "movq -%zu(TEMPORARY#%zu), TEMPORARY#%zu\n",
+                    instruction->val.saveTempFromParentScope.uniqueVariableId * POINTER_SIZE,
+                    instruction->val.saveTempFromParentScope.intermediateTemp,
+                    instruction->val.saveTempFromParentScope.intermediateTemp);
+            //The pointer to the value is now in the temp
+            fprintf(out, "mov TEMPORARY#%zu, (TEMPORARY#%zu)\n",
+                    instruction->val.saveTempFromParentScope.inputTemp,
+                    instruction->val.saveTempFromParentScope.intermediateTemp);
         } break;
     }
 }
 
+void generateScopeFrames(FILE *file) {
+    fprintf(file, "scopeFrames:\n");
+    for (int i = 0; i < maxDistFromRoot + 1; ++i) {
+        fprintf(file, ".quad 0\n");
+    }
+}
+
 void generate(FILE *file, Instructions* instructions) {
+    generateScopeFrames(file);
+
     Instructions* current_instruction = instructions;
     while (current_instruction != NULL && current_instruction->kind) {
         generateInstruction(file, current_instruction);

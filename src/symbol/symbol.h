@@ -14,9 +14,7 @@
 #include <stdbool.h>
 #include "../utils/enum_to_string.h"
 
-/* SYMBOL will be extended later.
-   Function calls will take more parameters later.
-*/
+extern size_t maxDistFromRoot;
 
 typedef struct Value {
     enum { typeK, typeFunctionK, symTypeClassK } kind;

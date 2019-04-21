@@ -52,10 +52,11 @@ typedef enum {
     INSTRUCTION_FUNCTION_CALL,
 
     COMPLEX_CONSTRAIN_BOOLEAN,
-    COMPLEX_FETCH_VARIABLE_FROM_PARENT_SCOPE_FRAME,
+    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
     COMPLEX_ALLOCATE,
     COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
+    COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -83,8 +84,9 @@ typedef struct Instructions {
         size_t tempToNegate;
         size_t tempToAbs;
         struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-        struct {size_t tempPtr; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-        struct { size_t distanceFromCurrentFrame; size_t uniqueVariableId; size_t outputTemp; } fetchTempFromParentScope;
+        struct {SYMBOL *sym; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;
+        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempFromParentScope;
     } val;
 } Instructions;
 

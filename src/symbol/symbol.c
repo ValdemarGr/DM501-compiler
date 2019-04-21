@@ -59,6 +59,11 @@ SymbolTable *scopeSymbolTable(SymbolTable *t) {
     SymbolTable* htable = initSymbolTable();
     htable->distanceFromRoot = t->distanceFromRoot + 1;
     htable->next = t;
+
+    if (maxDistFromRoot < htable->distanceFromRoot) {
+        maxDistFromRoot = htable->distanceFromRoot;
+    }
+
     return htable;
 }
 

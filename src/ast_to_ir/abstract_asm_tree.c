@@ -54,17 +54,27 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             size_t uniqueVariableId = symbol->uniqueIdForScope;
 
             //Check how far up the scope stack we need to look for the variable
-            size_t frameStackDistanceToVaraible = symbol->distanceFromRoot - symbolTable->distanceFromRoot;
+            size_t frameStackDistanceToVariable = symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
-            //TODO Maybe use accumulator for counting "back in memory" offset
-            Instructions *fetch = newInstruction();
-            fetch->kind = COMPLEX_FETCH_VARIABLE_FROM_PARENT_SCOPE_FRAME;
-            fetch->val.fetchTempFromParentScope.uniqueVariableId = uniqueVariableId;
-            fetch->val.fetchTempFromParentScope.distanceFromCurrentFrame = frameStackDistanceToVaraible;
-            fetch->val.fetchTempFromParentScope.outputTemp = currentTemporary;
-            appendInstructions(fetch);
-            currentTemporary++;
-            return currentTemporary - 1;
+            if (frameStackDistanceToVariable == 0) {
+                Instructions *load = newInstruction();
+                load->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK;
+                load->val.ptrLoad.var = symbol;
+                load->val.ptrLoad.temporary = currentTemporary;
+                currentTemporary++;
+                appendInstructions(load);
+                return currentTemporary - 1;
+            } else {
+                //TODO Maybe use accumulator for counting "back in memory" offset
+                Instructions *fetch = newInstruction();
+                fetch->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE;
+                fetch->val.loadTempFromParentScope.uniqueVariableId = uniqueVariableId;
+                fetch->val.loadTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                fetch->val.loadTempFromParentScope.outputTemp = currentTemporary;
+                appendInstructions(fetch);
+                currentTemporary++;
+                return currentTemporary - 1;
+            }
         } break;
         case arrayIndexK: {
             //TODO Array index requires multiple steps, access child first
@@ -387,8 +397,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             //pop(contextStack);
 
             currentTemporary++;
-        }
-            break;
+        } break;
         case statWriteK: {
             Instructions *instructions = newInstruction();
             instructions->kind = INSTRUCTION_WRITE;
@@ -443,19 +452,24 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
 
-            //We need to move the n'th variable into a register and then move the value into the register's de-referenced pointer
-            Instructions *load = newInstruction();
-            load->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK;
-            load->val.ptrLoad.var = symbol;
-            load->val.ptrLoad.temporary = currentTemporary;
-            currentTemporary++;
-            appendInstructions(load);
+            size_t frameStackDistanceToVariable = statement->symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
-            Instructions *save = newInstruction();
-            save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
-            save->val.ptrSave.tempPtr = currentTemporary - 1;
-            save->val.ptrSave.tempValue = expressionTemp;
-            appendInstructions(save);
+            if (frameStackDistanceToVariable == 0) {
+                Instructions *save = newInstruction();
+                save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+                save->val.ptrSave.sym = symbol;
+                save->val.ptrSave.tempValue = expressionTemp;
+                appendInstructions(save);
+            } else {
+                Instructions *save = newInstruction();
+                save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;
+                save->val.saveTempFromParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                save->val.saveTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                save->val.saveTempFromParentScope.inputTemp = expressionTemp;
+                save->val.saveTempFromParentScope.intermediateTemp = currentTemporary;
+                appendInstructions(save);
+                currentTemporary++;
+            }
         } break;
     }
 }

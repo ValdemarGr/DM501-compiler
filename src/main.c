@@ -16,6 +16,7 @@ int stmDeclNum;
 Body *theexpression;
 extern FILE *yyin;
 bool printWithTypes = false;
+size_t maxDistFromRoot = 0;
 
 int compile_file(FILE *file) {
     SymbolTable *globalScope = initSymbolTable();

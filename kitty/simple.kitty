@@ -4,5 +4,6 @@ func horse(z: int): int
     var q: int;
     var o: int;
     o = 5;
+    a = 2;
     return z;
 end horse
