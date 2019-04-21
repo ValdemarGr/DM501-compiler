@@ -49,12 +49,13 @@ typedef enum {
     INSTRUCTION_POP,
     INSTRUCTION_NEGATE,
     INSTRUCTION_ABS,
-
     INSTRUCTION_FUNCTION_CALL,
 
     COMPLEX_CONSTRAIN_BOOLEAN,
     COMPLEX_FETCH_VARIABLE_FROM_PARENT_SCOPE_FRAME,
     COMPLEX_ALLOCATE,
+    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
+    COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -73,7 +74,7 @@ typedef struct Instructions {
         struct { size_t accessTemp; size_t timesTemp; Type* tpe;} allocate;
         char* label; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
-        int argNum; //METADATA_FUNCTION_ARGUMENT
+        size_t argNum; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
         size_t tempToReturn; //INSTRUCTION_RETURN
         size_t tempToConstrain; //COMPLEX_CONSTRAIN_BOOLEAN
@@ -81,6 +82,8 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
+        struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+        struct {size_t tempPtr; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t distanceFromCurrentFrame; size_t uniqueVariableId; size_t outputTemp; } fetchTempFromParentScope;
     } val;
 } Instructions;

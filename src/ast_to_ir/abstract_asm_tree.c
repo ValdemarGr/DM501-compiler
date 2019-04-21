@@ -118,7 +118,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             pop->val.tempToPopInto = currentTemporary;
             appendInstructions(call);
             currentTemporary++;
-            return currentTemporary;
+            return currentTemporary - 1;
         } break;
         case parenthesesK: {
             return generateInstructionsForExpression(term->val.parenthesesD.expression, symbolTable);
@@ -143,6 +143,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             num->val.constant.temp = currentTemporary;
             appendInstructions(num);
             currentTemporary++;
+            return currentTemporary - 1;
         } break;
         case trueK: {
             Instructions *num = newInstruction();
@@ -151,6 +152,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             num->val.constant.temp = currentTemporary;
             appendInstructions(num);
             currentTemporary++;
+            return currentTemporary - 1;
         } break;
         case falseK: {
             Instructions *num = newInstruction();
@@ -159,6 +161,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             num->val.constant.temp = currentTemporary;
             appendInstructions(num);
             currentTemporary++;
+            return currentTemporary - 1;
         } break;
         case nullK: {
             //TODO point at 0
@@ -433,9 +436,27 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case stmListK:
             //TODO
             break;
-        case assignmentK:
-            //TODO
-            break;
+        case assignmentK: {
+            //For now we simply tell that temporary must be moved back to variable number x
+            //Fetch variable
+            SYMBOL *symbol = getSymbol(statement->symbolTable, statement->val.assignmentD.var->val.idD.id);
+
+            size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
+
+            //We need to move the n'th variable into a register and then move the value into the register's de-referenced pointer
+            Instructions *load = newInstruction();
+            load->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK;
+            load->val.ptrLoad.var = symbol;
+            load->val.ptrLoad.temporary = currentTemporary;
+            currentTemporary++;
+            appendInstructions(load);
+
+            Instructions *save = newInstruction();
+            save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+            save->val.ptrSave.tempPtr = currentTemporary - 1;
+            save->val.ptrSave.tempValue = expressionTemp;
+            appendInstructions(save);
+        } break;
     }
 }
 
@@ -481,7 +502,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 
             //For args we generate metadata for later (maybe this is useless, who knows?)
             VarDelList *declarationList = declaration->val.functionD.function->head->declarationList;
-            int counter = 0;
+            size_t counter = 0;
 
             while (declarationList != NULL) {
                 //Create arg instr for this argument
