@@ -20,7 +20,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case INSTRUCTION_VAR:{
             SYMBOL *var = instruction->val.var;
-            fprintf(out, "VAR%zu\n", var->uniqueIdForScope);
+            fprintf(out, "; var #%zu with stack pos -%zu(%%rbp)\n", var->uniqueIdForScope, (var->uniqueIdForScope + 1) * POINTER_SIZE);
             //fprintf(out, "mov $0,%s\n", getUidLocation(instruction->val.var));
         } break;
         case INSTRUCTION_FUNCTION_END:

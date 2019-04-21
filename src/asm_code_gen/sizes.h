@@ -10,6 +10,7 @@
 #include "../ast/tree.h"
 #include "consts.h"
 
+#define POINTER_SIZE 8
 
 size_t getSizeForType(Type *tpe);
 
