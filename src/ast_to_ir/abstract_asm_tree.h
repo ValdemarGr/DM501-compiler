@@ -9,6 +9,7 @@
 #include "./intermediate_representation.h"
 #include "../utils/stack.h"
 #include "../type_checker/type_checker.h"
+#include "../asm_code_gen/sizes.h"
 
 typedef enum {
     ACCUMULATE

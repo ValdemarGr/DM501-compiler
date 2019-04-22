@@ -3,7 +3,10 @@ var a: int;
 func horse(z: int): int
     var q: int;
     var o: int;
+    o = | 0-5 |;
     o = 5;
     a = 2;
     return z;
 end horse
+
+return horse(5);

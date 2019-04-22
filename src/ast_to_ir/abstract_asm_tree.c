@@ -1,11 +1,10 @@
 #include "abstract_asm_tree.h"
-#include "../ast/tree.h"
-#include "intermediate_representation.h"
-#include "../symbol/symbol.h"
+
 
 static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
+
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -126,7 +125,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             Instructions *pop = newInstruction();
             pop->kind = INSTRUCTION_POP;
             pop->val.tempToPopInto = currentTemporary;
-            appendInstructions(call);
+            appendInstructions(pop);
             currentTemporary++;
             return currentTemporary - 1;
         } break;
@@ -144,7 +143,55 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return result;
         } break;
         case absK: {
-            //TODO DO this manually or MMX SSSE3 PABSD
+            //TODO DO this manually or MMX SSSE3 PABSD OR USE PROVIDED METHOD
+            // mask = n >> (sizeof(int) * bitsof(char) - 1)
+            // (mask + n)^mask
+            size_t tempToAbsOn = generateInstructionsForExpression(term->val.absD.expression, symbolTable);
+
+            //We must evaluate (sizeof(int) * bitsof(char) - 1)
+            int bitsofChar = 8;
+            int sizeInt = INTEGER_SIZE;
+            int maskSize = bitsofChar * sizeInt - 1;
+
+            //Make copy of n
+            Instructions *copyN = newInstruction();
+            copyN->kind = INSTRUCTION_COPY;
+            copyN->val.arithmetic2.source = tempToAbsOn; //maskConstant
+            copyN->val.arithmetic2.dest = currentTemporary;
+            appendInstructions(copyN);
+            size_t maskTemp = currentTemporary;
+            currentTemporary++;
+
+            Instructions *maskConstant = newInstruction();
+            maskConstant->kind = INSTRUCTION_CONST;
+            maskConstant->val.constant.value = maskSize;
+            maskConstant->val.constant.temp = currentTemporary;
+            appendInstructions(maskConstant);
+            size_t maskConstTemp = currentTemporary;
+            currentTemporary++;
+
+            // Bitmask right arithmetic shift
+            Instructions *mask = newInstruction();
+            mask->kind = INSTRUCTION_RIGHT_SHIFT;
+            mask->val.arithmetic2.source = maskConstTemp; //maskConstant
+            mask->val.arithmetic2.dest = maskTemp; //Ntemp is now the mask
+            appendInstructions(mask);
+
+            //Addition (mask + n) we can corrupt n
+            Instructions *add = newInstruction();
+            add->kind = INSTRUCTION_ADD;
+            add->val.arithmetic2.source = maskTemp; //add mask
+            add->val.arithmetic2.dest = tempToAbsOn;
+            appendInstructions(add);
+
+            //mask + n now resides in tempToAbsOn and mask in current - 1
+            Instructions *xor = newInstruction();
+            xor->kind = INSTRUCTION_XOR;
+            xor->val.arithmetic2.source = tempToAbsOn;
+            xor->val.arithmetic2.dest = maskTemp;
+            appendInstructions(xor);
+
+            return currentTemporary - 1;
         } break;
         case numK: {
             Instructions *num = newInstruction();
@@ -174,7 +221,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case nullK: {
-            //TODO point at 0
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = 0;
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+            return currentTemporary - 1;
         } break;
         case lambdaK: {
             //TODO
@@ -220,10 +273,10 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                 case opMinusK: {
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
-                    instruction->val.arithmetic2.source = lhsTemp;
-                    instruction->val.arithmetic2.dest = rhsTemp;
+                    instruction->val.arithmetic2.source = rhsTemp;
+                    instruction->val.arithmetic2.dest = lhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    return lhsTemp;
                 } break;
                 case opInequalityK: {
                     //subtract

@@ -3,9 +3,9 @@
 
 void generateInstruction(FILE *out, Instructions* instruction) {
     switch (instruction->kind) {
-        case INSTRUCTION_ADD:
-            //
-            break;
+        case INSTRUCTION_ADD: {
+            fprintf(out, "add TEMPORARY#%zu, TEMPORARY#%zu\n", instruction->val.arithmetic2.source, instruction->val.arithmetic2.dest);
+        } break;
         case METADATA_BEGIN_BODY_BLOCK:
             //SKIP
             break;
@@ -34,7 +34,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "; arg %zu at stack pos -%zu(%%rbp)\n", instruction->val.argNum, (instruction->val.argNum + 1) * POINTER_SIZE);
         } break;
         case INSTRUCTION_MINUS: {
-
+            fprintf(out, "sub TEMPORARY#%zu, TEMPORARY#%zu\n", instruction->val.arithmetic2.source, instruction->val.arithmetic2.dest);
         } break;
         case INSTRUCTION_MUL: {
 
@@ -115,6 +115,15 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.saveTempFromParentScope.inputTemp,
                     instruction->val.saveTempFromParentScope.intermediateTemp);
         } break;
+        case INSTRUCTION_RIGHT_SHIFT: {
+            fprintf(out, "sar TEMPORARY#%zu, TEMPORARY#%zu\n", instruction->val.arithmetic2.source, instruction->val.arithmetic2.dest);
+        } break;
+        case INSTRUCTION_XOR: {
+            fprintf(out, "xor TEMPORARY#%zu, TEMPORARY#%zu\n", instruction->val.arithmetic2.source, instruction->val.arithmetic2.dest);
+        } break;
+        case INSTRUCTION_COPY: {
+            fprintf(out, "mov TEMPORARY#%zu, TEMPORARY#%zu\n", instruction->val.arithmetic2.source, instruction->val.arithmetic2.dest);
+        } break;
     }
 }
 
@@ -129,7 +138,7 @@ void generate(FILE *file, Instructions* instructions) {
     generateScopeFrames(file);
 
     Instructions* current_instruction = instructions;
-    while (current_instruction != NULL && current_instruction->kind) {
+    while (current_instruction != NULL) {
         generateInstruction(file, current_instruction);
         current_instruction = current_instruction->next;
     }
