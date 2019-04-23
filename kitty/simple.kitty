@@ -9,4 +9,4 @@ func horse(z: int): int
     return z;
 end horse
 
-return horse(5);
+a = horse(5);
