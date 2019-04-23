@@ -68,7 +68,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //SKIP
             break;
         case INSTRUCTION_FUNCTION_LABEL:
-            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.label, instruction->val.label);
+            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
+            fprintf(out, "movq (%%rbp), %%%s\n",
+                    getNextRegister(instruction->val.functionHead.temporary));
+            fprintf(out, "movq %%%s, scopeFrames+%zu(%%rip)\n",
+                    getNextRegister(instruction->val.functionHead.temporary),
+                    instruction->val.functionHead.distance * POINTER_SIZE);
             break;
         case INSTRUCTION_VAR:{
             //SYMBOL *var = instruction->val.var;
@@ -105,25 +110,33 @@ void generateInstruction(FILE *out, Instructions* instruction) {
 
         } break;
         case INSTRUCTION_AND: {
-
+            fprintf(out, "and %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+            getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_OR: {
-
+            fprintf(out, "or %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_PUSH: {
-
+            fprintf(out, "push %%%s\n",
+                    getNextRegister(instruction->val.tempToPush));
         } break;
         case INSTRUCTION_POP: {
-
+            fprintf(out, "pop %%%s\n",
+                    getNextRegister(instruction->val.tempToPopInto));
         } break;
         case INSTRUCTION_NEGATE: {
-
+            fprintf(out, "neg %%%s\n",
+                    getNextRegister(instruction->val.tempToNegate));
         } break;
         case INSTRUCTION_ABS: {
 
         } break;
         case INSTRUCTION_FUNCTION_CALL: {
-
+            fprintf(out, "call %s\n",
+                    instruction->val.function);
         } break;
         case COMPLEX_CONSTRAIN_BOOLEAN: {
 
@@ -189,6 +202,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "mov %%%s, %%%s\n",
                     getNextRegister(instruction->val.arithmetic2.source),
                     getNextRegister(instruction->val.arithmetic2.dest));
+        } break;
+        case COMPLEX_SAVE_STATIC_LINK: {
+            fprintf(out, "push scopeFrames+%zu(%%rip)\n",
+                    instruction->val.staticLinkDepth * POINTER_SIZE);
+        } break;
+        case COMPLEX_RESTORE_STATIC_LINK: {
+            fprintf(out, "pop scopeFrames+%zu(%%rip)\n",
+                    instruction->val.staticLinkDepth * POINTER_SIZE);
         } break;
     }
 }
