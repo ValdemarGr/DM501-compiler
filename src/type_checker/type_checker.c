@@ -1801,6 +1801,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
             return NULL;
             break;
     }
+    return NULL;
 }
 
 SYMBOL *unwrapTypedefToClassId(Type *type, SymbolTable *symbolTable) {
