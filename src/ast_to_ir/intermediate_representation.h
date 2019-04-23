@@ -93,7 +93,7 @@ typedef struct Instructions {
         struct {SYMBOL *sym; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempFromParentScope;
-        size_t staticLinkDepth;
+        struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
     } val;
 } Instructions;
 

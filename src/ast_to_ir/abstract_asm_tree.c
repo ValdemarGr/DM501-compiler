@@ -108,8 +108,10 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //We need to save the current static link pointer
                 Instructions *push = newInstruction();
                 push->kind = COMPLEX_SAVE_STATIC_LINK;
-                push->val.staticLinkDepth = symbol->distanceFromRoot;
+                push->val.pushPopStaticLink.staticLinkDepth = symbol->distanceFromRoot;
+                push->val.pushPopStaticLink.temporary = currentTemporary;
                 appendInstructions(push);
+                currentTemporary++;
             }
 
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
@@ -144,8 +146,10 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //We need to restore the static link
                 Instructions *popLink = newInstruction();
                 popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
-                popLink->val.staticLinkDepth = symbol->distanceFromRoot;
+                popLink->val.pushPopStaticLink.staticLinkDepth = symbol->distanceFromRoot;
+                popLink->val.pushPopStaticLink.temporary = currentTemporary;
                 appendInstructions(popLink);
+                currentTemporary++;
             }
             return currentTemporary - 1;
         } break;
