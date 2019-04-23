@@ -17,6 +17,8 @@ int stmDeclNum;
 Body *theexpression;
 extern FILE *yyin;
 bool printWithTypes = false;
+bool prettyPrint = false;
+bool verbose = false;
 size_t maxDistFromRoot = 0;
 
 int compile_file(FILE *file) {
@@ -45,7 +47,9 @@ int compile_file(FILE *file) {
     e = typeCheck(theexpression, &intStaticType);
     ei = writeError(e); if (ei != 0) return ei;
 
-    prettyBody(theexpression);
+    if (prettyPrint) {
+        prettyBody(theexpression);
+    }
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
@@ -55,8 +59,6 @@ int compile_file(FILE *file) {
 }
 
 int main(int argc, char *argv[]) {
-    generate(stdout, NULL);
-
     bool gotFile = false;
     int r = 0;
     for (int i = 1; i < argc; i++) {
@@ -68,6 +70,12 @@ int main(int argc, char *argv[]) {
                 case 't':
                     printWithTypes = true;
                     break;
+                case 'p':
+                    prettyPrint = true;
+                    break;
+                case 'v':
+                    verbose = true;
+                    break;
                 default:
                     printf("Please supply the correct argument for %s\n", arg);
                     break;
@@ -76,7 +84,9 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        printf("File name: %s\n", arg);
+        if (verbose) {
+            printf("File name: %s\n", arg);
+        }
 
         //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
