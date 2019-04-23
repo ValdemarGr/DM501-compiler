@@ -15,6 +15,19 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
+SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
+    switch (variable->kind) {
+        case varIdK: {
+            return getSymbol(symbolTable, variable->val.idD.id);
+        } break;
+        case arrayIndexK: {
+            return getSymbolForBaseVariable(variable->val.arrayIndexD.var, symbolTable);
+        } break;
+        case recordLookupK: {
+            return getSymbolForBaseVariable(variable->val.recordLookupD.var, symbolTable);
+        } break;
+    }
+}
 //Go all the way down through variable, then once at bottom get type
 //when we get type start returning, apply subscripting and such as we go up
 
@@ -1536,11 +1549,14 @@ bool isTypedef(char* id, SymbolTable *symbolTable) {
     return false;
 }
 
-bool isConst(char* id, SymbolTable *symbolTable) {
+bool isConst(Variable* id, SymbolTable *symbolTable) {
+    if (id->kind == varIdK) {
+        SYMBOL *symbol = getSymbol(symbolTable, id->val.idD.id);
 
-    SYMBOL *symbol = getSymbol(symbolTable, id);
+        return symbol->isConst;
+    }
 
-    return symbol->isConst;
+    return false;
 }
 
 //We need to track the return type, since we can have deeeeeeeep dwelling return statements
@@ -1646,7 +1662,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             //Assignment is a bit funny, we have to check if the LHS and RHS are the same
             //We have to find out what the LHS is first
             //We also cannot re assign a const
-            if (isConst(statement->val.assignmentD.var->val.idD.id, statement->symbolTable)) {
+            if (isConst(statement->val.assignmentD.var, statement->symbolTable)) {
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
