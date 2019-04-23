@@ -38,7 +38,9 @@ typedef struct Error {
         NOT_CLASS,
         TOO_MANY_GENERICS,
         TOO_FEW_GENERICS,
-        CLASS_NOT_EXTENDED
+        CLASS_NOT_EXTENDED,
+        NOT_TYPE,
+        DECLARATIONS_IN_CLASS
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
@@ -67,6 +69,8 @@ typedef struct Error {
         struct { char *id; int lineno; } TOO_MANY_GENERICS;
         struct { char *id; int lineno; } TOO_FEW_GENERICS;
         struct { char *id; int lineno; } CLASS_NOT_EXTENDED;
+        struct { char *id; int lineno; } NOT_TYPE;
+        struct { char *classId; int lineno; } DECLARATIONS_IN_CLASS;
     } val;
 } Error;
 
