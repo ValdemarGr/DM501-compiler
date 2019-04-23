@@ -482,6 +482,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(num);
             currentTemporary++;
 
+            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
             size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
             Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();

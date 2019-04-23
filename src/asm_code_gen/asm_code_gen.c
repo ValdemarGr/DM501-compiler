@@ -187,7 +187,45 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp));
         } break;
         case COMPLEX_ALLOCATE: {
+            printIndentation(out);
+            fprintf(out, "push %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "push %%rax\n");
+            printIndentation(out);
+            fprintf(out, "push %%r15\n");
 
+            printIndentation(out);
+            fprintf(out, "mov $0, %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "mov $12, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "syscall\n");
+            printIndentation(out);
+            fprintf(out, "push %%rax\n");
+            printIndentation(out);
+            fprintf(out, "mov $%zu, %%r15\n",
+                    getSizeForType(instruction->val.allocate.tpe));
+            printIndentation(out);
+            fprintf(out, "mul %%%s, %%r15\n",
+                    getNextRegister(instruction->val.allocate.timesTemp));
+            printIndentation(out);
+            fprintf(out, "add %%r15, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "mov %%rax, %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "mov $12, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "syscall\n");
+            printIndentation(out);
+            fprintf(out, "pop (%%%s)\n",
+                    getNextRegister(instruction->val.allocate.accessTemp));
+
+            printIndentation(out);
+            fprintf(out, "push %%r15\n");
+            printIndentation(out);
+            fprintf(out, "push %%rax\n");
+            printIndentation(out);
+            fprintf(out, "push %%rdi\n");
         } break;
         case METADATA_CREATE_MAIN: {
             printIndentation(out);

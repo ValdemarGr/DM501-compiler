@@ -1,8 +1,10 @@
 var a: int;
 
+(*
 func horse(z: int): int
     var q: int;
     var o: int;
+    allocate o;
     o = | 0-5 |;
     o = 5;
     a = 2;
@@ -10,3 +12,7 @@ func horse(z: int): int
 end horse
 
 a = horse(5);
+*)
+
+allocate a;
+a = 5;
