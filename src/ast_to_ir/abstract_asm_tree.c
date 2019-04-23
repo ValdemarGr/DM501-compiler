@@ -1,4 +1,6 @@
 #include "abstract_asm_tree.h"
+#include "intermediate_representation.h"
+#include "../ast/tree.h"
 
 
 static Instructions *instructionHead = NULL;
@@ -162,19 +164,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             size_t maskTemp = currentTemporary;
             currentTemporary++;
 
-            Instructions *maskConstant = newInstruction();
-            maskConstant->kind = INSTRUCTION_CONST;
-            maskConstant->val.constant.value = maskSize;
-            maskConstant->val.constant.temp = currentTemporary;
-            appendInstructions(maskConstant);
-            size_t maskConstTemp = currentTemporary;
-            currentTemporary++;
-
             // Bitmask right arithmetic shift
             Instructions *mask = newInstruction();
             mask->kind = INSTRUCTION_RIGHT_SHIFT;
-            mask->val.arithmetic2.source = maskConstTemp; //maskConstant
-            mask->val.arithmetic2.dest = maskTemp; //Ntemp is now the mask
+            mask->val.rightShift.constant = maskSize; //maskConstant
+            mask->val.rightShift.temp = maskTemp; //Ntemp is now the mask
             appendInstructions(mask);
 
             //Addition (mask + n) we can corrupt n
@@ -501,7 +495,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case assignmentK: {
             //For now we simply tell that temporary must be moved back to variable number x
             //Fetch variable
-            SYMBOL *symbol = getSymbol(statement->symbolTable, statement->val.assignmentD.var->val.idD.id);
+            //Todo unwrap correctly
+            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable);
 
             size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
 
