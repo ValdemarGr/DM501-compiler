@@ -1,0 +1,8 @@
+//
+// Created by valde on 4/23/19.
+//
+
+#ifndef HELLO_GARBAGE_COLLECTOR_H
+#define HELLO_GARBAGE_COLLECTOR_H
+
+#endif //HELLO_GARBAGE_COLLECTOR_H

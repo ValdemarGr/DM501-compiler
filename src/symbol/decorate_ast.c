@@ -598,6 +598,23 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             DeclarationList *declarationList = newHead;
 
             while (declarationList != NULL) {
+                //No classes or funcs inside of class
+                if (declarationList->declaration->kind == declClassK) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                }
+
+                if (declarationList->declaration->kind == declFuncK) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                }
+
                 e = decorateDeclaration(declarationList->declaration, newSt);
                 if (e != NULL) return e;
 
