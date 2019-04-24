@@ -1,33 +1,41 @@
-scopeFrames:
-.quad 0
-.quad 0
+.section .data
+staticLink:
+	.space 16
 .type horse, @function
 horse:
-push %rbp
-mov %rsp,%rbp
-mov $0, %rax
-mov $5, %rcx
-sub %rcx, %rax
-mov %rax, %rdx
-sar $31, %rdx
-add %rdx, %rax
-xor %rax, %rdx
-mov %rdx, -24(%rbp)
-mov $5, %rbx
-mov %rbx, -24(%rbp)
-mov $2, %rsi
-movq scopeFrames+0(%rip), %rdi
-movq -0(%rdi), %rdi
-mov %rsi, (%rdi)
-movq -8(%rbp), %r8
-mov %r8, %rax
-mov %rbp,%rsp
-pop %rbp
-ret
+    push %rbp
+    mov %rsp,%rbp
+	leaq staticLink, %rax
+	movq %rbp, 8(%rax)
+	mov $0, %rcx
+	mov $5, %rdx
+	sub %rdx, %rcx
+	mov %rcx, %rbx
+	sar $31, %rbx
+	add %rbx, %rcx
+	xor %rcx, %rbx
+	mov %rbx, -24(%rbp)
+	mov $5, %rsi
+	mov %rsi, -24(%rbp)
+	mov $2, %rdi
+	leaq staticLink, %r8
+	movq 0(%r8), %r8
+	movq -0(%r8), %r8
+	movq %rdi, (%r8)
+	movq -8(%rbp), %r9
+	mov %r9, %rax
+	mov %rbp,%rsp
+    pop %rbp
+    ret
 .global main
 main:
-mov $5, %rax
-mov %rcx, -8(%rbp)
-mov $60, %rax
-mov $0, %rdi
-syscall
+    leaq staticLink, %rax
+    movq %rbp, (%rax)
+	mov $5, %rcx
+	push %rcx
+	call horse
+	pop %rdx
+	mov %rdx, -8(%rbp)
+    mov $60, %rax
+    mov $0, %rdi
+    syscall

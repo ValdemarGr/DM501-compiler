@@ -102,6 +102,18 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
         case functionCallK: {
             //Give arguments on stack
             //For each expression argument, evaluate it and push it to the stack
+            SYMBOL *symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
+
+            if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
+                //We need to save the current static link pointer
+                Instructions *push = newInstruction();
+                push->kind = COMPLEX_SAVE_STATIC_LINK;
+                push->val.pushPopStaticLink.staticLinkDepth = symbol->distanceFromRoot;
+                push->val.pushPopStaticLink.temporary = currentTemporary;
+                appendInstructions(push);
+                currentTemporary++;
+            }
+
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
 
             while (expressionList != NULL) {
@@ -129,6 +141,16 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             pop->val.tempToPopInto = currentTemporary;
             appendInstructions(pop);
             currentTemporary++;
+
+            if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
+                //We need to restore the static link
+                Instructions *popLink = newInstruction();
+                popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
+                popLink->val.pushPopStaticLink.staticLinkDepth = symbol->distanceFromRoot;
+                popLink->val.pushPopStaticLink.temporary = currentTemporary;
+                appendInstructions(popLink);
+                currentTemporary++;
+            }
             return currentTemporary - 1;
         } break;
         case parenthesesK: {
@@ -460,6 +482,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(num);
             currentTemporary++;
 
+            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
             size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
             Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
@@ -555,9 +579,14 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             break;
         case declFuncK: {
             //For function label
+            SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier);
+
             Instructions *label = newInstruction();
-            label->val.label = declaration->val.functionD.function->head->indentifier;
+            label->val.functionHead.label = declaration->val.functionD.function->head->indentifier;
+            label->val.functionHead.distance = symbol->distanceFromRoot + 1;
+            label->val.functionHead.temporary = currentTemporary;
             label->kind = INSTRUCTION_FUNCTION_LABEL;
+            currentTemporary++;
 
             //Readjust arg
             appendInstructions(label);
@@ -578,11 +607,6 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             }
 
             generateInstructionTree(declaration->val.functionD.function->body);
-
-            Instructions *tail = newInstruction();
-            tail->kind = INSTRUCTION_FUNCTION_END;
-            tail->val.label = declaration->val.functionD.function->tail->indentifier;
-            appendInstructions(tail);
         }
             break;
         case declValK: {

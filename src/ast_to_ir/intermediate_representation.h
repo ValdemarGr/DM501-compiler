@@ -60,6 +60,8 @@ typedef enum {
     COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE,
+    COMPLEX_SAVE_STATIC_LINK,
+    COMPLEX_RESTORE_STATIC_LINK,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -76,7 +78,7 @@ typedef struct Instructions {
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
         struct { size_t accessTemp; size_t timesTemp; Type* tpe;} allocate;
-        char* label; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
+        struct {char* label; size_t distance; size_t temporary;} functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t argNum; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
@@ -91,6 +93,7 @@ typedef struct Instructions {
         struct {SYMBOL *sym; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempFromParentScope;
+        struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
     } val;
 } Instructions;
 

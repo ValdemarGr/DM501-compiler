@@ -7,7 +7,7 @@
 
 #include "../utils/map.h"
 
-#define ASM_HEADER ".global main\nmain:\n"
+#define ASM_HEADER ".global main\nmain:\nleaq staticLink, %%rax\nmovq %%rbp, (%%rax)\n"
 #define ASM_TAIL "mov $60, %%rax\nmov $0, %%rdi\nsyscall\n"
 #define REGISTER_COUNT 14
 
