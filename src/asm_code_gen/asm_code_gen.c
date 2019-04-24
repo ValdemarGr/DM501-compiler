@@ -393,6 +393,31 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     (instruction->val.loadPtrToStaticLink.linkBaseOffset + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp));
         } break;
+        case INSTRUCTION_CMP: {
+            fprintf(out, "# INSTRUCTION_CMP\n");
+            printIndentation(out);
+            fprintf(out, "cmp %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
+        } break;
+        case INSTRUCTION_LABEL: {
+            fprintf(out, "# INSTRUCTION_LABEL\n");
+            printIndentation(out);
+            fprintf(out, "%s:\n",
+                    instruction->val.label);
+        } break;
+        case INSTRUCTION_JE: {
+            fprintf(out, "# INSTRUCTION_JE\n");
+            printIndentation(out);
+            fprintf(out, "je %s\n",
+                    instruction->val.label);
+        } break;
+        case INSTRUCTION_JMP: {
+            fprintf(out, "# INSTRUCTION_JMP\n");
+            printIndentation(out);
+            fprintf(out, "jmp %s\n",
+                    instruction->val.label);
+        } break;
     }
 }
 

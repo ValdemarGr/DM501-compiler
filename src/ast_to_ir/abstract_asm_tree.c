@@ -6,7 +6,7 @@
 static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
-
+static size_t ifCounter = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -509,29 +509,83 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(endAlloc);
         } break;
         case statAllocateLenK: {
-            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateLenD.var, statement->symbolTable);
-            Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
-            size_t times = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+            size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
+            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
+            Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
-            ret->val.allocate.timesTemp = times;
+            ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
             appendInstructions(ret);
             currentTemporary++;
+
+            Instructions *loadPtr = newInstruction();
+            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
+            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
+            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
+            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
+            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
+            appendInstructions(loadPtr);
+            currentTemporary++;
+
+            Instructions *endAlloc = newInstruction();
+            endAlloc->kind = COMPLEX_ALLOCATE_END;
+            appendInstructions(endAlloc);
         } break;
         case statIfK: {
             //TODO
             Instructions *constant = newInstruction();
             constant->kind = INSTRUCTION_CONST;
             constant->val.constant.temp = currentTemporary;
-
-            appendInstructions(3)
+            constant->val.constant.value = 1;
+            appendInstructions(constant);
+            size_t constantTemp = currentTemporary;
+            currentTemporary++;
 
             size_t boolTemp = generateInstructionsForExpression(statement->val.ifD.exp, statement->symbolTable);
             Instructions *boolCmp = newInstruction();
             boolCmp->kind = INSTRUCTION_CMP;
             boolCmp->val.arithmetic2.source = boolTemp;
+            boolCmp->val.arithmetic2.dest = constantTemp;
+            appendInstructions(boolCmp);
+
+            char *beginBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(beginBuf, "if_%zu_begin", ifCounter);
+            char *endBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(endBuf, "if_%zu_end", ifCounter);
+            ifCounter++;
+
+            //cmp
+            //je label
+            //jmp end
+            //label
+            //instrForIf
+            //end
+
+            Instructions *je = newInstruction();
+            je->kind = INSTRUCTION_JE;
+            je->val.label = beginBuf;
+            appendInstructions(je);
+
+            Instructions *jmp = newInstruction();
+            jmp->kind = INSTRUCTION_JMP;
+            jmp->val.label = endBuf;
+            appendInstructions(jmp);
+
+            Instructions *begin = newInstruction();
+            begin->kind = INSTRUCTION_LABEL;
+            begin->val.label = beginBuf;
+            appendInstructions(begin);
+
+            generateInstructionTreeForStatement(statement->val.ifD.statement);
+
+            Instructions *end = newInstruction();
+            end->kind = INSTRUCTION_LABEL;
+            end->val.label = endBuf;
+            appendInstructions(end);
 
         } break;
         case statIfElK:
@@ -540,9 +594,14 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case statWhileK:
             //TODO
             break;
-        case stmListK:
-            //TODO
-            break;
+        case stmListK: {
+            StatementList *statementList = statement->val.stmListD.statementList;
+
+            while (statementList != NULL) {
+                generateInstructionTreeForStatement(statementList->statement);
+                statementList = statementList->next;
+            }
+        } break;
         case assignmentK: {
             //For now we simply tell that temporary must be moved back to variable number x
             //Fetch variable

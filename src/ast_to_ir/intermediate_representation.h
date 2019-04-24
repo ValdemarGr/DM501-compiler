@@ -54,6 +54,9 @@ typedef enum {
     INSTRUCTION_XOR,
     INSTRUCTION_COPY,
     INSTRUCTION_CMP,
+    INSTRUCTION_LABEL,
+    INSTRUCTION_JE,
+    INSTRUCTION_JMP,
 
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
@@ -91,6 +94,7 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
+        char* label;
         struct { size_t constant; size_t temp; } rightShift;
         struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct {SYMBOL *sym; size_t tempValue; size_t intermediate; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
