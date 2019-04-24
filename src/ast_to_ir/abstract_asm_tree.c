@@ -480,18 +480,33 @@ void generateInstructionTreeForStatement(Statement *statement) {
             num->val.constant.value = 1;
             num->val.constant.temp = currentTemporary;
             appendInstructions(num);
+            size_t constNum = currentTemporary;
             currentTemporary++;
 
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
-            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
+            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
             Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
-            ret->val.allocate.timesTemp = currentTemporary - 1;
-            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.timesTemp = constNum;
+            ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
             appendInstructions(ret);
+            currentTemporary++;
+
+            Instructions *loadPtr = newInstruction();
+            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
+            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
+            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
+            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
+            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
+            appendInstructions(loadPtr);
+            currentTemporary++;
+
+            Instructions *endAlloc = newInstruction();
+            endAlloc->kind = COMPLEX_ALLOCATE_END;
+            appendInstructions(endAlloc);
         } break;
         case statAllocateLenK: {
             size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateLenD.var, statement->symbolTable);
@@ -500,9 +515,10 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = times;
-            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
             appendInstructions(ret);
+            currentTemporary++;
         } break;
         case statIfK:
             //TODO
@@ -531,7 +547,9 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
                 save->val.ptrSave.sym = symbol;
                 save->val.ptrSave.tempValue = expressionTemp;
+                save->val.ptrSave.intermediate = currentTemporary;
                 appendInstructions(save);
+                currentTemporary++;
             } else {
                 Instructions *save = newInstruction();
                 save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;

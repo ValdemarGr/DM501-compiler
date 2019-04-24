@@ -16,6 +16,7 @@ int stmDeclNum;
 Body *theexpression;
 extern FILE *yyin;
 bool printWithTypes = false;
+bool withPrettyPrint = false;
 size_t maxDistFromRoot = 0;
 
 int compile_file(FILE *file) {
@@ -44,94 +45,18 @@ int compile_file(FILE *file) {
     e = typeCheck(theexpression, &intStaticType);
     ei = writeError(e); if (ei != 0) return ei;
 
-    prettyBody(theexpression);
+    if (withPrettyPrint) {
+        prettyBody(theexpression);
+    }
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
     generate(stdout, instructions);
 
-/*
-    char *a = "a";
-    char *b = "b";
-    char *c = "c";
-    char *d = "d";
-
-    Stack *s = initStack();
-
-    push(s, a);
-    push(s, b);
-    push(s, c);
-
-    char *expectedC = pop(s);
-    char *expectedB = pop(s);
-    push(s, d);
-    char* expectedD = pop(s);
-    char *expectedA = pop(s);
-
-
-    printf("c %s\n", expectedC);
-    printf("b %s\n", expectedB);
-    printf("a %s\n", expectedA);
-    printf("d %s\n", expectedD);*/
-
-
-    /*Instructions *head = NEW(Instructions);
-    head->next = NULL;
-    head->kind = INSTRUCTION_PROGRAM_BEGIN;
-
-    generateInstructionTree(theexpression, head);
-
-
-    //DEBUG STUFF BEGIN
-    Instructions *iterator = head;
-
-    while(iterator != NULL) {
-
-        switch (iterator->kind) {
-            case INSTRUCTION_ADD:
-                printf("Add\n");
-                break;
-            case METADATA_BEGIN_BODY_BLOCK:
-                printf("BEGIN BODY\n");
-                break;
-            case METADATA_END_BODY_BLOCK:
-                printf("END BODY\n");
-                break;
-            case INSTRUCTION_PROGRAM_BEGIN:
-                printf("PROGRAM BEGIN\n");
-                break;
-            case INSTRUCTION_VAR:
-                printf("VAR: id %i\n", iterator->val.var);
-                break;
-            case INSTRUCTION_FUNCTION_LABEL:
-                printf("FUNCTION LABEL: label %s\n", iterator->val.label);
-                break;
-            case INSTRUCTION_FUNCTION_END:
-                printf("FUNCTION END: label %s\n", iterator->val.label);
-                break;
-            case INSTRUCTION_RETURN:
-                printf("INSTRUCTION RETURN\n");
-                break;
-            case METADATA_FUNCTION_ARGUMENT:
-                printf("ARGUMENT: %i\n", iterator->val.argNum);
-                break;
-        }
-
-        iterator = iterator->next;
-    }
-    //DEBUG STUFF END
-
-    //Code gen
-    generate(stdout, head);
-
-    printf("\n");*/
-
     return 0;
 }
 
 int main(int argc, char *argv[]) {
-    generate(stdout, NULL);
-
     bool gotFile = false;
     int r = 0;
     for (int i = 1; i < argc; i++) {
@@ -142,6 +67,9 @@ int main(int argc, char *argv[]) {
             switch (arg[1]) {
                 case 't':
                     printWithTypes = true;
+                    break;
+                case 'p':
+                    withPrettyPrint = true;
                     break;
                 default:
                     printf("Please supply the correct argument for %s\n", arg);

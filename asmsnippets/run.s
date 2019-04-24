@@ -93,14 +93,16 @@ main:
 		mov (%r13), %r13
 # INSTRUCTION_WRITE
 		push %r13
-		call print_number
-		pop %r13# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+		#call print_number
+		pop %r13
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
 		mov -16(%rbp), %r14
 		mov (%r14), %r14
 # INSTRUCTION_WRITE
 		push %r14
-		call print_number
-		pop %r14# METADATA_END_BODY_BLOCK
+		#call print_number
+		pop %r14
+# METADATA_END_BODY_BLOCK
 mov $60, %rax
 mov $0, %rdi
 syscall
