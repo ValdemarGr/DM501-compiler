@@ -520,9 +520,20 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(ret);
             currentTemporary++;
         } break;
-        case statIfK:
+        case statIfK: {
             //TODO
-            break;
+            Instructions *constant = newInstruction();
+            constant->kind = INSTRUCTION_CONST;
+            constant->val.constant.temp = currentTemporary;
+
+            appendInstructions(3)
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifD.exp, statement->symbolTable);
+            Instructions *boolCmp = newInstruction();
+            boolCmp->kind = INSTRUCTION_CMP;
+            boolCmp->val.arithmetic2.source = boolTemp;
+
+        } break;
         case statIfElK:
             //TODO
             break;
