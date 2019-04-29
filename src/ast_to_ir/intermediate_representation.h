@@ -66,8 +66,12 @@ typedef enum {
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
     COMPLEX_CONSTRAIN_BOOLEAN,
-    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
+    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK,
+    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK_IN_SCOPE,
     COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
+    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
+    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK,
+    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE,
     COMPLEX_SAVE_STATIC_LINK,
@@ -92,7 +96,7 @@ typedef struct Instructions {
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
         struct { size_t ptrTemp; size_t timesTemp; Type* tpe;} allocate;
-        struct {char* label; size_t distance; size_t temporary;} functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
+        struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t argNum; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
@@ -102,13 +106,14 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
+        SymbolTable *tableForFunction;
         char* label;
         struct { size_t constant; size_t temp; } rightShift;
         struct { int constant; size_t temp; } art2const;
-        struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-        struct {SYMBOL *sym; size_t tempValue; size_t intermediate; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+        struct {SYMBOL* var; size_t temporary; } currentScopeLoad;
+        struct {SYMBOL *sym; size_t tempValue; size_t intermediate; } currentScopeSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;
-        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempFromParentScope;
+        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempToParentScope;
         struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
         struct { size_t ptrTemp; size_t scopeToFindFrame; size_t linkBaseOffset; size_t  intermediateTemp;} loadPtrToStaticLink;
     } val;

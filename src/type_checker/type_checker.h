@@ -16,6 +16,7 @@
 
 typedef struct Error Error;
 
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable);
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
 Error *typeCheck(Body *body, Type *functionReturnType);

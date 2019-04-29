@@ -139,9 +139,15 @@ SortedSet *evaluateRequiredRegistersForExpression(Instructions *instructions) {
                     return temporariesForExp;
                 }
             } break;
-            case INSTRUCTION_MOVE:break;
-            case INSTRUCTION_ADD_CONST:break;
-            case INSTRUCTION_MUL_CONST:break;
+            case INSTRUCTION_MOVE: {
+
+            } break;
+            case INSTRUCTION_ADD_CONST: {
+
+            } break;
+            case INSTRUCTION_MUL_CONST: {
+
+            } break;
         }
 
         iter = iter->next;
@@ -317,9 +323,17 @@ void simpleRegisterAllocation(Instructions *head) {
             case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
                 SortedSet *regs = evaluateRequiredRegistersForExpression(iter);
                 size_t size = length(regs);
-                printf("HELLO\n");
             } break;
             case METADATA_END_ARITHMETIC_EVALUATION: {
+
+            } break;
+            case INSTRUCTION_MOVE: {
+
+            } break;
+            case INSTRUCTION_ADD_CONST: {
+
+            } break;
+            case INSTRUCTION_MUL_CONST: {
 
             } break;
         }

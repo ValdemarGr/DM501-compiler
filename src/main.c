@@ -55,7 +55,12 @@ int compile_file(FILE *file) {
 
     simpleRegisterAllocation(instructions);
 
-    peephole(instructions);
+    Instructions *iter = instructions;
+    while (iter != NULL) {
+        iter = iter->next;
+    }
+
+    //peephole(instructions);
 
     generate(stdout, instructions);
 

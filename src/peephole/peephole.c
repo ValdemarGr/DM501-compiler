@@ -365,7 +365,7 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case COMPLEX_SAVE_STATIC_LINK: { return instructions;} break;
         case COMPLEX_RESTORE_STATIC_LINK: { return instructions;} break;
         case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: { return instructions;} break;
-        case METADATA_BEGIN_BODY_BLOCK: { return skipToNextImportantInstruction(instructions->next); } break;
+        case METADATA_BEGIN_BODY_BLOCK: { return instructions; } break; //<-- this is holy
         case METADATA_END_BODY_BLOCK: { return skipToNextImportantInstruction(instructions->next);} break;
         case METADATA_FUNCTION_ARGUMENT: { return skipToNextImportantInstruction(instructions->next);} break;
         case METADATA_CREATE_MAIN: { return skipToNextImportantInstruction(instructions->next);} break;

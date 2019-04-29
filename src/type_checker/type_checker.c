@@ -12,7 +12,6 @@ struct Type intStaticType = {.kind = typeIntK};
 //This is a hack, it is very hacky. Do not do this at home.
 
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
-Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
