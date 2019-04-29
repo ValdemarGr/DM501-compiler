@@ -653,7 +653,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             if (frameStackDistanceToVariable == 0) {
                 if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
                     Instructions *save = newInstruction();
-                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK;
                     save->val.currentScopeSave.sym = symbol;
                     save->val.currentScopeSave.tempValue = expressionTemp;
                     save->val.currentScopeSave.intermediate = currentTemporary;
@@ -661,7 +661,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                     currentTemporary++;
                 } else {
                     Instructions *save = newInstruction();
-                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK;
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
                     save->val.currentScopeSave.sym = symbol;
                     save->val.currentScopeSave.tempValue = expressionTemp;
                     save->val.currentScopeSave.intermediate = currentTemporary;

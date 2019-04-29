@@ -102,13 +102,13 @@ SortedSet *evaluateRequiredRegistersForExpression(Instructions *instructions) {
                 insertSortedSet(temporariesForExp, (int)iter->val.loadTempFromParentScope.outputTemp);
             } break;
             case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
-                insertSortedSet(temporariesForExp, (int)iter->val.ptrLoad.temporary);
+                insertSortedSet(temporariesForExp, (int)iter->val.currentScopeLoad.temporary);
             } break;
             case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER: {
-                insertSortedSet(temporariesForExp, (int)iter->val.ptrSave.intermediate);
+                insertSortedSet(temporariesForExp, (int)iter->val.currentScopeSave.intermediate);
             } break;
             case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE: {
-                insertSortedSet(temporariesForExp, (int)iter->val.saveTempFromParentScope.intermediateTemp);
+                insertSortedSet(temporariesForExp, (int)iter->val.saveTempToParentScope.intermediateTemp);
             } break;
             case COMPLEX_SAVE_STATIC_LINK: {
                 insertSortedSet(temporariesForExp, (int)iter->val.pushPopStaticLink.temporary);

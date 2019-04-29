@@ -379,7 +379,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK\n");
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
-                    getNextRegister(instruction->val.currentScopeSave.intermediate),
+                    getNextRegister(instruction->val.currentScopeSave.tempValue),
                     (instruction->val.currentScopeSave.sym->uniqueIdForScope + 1) * POINTER_SIZE);
         } break;
         case COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE: {

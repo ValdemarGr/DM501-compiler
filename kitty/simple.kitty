@@ -28,11 +28,7 @@ if (a == 5) then {
     write a;
 }*)
 
-var a: int;
 var b: int;
-
-allocate a;
-allocate b;
 
 b = 5 + 2;
 
