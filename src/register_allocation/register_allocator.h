@@ -7,6 +7,14 @@
 
 #include "../ast_to_ir/intermediate_representation.h"
 #include "../asm_code_gen/consts.h"
+#include "../utils/optional.h"
+#include "../utils/sortedset.h"
+
+typedef struct AbstractRegister{
+    char *registerName;
+    Instructions *boundInstruction;
+    size_t useTimestamp;
+} AbstractRegister;
 
 void simpleRegisterAllocation(Instructions *head);
 

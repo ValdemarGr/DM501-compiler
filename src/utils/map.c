@@ -4,7 +4,65 @@
 
 #include "map.h"
 
-size_t findAtleaseLargerThanNPrime(size_t n) {
+Key *makeIntKey(int iK) {
+    Key *k = (Key*)malloc(sizeof(Key));
+    k->keyTypes = eIK;
+    k->key.iK = iK;
+    return k;
+}
+
+Key *makeCharKey(char *cK) {
+    Key *k = (Key*)malloc(sizeof(Key));
+    k->keyTypes = eCK;
+    k->key.cK = cK;
+    return k;
+}
+
+Pair *maxBy(ConstMap *m, size_t (*unpacker)(void*)) {
+    Pair* largestPair = NULL;
+    size_t largestValue = 0;
+
+    for (int i = 0; i < m->size; i++) {
+        Pair *this = m->entries[i];
+
+        while (this != NULL) {
+            size_t evaluated = unpacker(this->v);
+
+            if (evaluated > largestValue) {
+                largestValue = evaluated;
+                largestPair = this;
+            }
+
+            this = this->next;
+        }
+    }
+
+    return largestPair;
+}
+
+Pair *minBy(ConstMap *m, size_t (*unpacker)(void*)) {
+    Pair* smallestPair = NULL;
+    size_t smallestValue = UINT_MAX;
+
+    for (int i = 0; i < m->size; i++) {
+        Pair *this = m->entries[i];
+
+        while (this != NULL) {
+            size_t evaluated = unpacker(this->v);
+
+            if (evaluated < smallestValue) {
+                smallestValue = evaluated;
+                smallestPair = this;
+            }
+
+            this = this->next;
+        }
+    }
+
+    return smallestPair;
+}
+
+size_t findAtleastLargerThanNPrime(size_t n) {
 
     if (n <= 5) {
         return 5;
@@ -32,10 +90,10 @@ size_t findAtleaseLargerThanNPrime(size_t n) {
 ConstMap *initMap(size_t tableSize) {
     ConstMap *m = NEW(ConstMap);
 
-    size_t nearestPrime = findAtleaseLargerThanNPrime(tableSize);
+    size_t nearestPrime = findAtleastLargerThanNPrime(tableSize);
 
     m->size = nearestPrime;
-    m->entries = (Pair*)malloc(sizeof(Pair) * nearestPrime);
+    m->entries = (Pair**)malloc(sizeof(Pair) * nearestPrime);
 
     for (int i = 0; i < nearestPrime; i++) {
         m->entries[i] = NULL;
@@ -111,7 +169,7 @@ Pair *get(ConstMap *m, Key *k) {
     while (cur != NULL) {
         if (cur->k->keyTypes == eIK && k->keyTypes == eIK && k->key.iK == cur->k->key.iK) {
             return cur;
-        } else if (cur->k->keyTypes == eCK && k->keyTypes == eCK && strcmp(k->key.cK, cur->k->key.cK)) {
+        } else if (cur->k->keyTypes == eCK && k->keyTypes == eCK && strcmp(k->key.cK, cur->k->key.cK) != 0) {
             return cur;
         }
     }

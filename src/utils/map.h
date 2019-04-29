@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 #include "memory.h"
 
 typedef struct Key{
@@ -30,7 +31,13 @@ typedef struct ConstMap {
     Pair **entries;
 } ConstMap;
 
-size_t findAtleaseLargerThanNPrime(size_t n);
+Key *makeIntKey(int iK);
+Key *makeCharKey(char *cK);
+
+Pair *maxBy(ConstMap *m, size_t (*unpacker)(void*));
+Pair *minBy(ConstMap *m, size_t (*unpacker)(void*));
+
+size_t findAtleastLargerThanNPrime(size_t n);
 
 ConstMap *initMap(size_t tableSize);
 

@@ -1,7 +1,7 @@
 .include "print.asm"
 .section .data
 staticLink:
-	.space 8
+	.space 24
 .LC0:
 	.string "%i"
 .LC1:
@@ -9,7 +9,6 @@ staticLink:
 .section .text
 # METADATA_BEGIN_BODY_BLOCK
 # VAR a
-# VAR b
 # METADATA_CREATE_MAIN
 	.global main
 main:
@@ -19,89 +18,36 @@ main:
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
 		mov $1, %rax
-# COMPLEX_ALLOCATE
-		push %rdi
-		push %rax
-		push %r15
-		push %r14
-		mov %rax, %r14
-		mov $0, %rdi
-		mov $12, %rax
-		syscall
-		push %rax
-		mov $8, %r15
-		imul %r14, %r15
-		add %r15, %rax
-		mov %rax, %rdi
-		mov $12, %rax
-		syscall
-		pop %rcx
-# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME
-		leaq staticLink, %rdx
-		movq 0(%rdx), %rdx
-		movq %rcx, -8(%rdx)
-# COMPLEX_ALLOCATE_END
-		pop %r14
-		pop %r15
-		pop %rax
-		pop %rdi
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+		mov -8(%rbp), %rcx
+		mov (%rcx), %rcx
+# INSTRUCTION_CONST
+		mov $5, %rdx
+# INSTRUCTION_MINUS
+		sub %rcx, %rdx
 # INSTRUCTION_CONST
 		mov $1, %rbx
-# COMPLEX_ALLOCATE
-		push %rdi
-		push %rax
-		push %r15
-		push %r14
-		mov %rbx, %r14
-		mov $0, %rdi
-		mov $12, %rax
-		syscall
-		push %rax
-		mov $8, %r15
-		imul %r14, %r15
-		add %r15, %rax
-		mov %rax, %rdi
-		mov $12, %rax
-		syscall
+# INSTRUCTION_MINUS
+		sub %rbx, %rdx
+# INSTRUCTION_CMP
+		cmp %rdx, %rax
+# INSTRUCTION_JE
+		je if_0_begin
+# INSTRUCTION_JMP
+		jmp if_0_end
+# INSTRUCTION_LABEL
+		if_0_begin:
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE
+		leaq staticLink, %rsi
+		movq 0(%rsi), %rsi
+		movq -0(%rsi), %rsi
+		movq (%rsi), %rsi
+# INSTRUCTION_WRITE
+		push %rsi
+		#call print_number
 		pop %rsi
-# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME
-		leaq staticLink, %rdi
-		movq 0(%rdi), %rdi
-		movq %rsi, -16(%rdi)
-# COMPLEX_ALLOCATE_END
-		pop %r14
-		pop %r15
-		pop %rax
-		pop %rdi
-# INSTRUCTION_CONST
-		mov $5, %r8
-# COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER
-		mov -8(%rbp), %r9
-		mov %r8, (%r9)
-# INSTRUCTION_CONST
-		mov $9, %r10
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -8(%rbp), %r11
-		mov (%r11), %r11
-# INSTRUCTION_ADD
-		add %r10, %r11
-# COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER
-		mov -16(%rbp), %r12
-		mov %r11, (%r12)
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -8(%rbp), %r13
-		mov (%r13), %r13
-# INSTRUCTION_WRITE
-		push %r13
-		#call print_number
-		pop %r13
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r14
-		mov (%r14), %r14
-# INSTRUCTION_WRITE
-		push %r14
-		#call print_number
-		pop %r14
+# INSTRUCTION_LABEL
+		if_0_end:
 # METADATA_END_BODY_BLOCK
 mov $60, %rax
 mov $0, %rdi

@@ -256,6 +256,12 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
 //size_t is the resulting temporary
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable) {
+    size_t toReturn = 0;
+
+    Instructions *expStart = newInstruction();
+    expStart->kind = METADATA_BEGIN_ARITHMETIC_EVALUATION;
+    appendInstructions(expStart);
+
     switch (expression->kind) {
         case opK: {
             size_t lhsTemp = generateInstructionsForExpression(expression->val.op.left, symbolTable);
@@ -268,7 +274,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opDivK: {
                     Instructions *instruction = newInstruction();
@@ -276,7 +282,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opPlusK: {
                     Instructions *instruction = newInstruction();
@@ -284,7 +290,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opMinusK: {
                     Instructions *instruction = newInstruction();
@@ -292,7 +298,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = rhsTemp;
                     instruction->val.arithmetic2.dest = lhsTemp;
                     appendInstructions(instruction);
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opInequalityK: {
                     //subtract
@@ -301,7 +307,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opEqualityK: {
                     //subtract and use 1-x trick to invert
@@ -324,7 +330,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     trick->val.arithmetic2.dest = rhsTemp; // For the resulting subtraction
                     appendInstructions(trick);
 
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opGreaterK: {
                     //TODO Use smart x86 instruction for this
@@ -341,7 +347,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
                     constrain->val.tempToConstrain = rhsTemp;
                     appendInstructions(constrain);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opLessK: {
                     //TODO Use smart x86 instruction for this
@@ -357,7 +363,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = lhsTemp;
                     appendInstructions(constrain);
 
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opGeqK: {
                     //TODO Use smart x86 instruction for this
@@ -386,7 +392,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = rhsTemp;
                     appendInstructions(constrain);
 
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opLeqK: {
                     //TODO Use smart x86 instruction for this
@@ -415,7 +421,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = lhsTemp;
                     appendInstructions(constrain);
 
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opAndK: {
                     //and lhs and rhs
@@ -424,7 +430,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opOrK: {
                     //and lhs and rhs
@@ -433,16 +439,21 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
             }
         }
             break;
         case termK: {
-            return generateInstructionsForTerm(expression->val.termD.term, symbolTable);
-        }
-            break;
+            toReturn = generateInstructionsForTerm(expression->val.termD.term, symbolTable);
+        } break;
     }
+
+    Instructions *expEnd = newInstruction();
+    expEnd->kind = METADATA_END_ARITHMETIC_EVALUATION;
+    appendInstructions(expEnd);
+
+    return toReturn;
 }
 
 void generateInstructionTreeForStatement(Statement *statement) {
