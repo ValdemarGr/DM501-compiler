@@ -5,6 +5,8 @@
 #include "peephole.h"
 #include "../ast_to_ir/intermediate_representation.h"
 
+Instructions *skipToNextImportantInstruction(Instructions *instructions);
+
 void addInstructionTemplate(PeepholeTemplates *peepholeTemplates, SimpleInstruction *simpleInstruction, PeepholeApplyType apply) {
     PeepholeTemplates *iter = peepholeTemplates;
 
@@ -148,14 +150,14 @@ void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_
     switch (apply) {
         case REMOVE_CONST_REGISTER_ADD: {
             instructionHead->kind = INSTRUCTION_ADD_CONST;
-            instructionHead->val.art2const.constant = instrHead->val.constant.value;
-            instructionsIter = instructionsIter->next;
+            instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
+            instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
             instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
         } break;
         case REMOVE_CONST_REGISTER_MUL: {
             instructionHead->kind = INSTRUCTION_MUL_CONST;
             instructionHead->val.art2const.constant = instrHead->val.constant.value;
-            instructionsIter = instructionsIter->next;
+            instructionsIter = skipToNextImportantInstruction(instructionsIter->next);
             instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
         } break;
     }
@@ -169,7 +171,7 @@ void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_
     }
 
     toReplaceFrom->next = instructionHead;
-    currentInstruction->next = toReplaceTo;
+    currentInstruction->next = toReplaceTo->next;
 }
 
 bool checkForInstructionEquality(SimpleInstruction *simpleHead, Instructions *instrHead) {
@@ -321,6 +323,7 @@ bool checkForInstructionEquality(SimpleInstruction *simpleHead, Instructions *in
 
     return true;
 }
+
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions) {
     switch (instructions->kind) {
