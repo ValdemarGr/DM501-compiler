@@ -418,6 +418,25 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "jmp %s\n",
                     instruction->val.label);
         } break;
+        case INSTRUCTION_MOVE: {
+
+        } break;
+        case INSTRUCTION_ADD_CONST: {
+            fprintf(out, "# INSTRUCTION_ADD_CONST\n");
+            printIndentation(out);
+            fprintf(out, "add $%i, %%%s\n",
+                    instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp));
+        } break;
+        case INSTRUCTION_MUL_CONST: {
+
+        } break;
+        case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
+
+        } break;
+        case METADATA_END_ARITHMETIC_EVALUATION: {
+
+        } break;
     }
 }
 

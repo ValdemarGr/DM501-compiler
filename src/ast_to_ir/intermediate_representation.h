@@ -10,6 +10,8 @@
 #include "../utils/memory.h"
 #include "../symbol/symbol.h"
 #include "abstract_asm_tree.h"
+#include "intermediate_representation.h"
+#include "../ast/tree.h"
 
 typedef struct Jump {
     char* label;
@@ -58,6 +60,8 @@ typedef enum {
     INSTRUCTION_JE,
     INSTRUCTION_JMP,
     INSTRUCTION_MOVE,
+    INSTRUCTION_ADD_CONST,
+    INSTRUCTION_MUL_CONST,
 
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
@@ -80,6 +84,7 @@ typedef enum {
 
 typedef struct Instructions {
     struct Instructions* next;
+    struct Instructions* previous;
     InstructionKind kind;
     union {
         Arithmetic2 arithmetic2; //INSTRUCTION_ADD..
@@ -99,6 +104,7 @@ typedef struct Instructions {
         size_t tempToAbs;
         char* label;
         struct { size_t constant; size_t temp; } rightShift;
+        struct { int constant; size_t temp; } art2const;
         struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct {SYMBOL *sym; size_t tempValue; size_t intermediate; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;

@@ -1,6 +1,5 @@
 #include "abstract_asm_tree.h"
-#include "intermediate_representation.h"
-#include "../ast/tree.h"
+
 
 
 static Instructions *instructionHead = NULL;
@@ -14,18 +13,10 @@ static size_t currentTemporary = 0;
 
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable);
 
-Instructions *newInstruction() {
-    Instructions *ret = NEW(Instructions);
-
-    ret->next = NULL;
-    //ret->context = NULL;
-
-    return ret;
-}
-
 //Helper
 void appendInstructions(Instructions *new) {
     currentInstruction->next = new;
+    new->previous = currentInstruction;
 
     Instructions *iter = new;
 
@@ -456,6 +447,15 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
     return toReturn;
 }
 
+Instructions *newInstruction() {
+    Instructions *ret = NEW(Instructions);
+
+    ret->next = NULL;
+    //ret->context = NULL;
+
+    return ret;
+}
+
 void generateInstructionTreeForStatement(Statement *statement) {
 
 
@@ -741,6 +741,7 @@ Instructions* generateInstructionTree(Body *body) {
 
     if (instructionHead == NULL) {
         instructionHead = head;
+        instructionHead->previous = NULL;
         currentInstruction = instructionHead;
     }
 

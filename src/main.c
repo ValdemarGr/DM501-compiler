@@ -11,6 +11,7 @@
 #include "asm_code_gen/asm_code_gen.h"
 #include "utils/stack.h"
 #include "register_allocation/register_allocator.h"
+#include "peephole/peephole.h"
 
 int lineno;
 int stmDeclNum;
@@ -53,6 +54,8 @@ int compile_file(FILE *file) {
     Instructions *instructions = generateInstructionTree(theexpression);
 
     simpleRegisterAllocation(instructions);
+
+    peephole(instructions);
 
     generate(stdout, instructions);
 

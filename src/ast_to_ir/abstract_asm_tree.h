@@ -22,6 +22,7 @@ typedef struct Context {
     } val;
 } Context;
 
+struct Instructions *newInstruction();
 struct Instructions *generateInstructionTree(Body* body);
 
 #endif //HELLO_ABSTRACT_ASM_TREE_H
