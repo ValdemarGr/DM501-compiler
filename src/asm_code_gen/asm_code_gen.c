@@ -217,7 +217,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //We want to move the stack frame + offset into temporary
             printIndentation(out);
             fprintf(out, "movq -%zu(%%%s), %%%s\n",
-                    instruction->val.loadTempFromParentScope.uniqueVariableId * POINTER_SIZE,
+                    (instruction->val.loadTempFromParentScope.uniqueVariableId + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp),
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp));
             //The pointer to the value is now in the temp
@@ -283,6 +283,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "subq $%i, %%rsp\n",
                     16 + (int)instruction->val.tableForFunction->nextSymbolId * POINTER_SIZE);
+            printIndentation(out);
+            fprintf(out, "leaq staticLink, %%rax\n\tmovq %%rbp, (%%rax)\n");
             currentIndendation++;
         } break;
         case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
@@ -323,7 +325,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //We want to move the stack frame + offset into temporary
             printIndentation(out);
             fprintf(out, "movq -%zu(%%%s), %%%s\n",
-                    instruction->val.saveTempToParentScope.uniqueVariableId * POINTER_SIZE,
+                    (instruction->val.saveTempToParentScope.uniqueVariableId + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp),
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp));
             //The pointer to the value is now in the temp
@@ -371,7 +373,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //We want to move the stack frame + offset into temporary
             printIndentation(out);
             fprintf(out, "movq -%zu(%%%s), %%%s\n",
-                    instruction->val.loadTempFromParentScope.uniqueVariableId * POINTER_SIZE,
+                    (instruction->val.loadTempFromParentScope.uniqueVariableId + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp),
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp));
         } break;
@@ -397,7 +399,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "movq %%%s, -%zu(%%%s)\n",
                     getNextRegister(instruction->val.saveTempToParentScope.inputTemp),
-                    instruction->val.saveTempToParentScope.uniqueVariableId * POINTER_SIZE,
+                    (instruction->val.saveTempToParentScope.uniqueVariableId + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp));
         } break;
         case INSTRUCTION_RIGHT_SHIFT: {

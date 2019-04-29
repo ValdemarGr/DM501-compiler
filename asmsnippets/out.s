@@ -42,12 +42,12 @@
 .LC0:
 	.string	"%i"
 	.text
-	.globl	main
-	.type	main, @function
-main:
+	.globl	doMagicalStuff
+	.type	doMagicalStuff, @function
+doMagicalStuff:
 .LFB6:
 	.file 1 "printComp.c"
-	.loc 1 8 12
+	.loc 1 8 22
 	.cfi_startproc
 	pushq	%rbp	#
 	.cfi_def_cfa_offset 16
@@ -55,91 +55,192 @@ main:
 	movq	%rsp, %rbp	#,
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp	#,
-# printComp.c:10:     int a = 1;
-	.loc 1 10 9
+# printComp.c:9:     int a = 1;
+	.loc 1 9 9
 	movl	$1, -24(%rbp)	#, a
-# printComp.c:11:     int b = 1;
-	.loc 1 11 9
+# printComp.c:10:     int b = 1;
+	.loc 1 10 9
 	movl	$1, -20(%rbp)	#, b
-# printComp.c:12:     int c = 1;
-	.loc 1 12 9
+# printComp.c:11:     int c = 1;
+	.loc 1 11 9
 	movl	$1, -16(%rbp)	#, c
-# printComp.c:13:     int d = 1;
-	.loc 1 13 9
+# printComp.c:12:     int d = 1;
+	.loc 1 12 9
 	movl	$1, -12(%rbp)	#, d
-# printComp.c:14:     int e = 1;
-	.loc 1 14 9
+# printComp.c:13:     int e = 1;
+	.loc 1 13 9
 	movl	$1, -8(%rbp)	#, e
-# printComp.c:15:     int f = 1;
-	.loc 1 15 9
+# printComp.c:14:     int f = 1;
+	.loc 1 14 9
 	movl	$1, -4(%rbp)	#, f
-# printComp.c:17:     printf("%i", a);
-	.loc 1 17 5
-	movl	-24(%rbp), %eax	# a, tmp89
-	movl	%eax, %esi	# tmp89,
-	leaq	.LC0(%rip), %rdi	#,
-	movl	$0, %eax	#,
-	call	printf@PLT	#
-# printComp.c:18:     printf("%i", b);
-	.loc 1 18 5
-	movl	-20(%rbp), %eax	# b, tmp90
-	movl	%eax, %esi	# tmp90,
-	leaq	.LC0(%rip), %rdi	#,
-	movl	$0, %eax	#,
-	call	printf@PLT	#
-# printComp.c:19:     printf("%i", c);
-	.loc 1 19 5
-	movl	-16(%rbp), %eax	# c, tmp91
-	movl	%eax, %esi	# tmp91,
-	leaq	.LC0(%rip), %rdi	#,
-	movl	$0, %eax	#,
-	call	printf@PLT	#
-# printComp.c:20:     printf("%i", d);
-	.loc 1 20 5
-	movl	-12(%rbp), %eax	# d, tmp92
-	movl	%eax, %esi	# tmp92,
-	leaq	.LC0(%rip), %rdi	#,
-	movl	$0, %eax	#,
-	call	printf@PLT	#
-# printComp.c:21:     printf("%i", e);
-	.loc 1 21 5
-	movl	-8(%rbp), %eax	# e, tmp93
+# printComp.c:16:     printf("%i", a);
+	.loc 1 16 5
+	movl	-24(%rbp), %eax	# a, tmp93
 	movl	%eax, %esi	# tmp93,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:22:     printf("%i", f);
-	.loc 1 22 5
-	movl	-4(%rbp), %eax	# f, tmp94
+# printComp.c:17:     printf("%i", b);
+	.loc 1 17 5
+	movl	-20(%rbp), %eax	# b, tmp94
 	movl	%eax, %esi	# tmp94,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:24:     a++;
-	.loc 1 24 6
-	addl	$1, -24(%rbp)	#, a
-# printComp.c:25:     b = 5 + c;
-	.loc 1 25 7
-	movl	-16(%rbp), %eax	# c, tmp98
-	addl	$5, %eax	#, tmp97
-	movl	%eax, -20(%rbp)	# tmp97, b
-# printComp.c:27:     printf("%i", b);
-	.loc 1 27 5
-	movl	-20(%rbp), %eax	# b, tmp99
-	movl	%eax, %esi	# tmp99,
+# printComp.c:18:     printf("%i", c);
+	.loc 1 18 5
+	movl	-16(%rbp), %eax	# c, tmp95
+	movl	%eax, %esi	# tmp95,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:29:     return 0;
-	.loc 1 29 12
-	movl	$0, %eax	#, _17
-# printComp.c:30: }
-	.loc 1 30 1
+# printComp.c:19:     printf("%i", d);
+	.loc 1 19 5
+	movl	-12(%rbp), %eax	# d, tmp96
+	movl	%eax, %esi	# tmp96,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:20:     printf("%i", e);
+	.loc 1 20 5
+	movl	-8(%rbp), %eax	# e, tmp97
+	movl	%eax, %esi	# tmp97,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:21:     printf("%i", f);
+	.loc 1 21 5
+	movl	-4(%rbp), %eax	# f, tmp98
+	movl	%eax, %esi	# tmp98,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:23:     return a + b + c + d + e + f;
+	.loc 1 23 14
+	movl	-24(%rbp), %edx	# a, tmp99
+	movl	-20(%rbp), %eax	# b, tmp100
+	addl	%eax, %edx	# tmp100, _1
+# printComp.c:23:     return a + b + c + d + e + f;
+	.loc 1 23 18
+	movl	-16(%rbp), %eax	# c, tmp101
+	addl	%eax, %edx	# tmp101, _2
+# printComp.c:23:     return a + b + c + d + e + f;
+	.loc 1 23 22
+	movl	-12(%rbp), %eax	# d, tmp102
+	addl	%eax, %edx	# tmp102, _3
+# printComp.c:23:     return a + b + c + d + e + f;
+	.loc 1 23 26
+	movl	-8(%rbp), %eax	# e, tmp103
+	addl	%eax, %edx	# tmp103, _4
+# printComp.c:23:     return a + b + c + d + e + f;
+	.loc 1 23 30
+	movl	-4(%rbp), %eax	# f, tmp104
+	addl	%edx, %eax	# _4, _18
+# printComp.c:24: }
+	.loc 1 24 1
 	leave	
 	.cfi_def_cfa 7, 8
 	ret	
 	.cfi_endproc
 .LFE6:
+	.size	doMagicalStuff, .-doMagicalStuff
+	.globl	main
+	.type	main, @function
+main:
+.LFB7:
+	.loc 1 26 12
+	.cfi_startproc
+	pushq	%rbp	#
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp	#,
+	.cfi_def_cfa_register 6
+	subq	$32, %rsp	#,
+# printComp.c:28:     int a = 1;
+	.loc 1 28 9
+	movl	$1, -24(%rbp)	#, a
+# printComp.c:29:     int b = 1;
+	.loc 1 29 9
+	movl	$1, -20(%rbp)	#, b
+# printComp.c:30:     int c = 1;
+	.loc 1 30 9
+	movl	$1, -16(%rbp)	#, c
+# printComp.c:31:     int d = 1;
+	.loc 1 31 9
+	movl	$1, -12(%rbp)	#, d
+# printComp.c:32:     int e = 1;
+	.loc 1 32 9
+	movl	$1, -8(%rbp)	#, e
+# printComp.c:33:     int f = 1;
+	.loc 1 33 9
+	movl	$1, -4(%rbp)	#, f
+# printComp.c:35:     printf("%i", a);
+	.loc 1 35 5
+	movl	-24(%rbp), %eax	# a, tmp89
+	movl	%eax, %esi	# tmp89,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:36:     printf("%i", b);
+	.loc 1 36 5
+	movl	-20(%rbp), %eax	# b, tmp90
+	movl	%eax, %esi	# tmp90,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:37:     printf("%i", c);
+	.loc 1 37 5
+	movl	-16(%rbp), %eax	# c, tmp91
+	movl	%eax, %esi	# tmp91,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:38:     printf("%i", d);
+	.loc 1 38 5
+	movl	-12(%rbp), %eax	# d, tmp92
+	movl	%eax, %esi	# tmp92,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:39:     printf("%i", e);
+	.loc 1 39 5
+	movl	-8(%rbp), %eax	# e, tmp93
+	movl	%eax, %esi	# tmp93,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:40:     printf("%i", f);
+	.loc 1 40 5
+	movl	-4(%rbp), %eax	# f, tmp94
+	movl	%eax, %esi	# tmp94,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:42:     a++;
+	.loc 1 42 6
+	addl	$1, -24(%rbp)	#, a
+# printComp.c:43:     b = 5 + c;
+	.loc 1 43 7
+	movl	-16(%rbp), %eax	# c, tmp98
+	addl	$5, %eax	#, tmp97
+	movl	%eax, -20(%rbp)	# tmp97, b
+# printComp.c:45:     printf("%i", b);
+	.loc 1 45 5
+	movl	-20(%rbp), %eax	# b, tmp99
+	movl	%eax, %esi	# tmp99,
+	leaq	.LC0(%rip), %rdi	#,
+	movl	$0, %eax	#,
+	call	printf@PLT	#
+# printComp.c:47:     return 0;
+	.loc 1 47 12
+	movl	$0, %eax	#, _17
+# printComp.c:48: }
+	.loc 1 48 1
+	leave	
+	.cfi_def_cfa 7, 8
+	ret	
+	.cfi_endproc
+.LFE7:
 	.size	main, .-main
 .Letext0:
 	.file 2 "/usr/lib/gcc/x86_64-pc-linux-gnu/8.2.1/include/stddef.h"
@@ -150,7 +251,7 @@ main:
 	.file 7 "/usr/include/bits/sys_errlist.h"
 	.section	.debug_info,"",@progbits
 .Ldebug_info0:
-	.long	0x35a
+	.long	0x3cb
 	.value	0x4
 	.long	.Ldebug_abbrev0
 	.byte	0x8
@@ -536,6 +637,72 @@ main:
 	.uleb128 0x10
 	.long	.LASF56
 	.byte	0x1
+	.byte	0x1a
+	.byte	0x5
+	.long	0x40
+	.quad	.LFB7
+	.quad	.LFE7-.LFB7
+	.uleb128 0x1
+	.byte	0x9c
+	.long	0x361
+	.uleb128 0x11
+	.string	"a"
+	.byte	0x1
+	.byte	0x1c
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -40
+	.uleb128 0x11
+	.string	"b"
+	.byte	0x1
+	.byte	0x1d
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -36
+	.uleb128 0x11
+	.string	"c"
+	.byte	0x1
+	.byte	0x1e
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -32
+	.uleb128 0x11
+	.string	"d"
+	.byte	0x1
+	.byte	0x1f
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -28
+	.uleb128 0x11
+	.string	"e"
+	.byte	0x1
+	.byte	0x20
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -24
+	.uleb128 0x11
+	.string	"f"
+	.byte	0x1
+	.byte	0x21
+	.byte	0x9
+	.long	0x40
+	.uleb128 0x2
+	.byte	0x91
+	.sleb128 -20
+	.byte	0
+	.uleb128 0x12
+	.long	.LASF57
+	.byte	0x1
 	.byte	0x8
 	.byte	0x5
 	.long	0x40
@@ -546,7 +713,7 @@ main:
 	.uleb128 0x11
 	.string	"a"
 	.byte	0x1
-	.byte	0xa
+	.byte	0x9
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -555,7 +722,7 @@ main:
 	.uleb128 0x11
 	.string	"b"
 	.byte	0x1
-	.byte	0xb
+	.byte	0xa
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -564,7 +731,7 @@ main:
 	.uleb128 0x11
 	.string	"c"
 	.byte	0x1
-	.byte	0xc
+	.byte	0xb
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -573,7 +740,7 @@ main:
 	.uleb128 0x11
 	.string	"d"
 	.byte	0x1
-	.byte	0xd
+	.byte	0xc
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -582,7 +749,7 @@ main:
 	.uleb128 0x11
 	.string	"e"
 	.byte	0x1
-	.byte	0xe
+	.byte	0xd
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -591,7 +758,7 @@ main:
 	.uleb128 0x11
 	.string	"f"
 	.byte	0x1
-	.byte	0xf
+	.byte	0xe
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -801,6 +968,8 @@ main:
 	.uleb128 0x18
 	.uleb128 0x2116
 	.uleb128 0x19
+	.uleb128 0x1
+	.uleb128 0x13
 	.byte	0
 	.byte	0
 	.uleb128 0x11
@@ -818,6 +987,31 @@ main:
 	.uleb128 0x13
 	.uleb128 0x2
 	.uleb128 0x18
+	.byte	0
+	.byte	0
+	.uleb128 0x12
+	.uleb128 0x2e
+	.byte	0x1
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x39
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x11
+	.uleb128 0x1
+	.uleb128 0x12
+	.uleb128 0x7
+	.uleb128 0x40
+	.uleb128 0x18
+	.uleb128 0x2116
+	.uleb128 0x19
 	.byte	0
 	.byte	0
 	.byte	0
@@ -850,6 +1044,8 @@ main:
 	.string	"_IO_buf_base"
 .LASF12:
 	.string	"long long unsigned int"
+.LASF57:
+	.string	"doMagicalStuff"
 .LASF53:
 	.string	"/home/valde/Git/DM501-compiler/asmsnippets"
 .LASF2:

@@ -326,7 +326,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     toReturn = rhsTemp;
                 } break;
                 case opEqualityK: {
-                    //subtract and use 1-x trick to invert
+                    //subtract equal check
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = lhsTemp;
@@ -342,11 +342,11 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     Instructions *trick = newInstruction();
                     trick->kind = INSTRUCTION_MINUS;
-                    trick->val.arithmetic2.source = currentTemporary - 1; // For the 1 constant
-                    trick->val.arithmetic2.dest = rhsTemp; // For the resulting subtraction
+                    trick->val.arithmetic2.source = rhsTemp; // For the 1 constant
+                    trick->val.arithmetic2.dest = currentTemporary - 1; // For the resulting subtraction
                     appendInstructions(trick);
 
-                    toReturn = rhsTemp;
+                    toReturn = currentTemporary - 1;
                 } break;
                 case opGreaterK: {
                     //TODO Use smart x86 instruction for this
