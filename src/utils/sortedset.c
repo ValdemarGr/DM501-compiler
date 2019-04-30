@@ -124,3 +124,16 @@ SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2) {
 
     return newSet;
 }
+
+void freeSortedSet(SortedSet* sortedSet) {
+    SortedSet *iter = sortedSet;
+    SortedSet *next;
+
+    while (iter != NULL) {
+        next = iter->_next;
+
+        free(iter);
+
+        iter = next;
+    }
+}
