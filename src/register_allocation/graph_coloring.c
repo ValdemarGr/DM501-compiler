@@ -12,14 +12,13 @@ typedef struct Node {
     struct Node* next;
 } Node;
 
-Node *initGraph(/*some data*/ int size){
-    Node *graph = (Node *)malloc(sizeof(Node) * size);
-    return graph;
-}
 
 
 int *colorGraph(/*some data*/ int size, int colors){
     Node *graph = initGraph(size);
+
+    //@TODO Init graph
+
     int *color_overview = (int *) malloc(sizeof(int) * size);
     memset(color_overview, -1, sizeof(int) * size);
     Stack *stack = initStack();
