@@ -5,7 +5,10 @@
 #include "graph_coloring.h"
 #include "stdlib.h"
 #include "../utils/stack.h"
+#include "../utils/sortedset.h"
+#include "../utils/memory.h"
 #include <stdbool.h>
+extern size_t currentTemporary;
 
 typedef struct Node {
     int  value;
@@ -14,25 +17,58 @@ typedef struct Node {
 
 
 
-int *colorGraph(/*some data*/ int size, int colors){
-    Node *graph = (Node *) malloc(sizeof(Node) * size);
+int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
+    int max_size = currentTemporary;
+    Node *graph = (Node *) malloc(sizeof(Node) * max_size);
+    int *color_overview = (int *) malloc(sizeof(int) * max_size);
+    memset(color_overview, -1, sizeof(int) * max_size);
 
-    //@TODO Init graph
+    //Init Empty graph
+    for (int i = 0; i < max_size; i++) {
+        graph[i].value = -1;
+        graph[i].next = NULL;
+    }
 
-    int *color_overview = (int *) malloc(sizeof(int) * size);
-    memset(color_overview, -1, sizeof(int) * size);
+    //Fill Graph
+    for (int set = 0; set < numberOfSets; ++set) {
+        SortedSet pos1 = *livenessResult[set];
+        while (pos1._next != NULL){
+            SortedSet pos2 = *livenessResult[set];
+            while (pos2._next != NULL){
+                if(pos1.data != pos2.data){
+                    Node *iterator = &graph[pos1.data];
+                    while (iterator->next != NULL){
+                        iterator = iterator->next;
+                        if(iterator->value == pos1.data){
+                            break;
+                        }
+                        if(iterator->next == NULL){
+                            Node *tempNode = NEW(Node);
+                            tempNode->value = pos2.data;
+                            tempNode->next = NULL;
+                            iterator->next = tempNode;
+                            graph[pos2.data].value++;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
     Stack *stack = initStack();
     bool couldSimplify = true;
 
     //Simplify
     while (couldSimplify == true){
         couldSimplify = false;
-        for (int i = 0; i < size; ++i){
+        for (int i = 0; i < max_size; i++){
             if ( 0 <= graph[i].value && graph[i].value < colors){
-                Node tempNode = graph[i];
-                while (tempNode.next != NULL) {
-                    tempNode = *tempNode.next;
-                    graph[tempNode.value].value--;
+                Node iterator = graph[i];
+                while (iterator.next != NULL) {
+                    iterator = *iterator.next;
+                    graph[iterator.value].value--;
                 }
                 graph[i].value = i;
                 push(stack, (void *) &graph[i]);
@@ -48,15 +84,15 @@ int *colorGraph(/*some data*/ int size, int colors){
         bool colorsUsedByNeighbors[colors];
         memset(colorsUsedByNeighbors, false, sizeof(int) * colors);
 
-        Node tempNode = poppedNode;
-        while(tempNode.next != NULL){
-            tempNode = *tempNode.next;
-            if(color_overview[tempNode.value] != -1){
-                colorsUsedByNeighbors[color_overview[tempNode.value]] = true;
+        Node iterator = poppedNode;
+        while(iterator.next != NULL){
+            iterator = *iterator.next;
+            if(color_overview[iterator.value] != -1){
+                colorsUsedByNeighbors[color_overview[iterator.value]] = true;
             }
         }
 
-        for (int i = 0; i < colors; ++i) {
+        for (int i = 0; i < colors; i++) {
             if (colorsUsedByNeighbors[i] == false){
                 color_overview[poppedNode.value] = i;
                 break;

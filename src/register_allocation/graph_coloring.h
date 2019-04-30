@@ -5,6 +5,8 @@
 #ifndef HELLO_GRAPH_COLORING_H
 #define HELLO_GRAPH_COLORING_H
 
-int *colorGraph(/* Some data*/ int size, int colors);
+#include "../utils/sortedset.h"
+
+int *colorGraph(SortedSet *livenessResult[], int numberOfSets, int colors);
 
 #endif //HELLO_GRAPH_COLORING_H
