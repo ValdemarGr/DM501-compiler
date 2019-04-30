@@ -36,11 +36,7 @@ LineList *makeLineList(int line) {
     return list;
 }
 
-VariableList *calculateIn(DataFlowEntry* dataFlowEntry) {
-
-}
-
-void livenessFirstPass(Instructions *instructions) {
+LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     Instructions *iter = instructions;
 
     ConstMap *labels = initMap(2048);
@@ -63,20 +59,16 @@ void livenessFirstPass(Instructions *instructions) {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(line));
             } break;
             case INSTRUCTION_FUNCTION_LABEL: {
-                iter->dataFlowIndex = line;
                 line += 2;
                 insert(labels, makeCharKey(iter->val.functionHead.label), makeIntBox(line));
             } break;
             case COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE: {
-                iter->dataFlowIndex = line;
                 line += 2;
             } break;
             case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-                iter->dataFlowIndex = line;
                 line += 2;
             } break;
             default: {
-                iter->dataFlowIndex = line;
                 line++;
             } break;
         }
@@ -455,8 +447,6 @@ void livenessFirstPass(Instructions *instructions) {
         iter = iter->next;
     }
 
-    iter = instructions;
-    dataFlowEntry = dataFlow;
     LineList *successor;
     LineList *predecessor;
 
@@ -492,6 +482,15 @@ void livenessFirstPass(Instructions *instructions) {
         dataFlowEntry->in = sortedSetUnion(dataFlowEntry->uses,
                                            sortedSetDiff(dataFlowEntry->out, dataFlowEntry->defines));
     }
+
+    LivenessAnalysisResult *result = NEW(LivenessAnalysisResult);
+    result->numberSets = dataFlowSize;
+    result->sets = malloc(sizeof(SortedSet) * dataFlowSize);
+    for (int i = 0; i < dataFlowSize; ++i) {
+        result->sets[i] = sortedSetUnion(dataFlow[i].in, dataFlow[i].out);
+    }
+
+    return result;
 }
 
 SortedSet *evaluateRequiredRegistersForExpression(Instructions *instructions) {
