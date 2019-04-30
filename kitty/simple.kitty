@@ -1,5 +1,4 @@
 
-var o: int;
-o = 0 - 4;
+val a = 5;
 
-write true;
+write a;

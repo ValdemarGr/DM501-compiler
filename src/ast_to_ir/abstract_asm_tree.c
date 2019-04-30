@@ -744,7 +744,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case assignmentK: {
             //For now we simply tell that temporary must be moved back to variable number x
             //Fetch variable
-            //Todo unwrap correctly
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable);
 
             size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
@@ -874,9 +873,53 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             ret->kind = INSTRUCTION_VAR;
             ret->val.var = symbol;
             appendInstructions(ret);
-            //TODO RHS evaluation needed for this
-        }
-            break;
+
+            size_t expressionTemp = generateInstructionsForExpression(declaration->val.valD.rhs, declaration->symbolTable);
+
+            size_t frameStackDistanceToVariable = declaration->symbolTable->distanceFromRoot - symbol->distanceFromRoot;
+
+            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, declaration->symbolTable);
+
+            if (frameStackDistanceToVariable == 0) {
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
+            } else {
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
+            }
+        } break;
         case declClassK:
             //TODO
             break;
@@ -909,7 +952,7 @@ Instructions* generateInstructionTree(Body *body) {
     }
 
 
-    while (declarationList != NULL) {
+    while (declarationList != NULL && declarationList->declaration->kind != declValK) {
         generateInstructionTreeForDeclaration(declarationList->declaration);
         declarationList = declarationList->next;
     }
@@ -918,14 +961,20 @@ Instructions* generateInstructionTree(Body *body) {
         Instructions *declsEnd = newInstruction();
         declsEnd->kind = METADATA_CREATE_MAIN;
         SymbolTable *st = NULL;
-        if (declarationList != NULL) {
-            st = declarationList->declaration->symbolTable;
-        } else if (statementList != NULL) {
-            st = statementList->statement->symbolTable;
+        if (body->declarationList != NULL) {
+            st = body->declarationList->declaration->symbolTable;
+        } else if (body->statementList != NULL) {
+            st = body->statementList->statement->symbolTable;
         }
         declsEnd->val.tableForFunction = st;
 
         appendInstructions(declsEnd);
+    }
+
+    declarationList = body->declarationList;
+    while (declarationList != NULL && declarationList->declaration->kind == declValK) {
+        generateInstructionTreeForDeclaration(declarationList->declaration);
+        declarationList = declarationList->next;
     }
 
     while (statementList != NULL) {

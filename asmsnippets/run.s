@@ -7,7 +7,6 @@ intprint:
 .global main
 .extern printf
 # METADATA_BEGIN_BODY_BLOCK
-# VAR o
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -15,18 +14,15 @@ intprint:
 	subq $24, %rsp
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
+# VAR a
 # INSTRUCTION_CONST
-		mov $0, %rax
-# INSTRUCTION_CONST
-		mov $4, %rcx
-# INSTRUCTION_MINUS
-		sub %rcx, %rax
+		mov $5, %rax
 # COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK
 		mov %rax, -8(%rbp)
-# INSTRUCTION_CONST
-		mov $1, %rbx
+# COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK
+		mov -8(%rbp), %rdx
 # INSTRUCTION_WRITE
-		movq %rbx, %rsi
+		movq %rdx, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
