@@ -1,4 +1,9 @@
 
-val a = 5;
+type Coordinate = record of { k: record of { x: int} , y: int };
+var r: Coordinate;
+allocate r;
+allocate r.k;
 
-write a;
+r.k.x = 2;
+
+write r.k.x;

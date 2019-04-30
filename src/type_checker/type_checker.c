@@ -728,6 +728,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
                     varDelList = varDelList->next;
                 }
+                //Todo FIX
             } else if (innerType->kind == typeGenericK && innerType->val.typeGeneric.subType != NULL) {
                 //If the generic subtypes another type, we can look the other type up
 

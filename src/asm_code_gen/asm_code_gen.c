@@ -501,6 +501,22 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case METADATA_END_ARITHMETIC_EVALUATION: {
 
         } break;
+        case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
+            fprintf(out, "# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET\n");
+            printIndentation(out);
+            fprintf(out, "mov (%%%s, %%%s, ), %%%s\n",
+                    getNextRegister(instruction->val.dereferenceOffset.ptrTemp),
+                    getNextRegister(instruction->val.dereferenceOffset.offsetTemp),
+                    getNextRegister(instruction->val.dereferenceOffset.ptrTemp));
+        } break;
+        case INSTRUCTION_MOVE_TO_OFFSET: {
+            fprintf(out, "# INSTRUCTION_MOVE_TO_OFFSET\n");
+            printIndentation(out);
+            fprintf(out, "mov %%%s, (%%%s, %%%s,)\n",
+                    getNextRegister(instruction->val.moveToOffset.tempToMove),
+                    getNextRegister(instruction->val.moveToOffset.ptrTemp),
+                    getNextRegister(instruction->val.moveToOffset.offsetTemp));
+        } break;
     }
 }
 
