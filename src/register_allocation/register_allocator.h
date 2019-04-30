@@ -16,6 +16,12 @@ typedef struct AbstractRegister{
     size_t useTimestamp;
 } AbstractRegister;
 
+
+typedef struct LivenessAnalysisResult {
+    int numberSets;
+    SortedSet **sets;
+} LivenessAnalysisResult;
+
 void simpleRegisterAllocation(Instructions *head);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H

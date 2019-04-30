@@ -25,8 +25,22 @@ typedef struct Error {
         TYPE_TERM_NOT_INTEGER,
         SYMBOL_NOT_FOUND,
         VARIABLE_UNEXPECTED_TYPE,
+        VARIABLE_UNEXPECTED_CLASS,
         VARIABLE_COULD_NOT_FIND_RECORD_ITEM,
-        SYMBOL_COULD_NOT_SCOPE
+        SYMBOL_COULD_NOT_SCOPE,
+        ILLEGAL_DOWNCAST,
+        VALUE_IS_NULL,
+        NULL_COMPARISON,
+        CONST_REASSIGNMENT,
+        INVALID_ASSIGMENT_TO_TYPE,
+        INVALID_ASSIGMENT_TO_NULL,
+        INVALID_TYPE,
+        NOT_CLASS,
+        TOO_MANY_GENERICS,
+        TOO_FEW_GENERICS,
+        CLASS_NOT_EXTENDED,
+        NOT_TYPE,
+        DECLARATIONS_IN_CLASS
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
@@ -41,7 +55,22 @@ typedef struct Error {
         struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_INTEGER_S;
         struct { char *id; int lineno; } SYMBOL_NOT_FOUND_S;
         struct { char *id; int lineno; TypeKind expectedType; TypeKind foundType;} VARIABLE_UNEXPECTED_TYPE_S;
+        struct { char *id; int lineno; char *expectedClass; char *foundClass;} VARIABLE_UNEXPECTED_CLASS_S;
         struct { int lineno; } VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S;
+        struct { char *idTo; char *idFrom; int lineno; } ILLEGAL_DOWNCAST;
+        struct { char *idTo; int lineno; } NULL_POINTER_EXCEPTION;
+        struct { int lineno; } VALUE_IS_NULL;
+        struct { int lineno; } NULL_COMPARISON;
+        struct { char *id; int lineno; } CONST_REASSIGNMENT;
+        struct { char *id; int lineno; } INVALID_ASSIGMENT_TO_TYPE;
+        struct { char *id; int lineno; } INVALID_ASSIGMENT_TO_NULL;
+        struct { char *id; int lineno; } INVALID_TYPE;
+        struct { char *id; int lineno; } NOT_CLASS;
+        struct { char *id; int lineno; } TOO_MANY_GENERICS;
+        struct { char *id; int lineno; } TOO_FEW_GENERICS;
+        struct { char *id; int lineno; } CLASS_NOT_EXTENDED;
+        struct { char *id; int lineno; } NOT_TYPE;
+        struct { char *classId; int lineno; } DECLARATIONS_IN_CLASS;
     } val;
 } Error;
 
