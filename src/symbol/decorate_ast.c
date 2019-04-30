@@ -449,6 +449,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //Update the decl
             declaration->val.valD.tpe = valType;
+            declaration->symbolTable = symbolTable;
 
             //Ensure that we decorate all r-value lambdas in function calls
             findAndDecorateFunctionCall(declaration->val.valD.rhs, symbolTable);
