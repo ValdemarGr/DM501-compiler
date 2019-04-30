@@ -20,6 +20,12 @@ int doMagicalStuff() {
     printf("%i", e);
     printf("%i", f);
 
+
+    if (a < b || (b >= e || f == b) && e < b) {
+        return 66;
+    }
+
+
     return a + b + c + d + e + f;
 }
 

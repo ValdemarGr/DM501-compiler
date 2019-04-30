@@ -115,29 +115,57 @@ doMagicalStuff:
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:23:     return a + b + c + d + e + f;
-	.loc 1 23 14
-	movl	-24(%rbp), %edx	# a, tmp99
+# printComp.c:24:     if (a < b || (b >= e || f == b) && e < b) {
+	.loc 1 24 8
+	movl	-24(%rbp), %eax	# a, tmp99
+	cmpl	-20(%rbp), %eax	# b, tmp99
+	jl	.L2	#,
+# printComp.c:24:     if (a < b || (b >= e || f == b) && e < b) {
+	.loc 1 24 15 discriminator 1
 	movl	-20(%rbp), %eax	# b, tmp100
-	addl	%eax, %edx	# tmp100, _1
-# printComp.c:23:     return a + b + c + d + e + f;
-	.loc 1 23 18
-	movl	-16(%rbp), %eax	# c, tmp101
-	addl	%eax, %edx	# tmp101, _2
-# printComp.c:23:     return a + b + c + d + e + f;
-	.loc 1 23 22
-	movl	-12(%rbp), %eax	# d, tmp102
-	addl	%eax, %edx	# tmp102, _3
-# printComp.c:23:     return a + b + c + d + e + f;
-	.loc 1 23 26
-	movl	-8(%rbp), %eax	# e, tmp103
-	addl	%eax, %edx	# tmp103, _4
-# printComp.c:23:     return a + b + c + d + e + f;
-	.loc 1 23 30
-	movl	-4(%rbp), %eax	# f, tmp104
-	addl	%edx, %eax	# _4, _18
-# printComp.c:24: }
-	.loc 1 24 1
+	cmpl	-8(%rbp), %eax	# e, tmp100
+	jge	.L3	#,
+# printComp.c:24:     if (a < b || (b >= e || f == b) && e < b) {
+	.loc 1 24 26 discriminator 3
+	movl	-4(%rbp), %eax	# f, tmp101
+	cmpl	-20(%rbp), %eax	# b, tmp101
+	jne	.L4	#,
+.L3:
+# printComp.c:24:     if (a < b || (b >= e || f == b) && e < b) {
+	.loc 1 24 37 discriminator 4
+	movl	-8(%rbp), %eax	# e, tmp102
+	cmpl	-20(%rbp), %eax	# b, tmp102
+	jge	.L4	#,
+.L2:
+# printComp.c:25:         return 66;
+	.loc 1 25 16
+	movl	$66, %eax	#, _5
+	jmp	.L5	#
+.L4:
+# printComp.c:29:     return a + b + c + d + e + f;
+	.loc 1 29 14
+	movl	-24(%rbp), %edx	# a, tmp103
+	movl	-20(%rbp), %eax	# b, tmp104
+	addl	%eax, %edx	# tmp104, _1
+# printComp.c:29:     return a + b + c + d + e + f;
+	.loc 1 29 18
+	movl	-16(%rbp), %eax	# c, tmp105
+	addl	%eax, %edx	# tmp105, _2
+# printComp.c:29:     return a + b + c + d + e + f;
+	.loc 1 29 22
+	movl	-12(%rbp), %eax	# d, tmp106
+	addl	%eax, %edx	# tmp106, _3
+# printComp.c:29:     return a + b + c + d + e + f;
+	.loc 1 29 26
+	movl	-8(%rbp), %eax	# e, tmp107
+	addl	%eax, %edx	# tmp107, _4
+# printComp.c:29:     return a + b + c + d + e + f;
+	.loc 1 29 30
+	movl	-4(%rbp), %eax	# f, tmp108
+	addl	%edx, %eax	# _4, _5
+.L5:
+# printComp.c:30: }
+	.loc 1 30 1
 	leave	
 	.cfi_def_cfa 7, 8
 	ret	
@@ -148,7 +176,7 @@ doMagicalStuff:
 	.type	main, @function
 main:
 .LFB7:
-	.loc 1 26 12
+	.loc 1 32 12
 	.cfi_startproc
 	pushq	%rbp	#
 	.cfi_def_cfa_offset 16
@@ -156,86 +184,86 @@ main:
 	movq	%rsp, %rbp	#,
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp	#,
-# printComp.c:28:     int a = 1;
-	.loc 1 28 9
+# printComp.c:34:     int a = 1;
+	.loc 1 34 9
 	movl	$1, -24(%rbp)	#, a
-# printComp.c:29:     int b = 1;
-	.loc 1 29 9
+# printComp.c:35:     int b = 1;
+	.loc 1 35 9
 	movl	$1, -20(%rbp)	#, b
-# printComp.c:30:     int c = 1;
-	.loc 1 30 9
+# printComp.c:36:     int c = 1;
+	.loc 1 36 9
 	movl	$1, -16(%rbp)	#, c
-# printComp.c:31:     int d = 1;
-	.loc 1 31 9
+# printComp.c:37:     int d = 1;
+	.loc 1 37 9
 	movl	$1, -12(%rbp)	#, d
-# printComp.c:32:     int e = 1;
-	.loc 1 32 9
+# printComp.c:38:     int e = 1;
+	.loc 1 38 9
 	movl	$1, -8(%rbp)	#, e
-# printComp.c:33:     int f = 1;
-	.loc 1 33 9
+# printComp.c:39:     int f = 1;
+	.loc 1 39 9
 	movl	$1, -4(%rbp)	#, f
-# printComp.c:35:     printf("%i", a);
-	.loc 1 35 5
+# printComp.c:41:     printf("%i", a);
+	.loc 1 41 5
 	movl	-24(%rbp), %eax	# a, tmp89
 	movl	%eax, %esi	# tmp89,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:36:     printf("%i", b);
-	.loc 1 36 5
+# printComp.c:42:     printf("%i", b);
+	.loc 1 42 5
 	movl	-20(%rbp), %eax	# b, tmp90
 	movl	%eax, %esi	# tmp90,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:37:     printf("%i", c);
-	.loc 1 37 5
+# printComp.c:43:     printf("%i", c);
+	.loc 1 43 5
 	movl	-16(%rbp), %eax	# c, tmp91
 	movl	%eax, %esi	# tmp91,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:38:     printf("%i", d);
-	.loc 1 38 5
+# printComp.c:44:     printf("%i", d);
+	.loc 1 44 5
 	movl	-12(%rbp), %eax	# d, tmp92
 	movl	%eax, %esi	# tmp92,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:39:     printf("%i", e);
-	.loc 1 39 5
+# printComp.c:45:     printf("%i", e);
+	.loc 1 45 5
 	movl	-8(%rbp), %eax	# e, tmp93
 	movl	%eax, %esi	# tmp93,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:40:     printf("%i", f);
-	.loc 1 40 5
+# printComp.c:46:     printf("%i", f);
+	.loc 1 46 5
 	movl	-4(%rbp), %eax	# f, tmp94
 	movl	%eax, %esi	# tmp94,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:42:     a++;
-	.loc 1 42 6
+# printComp.c:48:     a++;
+	.loc 1 48 6
 	addl	$1, -24(%rbp)	#, a
-# printComp.c:43:     b = 5 + c;
-	.loc 1 43 7
+# printComp.c:49:     b = 5 + c;
+	.loc 1 49 7
 	movl	-16(%rbp), %eax	# c, tmp98
 	addl	$5, %eax	#, tmp97
 	movl	%eax, -20(%rbp)	# tmp97, b
-# printComp.c:45:     printf("%i", b);
-	.loc 1 45 5
+# printComp.c:51:     printf("%i", b);
+	.loc 1 51 5
 	movl	-20(%rbp), %eax	# b, tmp99
 	movl	%eax, %esi	# tmp99,
 	leaq	.LC0(%rip), %rdi	#,
 	movl	$0, %eax	#,
 	call	printf@PLT	#
-# printComp.c:47:     return 0;
-	.loc 1 47 12
+# printComp.c:53:     return 0;
+	.loc 1 53 12
 	movl	$0, %eax	#, _17
-# printComp.c:48: }
-	.loc 1 48 1
+# printComp.c:54: }
+	.loc 1 54 1
 	leave	
 	.cfi_def_cfa 7, 8
 	ret	
@@ -637,7 +665,7 @@ main:
 	.uleb128 0x10
 	.long	.LASF56
 	.byte	0x1
-	.byte	0x1a
+	.byte	0x20
 	.byte	0x5
 	.long	0x40
 	.quad	.LFB7
@@ -648,7 +676,7 @@ main:
 	.uleb128 0x11
 	.string	"a"
 	.byte	0x1
-	.byte	0x1c
+	.byte	0x22
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -657,7 +685,7 @@ main:
 	.uleb128 0x11
 	.string	"b"
 	.byte	0x1
-	.byte	0x1d
+	.byte	0x23
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -666,7 +694,7 @@ main:
 	.uleb128 0x11
 	.string	"c"
 	.byte	0x1
-	.byte	0x1e
+	.byte	0x24
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -675,7 +703,7 @@ main:
 	.uleb128 0x11
 	.string	"d"
 	.byte	0x1
-	.byte	0x1f
+	.byte	0x25
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -684,7 +712,7 @@ main:
 	.uleb128 0x11
 	.string	"e"
 	.byte	0x1
-	.byte	0x20
+	.byte	0x26
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
@@ -693,7 +721,7 @@ main:
 	.uleb128 0x11
 	.string	"f"
 	.byte	0x1
-	.byte	0x21
+	.byte	0x27
 	.byte	0x9
 	.long	0x40
 	.uleb128 0x2
