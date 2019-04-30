@@ -1,12 +1,13 @@
 #include "abstract_asm_tree.h"
 #include "intermediate_representation.h"
 #include "../ast/tree.h"
+#include "../symbol/symbol.h"
 
 
 static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
-
+static size_t ifCounter = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -14,18 +15,10 @@ static size_t currentTemporary = 0;
 
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable);
 
-Instructions *newInstruction() {
-    Instructions *ret = NEW(Instructions);
-
-    ret->next = NULL;
-    //ret->context = NULL;
-
-    return ret;
-}
-
 //Helper
 void appendInstructions(Instructions *new) {
     currentInstruction->next = new;
+    new->previous = currentInstruction;
 
     Instructions *iter = new;
 
@@ -57,24 +50,47 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             //Check how far up the scope stack we need to look for the variable
             size_t frameStackDistanceToVariable = symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
+            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+
             if (frameStackDistanceToVariable == 0) {
-                Instructions *load = newInstruction();
-                load->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK;
-                load->val.ptrLoad.var = symbol;
-                load->val.ptrLoad.temporary = currentTemporary;
-                currentTemporary++;
-                appendInstructions(load);
-                return currentTemporary - 1;
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *load = newInstruction();
+                    load->kind = COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK;
+                    load->val.currentScopeLoad.var = symbol;
+                    load->val.currentScopeLoad.temporary = currentTemporary;
+                    currentTemporary++;
+                    appendInstructions(load);
+                    return currentTemporary - 1;
+                } else {
+                    Instructions *load = newInstruction();
+                    load->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK;
+                    load->val.currentScopeLoad.var = symbol;
+                    load->val.currentScopeLoad.temporary = currentTemporary;
+                    currentTemporary++;
+                    appendInstructions(load);
+                    return currentTemporary - 1;
+                }
             } else {
                 //TODO Maybe use accumulator for counting "back in memory" offset
-                Instructions *fetch = newInstruction();
-                fetch->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE;
-                fetch->val.loadTempFromParentScope.uniqueVariableId = uniqueVariableId;
-                fetch->val.loadTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
-                fetch->val.loadTempFromParentScope.outputTemp = currentTemporary;
-                appendInstructions(fetch);
-                currentTemporary++;
-                return currentTemporary - 1;
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *fetch = newInstruction();
+                    fetch->kind = COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK_IN_SCOPE;
+                    fetch->val.loadTempFromParentScope.uniqueVariableId = uniqueVariableId;
+                    fetch->val.loadTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    fetch->val.loadTempFromParentScope.outputTemp = currentTemporary;
+                    appendInstructions(fetch);
+                    currentTemporary++;
+                    return currentTemporary - 1;
+                } else {
+                    Instructions *fetch = newInstruction();
+                    fetch->kind = COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE;
+                    fetch->val.loadTempFromParentScope.uniqueVariableId = uniqueVariableId;
+                    fetch->val.loadTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    fetch->val.loadTempFromParentScope.outputTemp = currentTemporary;
+                    appendInstructions(fetch);
+                    currentTemporary++;
+                    return currentTemporary - 1;
+                }
             }
         } break;
         case arrayIndexK: {
@@ -256,6 +272,12 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
 //size_t is the resulting temporary
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable) {
+    size_t toReturn = 0;
+
+    Instructions *expStart = newInstruction();
+    expStart->kind = METADATA_BEGIN_ARITHMETIC_EVALUATION;
+    appendInstructions(expStart);
+
     switch (expression->kind) {
         case opK: {
             size_t lhsTemp = generateInstructionsForExpression(expression->val.op.left, symbolTable);
@@ -268,7 +290,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opDivK: {
                     Instructions *instruction = newInstruction();
@@ -276,7 +298,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opPlusK: {
                     Instructions *instruction = newInstruction();
@@ -284,7 +306,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opMinusK: {
                     Instructions *instruction = newInstruction();
@@ -292,7 +314,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = rhsTemp;
                     instruction->val.arithmetic2.dest = lhsTemp;
                     appendInstructions(instruction);
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opInequalityK: {
                     //subtract
@@ -301,10 +323,10 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opEqualityK: {
-                    //subtract and use 1-x trick to invert
+                    //subtract equal check
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = lhsTemp;
@@ -320,11 +342,11 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     Instructions *trick = newInstruction();
                     trick->kind = INSTRUCTION_MINUS;
-                    trick->val.arithmetic2.source = currentTemporary - 1; // For the 1 constant
-                    trick->val.arithmetic2.dest = rhsTemp; // For the resulting subtraction
+                    trick->val.arithmetic2.source = rhsTemp; // For the 1 constant
+                    trick->val.arithmetic2.dest = currentTemporary - 1; // For the resulting subtraction
                     appendInstructions(trick);
 
-                    return rhsTemp;
+                    toReturn = currentTemporary - 1;
                 } break;
                 case opGreaterK: {
                     //TODO Use smart x86 instruction for this
@@ -341,7 +363,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
                     constrain->val.tempToConstrain = rhsTemp;
                     appendInstructions(constrain);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opLessK: {
                     //TODO Use smart x86 instruction for this
@@ -357,7 +379,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = lhsTemp;
                     appendInstructions(constrain);
 
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opGeqK: {
                     //TODO Use smart x86 instruction for this
@@ -386,7 +408,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = rhsTemp;
                     appendInstructions(constrain);
 
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opLeqK: {
                     //TODO Use smart x86 instruction for this
@@ -415,7 +437,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->val.tempToConstrain = lhsTemp;
                     appendInstructions(constrain);
 
-                    return lhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opAndK: {
                     //and lhs and rhs
@@ -424,7 +446,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
                 case opOrK: {
                     //and lhs and rhs
@@ -433,16 +455,30 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-                    return rhsTemp;
+                    toReturn = rhsTemp;
                 } break;
             }
         }
             break;
         case termK: {
-            return generateInstructionsForTerm(expression->val.termD.term, symbolTable);
-        }
-            break;
+            toReturn = generateInstructionsForTerm(expression->val.termD.term, symbolTable);
+        } break;
     }
+
+    Instructions *expEnd = newInstruction();
+    expEnd->kind = METADATA_END_ARITHMETIC_EVALUATION;
+    appendInstructions(expEnd);
+
+    return toReturn;
+}
+
+Instructions *newInstruction() {
+    Instructions *ret = NEW(Instructions);
+
+    ret->next = NULL;
+    //ret->context = NULL;
+
+    return ret;
 }
 
 void generateInstructionTreeForStatement(Statement *statement) {
@@ -480,42 +516,128 @@ void generateInstructionTreeForStatement(Statement *statement) {
             num->val.constant.value = 1;
             num->val.constant.temp = currentTemporary;
             appendInstructions(num);
+            size_t constNum = currentTemporary;
             currentTemporary++;
 
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
-            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
+            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
             Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
-            ret->val.allocate.timesTemp = currentTemporary - 1;
-            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.timesTemp = constNum;
+            ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
             appendInstructions(ret);
+            currentTemporary++;
+
+            Instructions *loadPtr = newInstruction();
+            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
+            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
+            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
+            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
+            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
+            appendInstructions(loadPtr);
+            currentTemporary++;
+
+            Instructions *endAlloc = newInstruction();
+            endAlloc->kind = COMPLEX_ALLOCATE_END;
+            appendInstructions(endAlloc);
         } break;
         case statAllocateLenK: {
-            size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateLenD.var, statement->symbolTable);
-            Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
-            size_t times = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+            size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
+            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
+            Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
-            ret->val.allocate.timesTemp = times;
-            ret->val.allocate.accessTemp = accessTemp;
+            ret->val.allocate.timesTemp = lenExp;
+            ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
             appendInstructions(ret);
+            currentTemporary++;
+
+            Instructions *loadPtr = newInstruction();
+            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
+            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
+            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
+            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
+            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
+            appendInstructions(loadPtr);
+            currentTemporary++;
+
+            Instructions *endAlloc = newInstruction();
+            endAlloc->kind = COMPLEX_ALLOCATE_END;
+            appendInstructions(endAlloc);
         } break;
-        case statIfK:
+        case statIfK: {
             //TODO
-            break;
+            Instructions *constant = newInstruction();
+            constant->kind = INSTRUCTION_CONST;
+            constant->val.constant.temp = currentTemporary;
+            constant->val.constant.value = 1;
+            appendInstructions(constant);
+            size_t constantTemp = currentTemporary;
+            currentTemporary++;
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifD.exp, statement->symbolTable);
+            Instructions *boolCmp = newInstruction();
+            boolCmp->kind = INSTRUCTION_CMP;
+            boolCmp->val.arithmetic2.source = boolTemp;
+            boolCmp->val.arithmetic2.dest = constantTemp;
+            appendInstructions(boolCmp);
+
+            char *beginBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(beginBuf, "if_%zu_begin", ifCounter);
+            char *endBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(endBuf, "if_%zu_end", ifCounter);
+            ifCounter++;
+
+            //cmp
+            //je label
+            //jmp end
+            //label
+            //instrForIf
+            //end
+
+            Instructions *je = newInstruction();
+            je->kind = INSTRUCTION_JE;
+            je->val.label = beginBuf;
+            appendInstructions(je);
+
+            Instructions *jmp = newInstruction();
+            jmp->kind = INSTRUCTION_JMP;
+            jmp->val.label = endBuf;
+            appendInstructions(jmp);
+
+            Instructions *begin = newInstruction();
+            begin->kind = INSTRUCTION_LABEL;
+            begin->val.label = beginBuf;
+            appendInstructions(begin);
+
+            generateInstructionTreeForStatement(statement->val.ifD.statement);
+
+            Instructions *end = newInstruction();
+            end->kind = INSTRUCTION_LABEL;
+            end->val.label = endBuf;
+            appendInstructions(end);
+
+        } break;
         case statIfElK:
             //TODO
             break;
         case statWhileK:
             //TODO
             break;
-        case stmListK:
-            //TODO
-            break;
+        case stmListK: {
+            StatementList *statementList = statement->val.stmListD.statementList;
+
+            while (statementList != NULL) {
+                generateInstructionTreeForStatement(statementList->statement);
+                statementList = statementList->next;
+            }
+        } break;
         case assignmentK: {
             //For now we simply tell that temporary must be moved back to variable number x
             //Fetch variable
@@ -526,21 +648,46 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             size_t frameStackDistanceToVariable = statement->symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
+            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, statement->symbolTable);
+
             if (frameStackDistanceToVariable == 0) {
-                Instructions *save = newInstruction();
-                save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
-                save->val.ptrSave.sym = symbol;
-                save->val.ptrSave.tempValue = expressionTemp;
-                appendInstructions(save);
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
             } else {
-                Instructions *save = newInstruction();
-                save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;
-                save->val.saveTempFromParentScope.uniqueVariableId = symbol->uniqueIdForScope;
-                save->val.saveTempFromParentScope.scopeToFindFrame = symbol->distanceFromRoot;
-                save->val.saveTempFromParentScope.inputTemp = expressionTemp;
-                save->val.saveTempFromParentScope.intermediateTemp = currentTemporary;
-                appendInstructions(save);
-                currentTemporary++;
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
             }
         } break;
     }
@@ -588,6 +735,14 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             label->kind = INSTRUCTION_FUNCTION_LABEL;
             currentTemporary++;
 
+            SymbolTable *st = NULL;
+            if (declaration->val.functionD.function->body->declarationList != NULL) {
+                st = declaration->val.functionD.function->body->declarationList->declaration->symbolTable;
+            } else if (declaration->val.functionD.function->body->statementList != NULL) {
+                st = declaration->val.functionD.function->body->statementList->statement->symbolTable;
+            }
+            label->val.functionHead.tableForFunction = st;
+
             //Readjust arg
             appendInstructions(label);
 
@@ -605,6 +760,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
                 declarationList = declarationList->next;
                 counter++;
             }
+
 
             generateInstructionTree(declaration->val.functionD.function->body);
         }
@@ -640,27 +796,32 @@ Instructions* generateInstructionTree(Body *body) {
     Instructions *head = newInstruction();
     head->kind = METADATA_BEGIN_BODY_BLOCK;
 
+    //Bind the table for the body block
+
+
     if (instructionHead == NULL) {
         instructionHead = head;
+        instructionHead->previous = NULL;
         currentInstruction = instructionHead;
     }
-
-    //if (contextStack == NULL) {
-      //  contextStack = initStack();
-    //}
-
-    //Functions will take tail and return the new tail, head must be pre-inited
-
-    while (declarationList != NULL) {
-        generateInstructionTreeForDeclaration(declarationList->declaration);
-        declarationList = declarationList->next;
-    }
-
 
     if (createMain) {
         Instructions *declsEnd = newInstruction();
         declsEnd->kind = METADATA_CREATE_MAIN;
+        SymbolTable *st = NULL;
+        if (declarationList != NULL) {
+            st = declarationList->declaration->symbolTable;
+        } else if (statementList != NULL) {
+            st = statementList->statement->symbolTable;
+        }
+        declsEnd->val.tableForFunction = st;
+
         appendInstructions(declsEnd);
+    }
+
+    while (declarationList != NULL) {
+        generateInstructionTreeForDeclaration(declarationList->declaration);
+        declarationList = declarationList->next;
     }
 
     while (statementList != NULL) {
@@ -672,7 +833,6 @@ Instructions* generateInstructionTree(Body *body) {
     currentInstruction = currentInstruction->next;
     currentInstruction->kind = METADATA_END_BODY_BLOCK;
 
-    //Restore temporary counter
     currentTemporary = restoreTemporary;
 
     return instructionHead;

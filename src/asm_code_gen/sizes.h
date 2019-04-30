@@ -11,7 +11,7 @@
 #include "consts.h"
 
 #define POINTER_SIZE 8
-#define INTEGER_SIZE 4
+#define INTEGER_SIZE 8
 
 size_t getSizeForType(Type *tpe);
 

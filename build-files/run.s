@@ -7,6 +7,26 @@ staticLink:
 .LC1:
 	.string "hello!"
 .section .text
+mov $60, %rax
+mov $0, %rdi
+syscall
+[1;34mvar [0ma : [0;36mint[0m, ;
+[1;34mvar [0mb : [0;36mint[0m, ;
+[1;34mallocate [0ma;
+[1;34mallocate [0mb;
+a[1;34m = [0m5;
+b[1;34m = [0m(9 + a);
+[1;34mwrite [0ma;
+[1;34mwrite [0mb;
+.include "print.asm"
+.section .data
+staticLink:
+	.space 8
+.LC0:
+	.string "%i"
+.LC1:
+	.string "hello!"
+.section .text
 # METADATA_BEGIN_BODY_BLOCK
 # VAR a
 # VAR b
@@ -93,14 +113,16 @@ main:
 		mov (%r13), %r13
 # INSTRUCTION_WRITE
 		push %r13
-		call print_number
-		pop %r13# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+		#call print_number
+		pop %r13
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
 		mov -16(%rbp), %r14
 		mov (%r14), %r14
 # INSTRUCTION_WRITE
 		push %r14
-		call print_number
-		pop %r14# METADATA_END_BODY_BLOCK
+		#call print_number
+		pop %r14
+# METADATA_END_BODY_BLOCK
 mov $60, %rax
 mov $0, %rdi
 syscall

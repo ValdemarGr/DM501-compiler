@@ -10,6 +10,8 @@
 #include "../utils/memory.h"
 #include "../symbol/symbol.h"
 #include "abstract_asm_tree.h"
+#include "intermediate_representation.h"
+#include "../ast/tree.h"
 
 typedef struct Jump {
     char* label;
@@ -53,32 +55,48 @@ typedef enum {
     INSTRUCTION_RIGHT_SHIFT,
     INSTRUCTION_XOR,
     INSTRUCTION_COPY,
+    INSTRUCTION_CMP,
+    INSTRUCTION_LABEL,
+    INSTRUCTION_JE,
+    INSTRUCTION_JMP,
+    INSTRUCTION_MOVE,
+    INSTRUCTION_ADD_CONST,
+    INSTRUCTION_MUL_CONST,
 
-    COMPLEX_CONSTRAIN_BOOLEAN,
-    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
     COMPLEX_ALLOCATE,
+    COMPLEX_ALLOCATE_END,
+    COMPLEX_CONSTRAIN_BOOLEAN,
+    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK,
+    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK_IN_SCOPE,
     COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
+    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
+    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK,
+    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
     COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE,
     COMPLEX_SAVE_STATIC_LINK,
     COMPLEX_RESTORE_STATIC_LINK,
+    COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
     METADATA_FUNCTION_ARGUMENT,
-    METADATA_CREATE_MAIN
+    METADATA_CREATE_MAIN,
+    METADATA_BEGIN_ARITHMETIC_EVALUATION,
+    METADATA_END_ARITHMETIC_EVALUATION
 } InstructionKind;
 
 typedef struct Instructions {
     struct Instructions* next;
+    struct Instructions* previous;
     InstructionKind kind;
     union {
         Arithmetic2 arithmetic2; //INSTRUCTION_ADD..
         Arithmetic3 arithmetic3;
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
-        struct { size_t accessTemp; size_t timesTemp; Type* tpe;} allocate;
-        struct {char* label; size_t distance; size_t temporary;} functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
+        struct { size_t ptrTemp; size_t timesTemp; Type* tpe;} allocate;
+        struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t argNum; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
@@ -88,12 +106,16 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
+        SymbolTable *tableForFunction;
+        char* label;
         struct { size_t constant; size_t temp; } rightShift;
-        struct {SYMBOL* var; size_t temporary; } ptrLoad; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-        struct {SYMBOL *sym; size_t tempValue; } ptrSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+        struct { int constant; size_t temp; } art2const;
+        struct {SYMBOL* var; size_t temporary; } currentScopeLoad;
+        struct {SYMBOL *sym; size_t tempValue; size_t intermediate; } currentScopeSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; } loadTempFromParentScope;
-        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempFromParentScope;
+        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; } saveTempToParentScope;
         struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
+        struct { size_t ptrTemp; size_t scopeToFindFrame; size_t linkBaseOffset; size_t  intermediateTemp;} loadPtrToStaticLink;
     } val;
 } Instructions;
 

@@ -1,6 +1,7 @@
-var a: int;
-
 (*
+var b: int;
+
+
 func horse(z: int): int
     var q: int;
     var o: int;
@@ -12,7 +13,28 @@ func horse(z: int): int
 end horse
 
 a = horse(5);
-*)
+
 
 allocate a;
+allocate b;
 a = 5;
+b = 9 + a;
+
+write a;
+write b;
+
+
+if (a == 5) then {
+    write a;
+}*)
+
+var b: int;
+b = 5;
+
+if (b == 5) then {
+    write b;
+}
+
+if (b != 6) then {
+    write b;
+}
