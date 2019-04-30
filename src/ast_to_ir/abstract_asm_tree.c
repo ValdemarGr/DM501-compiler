@@ -8,6 +8,7 @@ static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
 static size_t ifCounter = 0;
+static size_t whileCounter = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -594,13 +595,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             sprintf(endBuf, "if_%zu_end", ifCounter);
             ifCounter++;
 
-            //cmp
-            //je label
-            //jmp end
-            //label
-            //instrForIf
-            //end
-
             Instructions *je = newInstruction();
             je->kind = INSTRUCTION_JE;
             je->val.label = beginBuf;
@@ -624,12 +618,121 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(end);
 
         } break;
-        case statIfElK:
+        case statIfElK: {
             //TODO
-            break;
-        case statWhileK:
-            //TODO
-            break;
+            Instructions *constant = newInstruction();
+            constant->kind = INSTRUCTION_CONST;
+            constant->val.constant.temp = currentTemporary;
+            constant->val.constant.value = 1;
+            appendInstructions(constant);
+            size_t constantTemp = currentTemporary;
+            currentTemporary++;
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
+            Instructions *boolCmp = newInstruction();
+            boolCmp->kind = INSTRUCTION_CMP;
+            boolCmp->val.arithmetic2.source = boolTemp;
+            boolCmp->val.arithmetic2.dest = constantTemp;
+            appendInstructions(boolCmp);
+
+            char *beginBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(beginBuf, "if_%zu_begin", ifCounter);
+            char *elBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(elBuf, "el_%zu_begin", ifCounter);
+            char *endBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(endBuf, "ifel_%zu_end", ifCounter);
+            ifCounter++;
+
+            Instructions *je = newInstruction();
+            je->kind = INSTRUCTION_JE;
+            je->val.label = beginBuf;
+            appendInstructions(je);
+
+            Instructions *jmp = newInstruction();
+            jmp->kind = INSTRUCTION_JMP;
+            jmp->val.label = elBuf;
+            appendInstructions(jmp);
+
+            Instructions *begin = newInstruction();
+            begin->kind = INSTRUCTION_LABEL;
+            begin->val.label = beginBuf;
+            appendInstructions(begin);
+
+            generateInstructionTreeForStatement(statement->val.ifElD.statement);
+
+            Instructions *gotoEnd = newInstruction();
+            gotoEnd->kind = INSTRUCTION_JMP;
+            gotoEnd->val.label = endBuf;
+            appendInstructions(gotoEnd);
+
+            Instructions *el = newInstruction();
+            el->kind = INSTRUCTION_LABEL;
+            el->val.label = elBuf;
+            appendInstructions(el);
+
+            generateInstructionTreeForStatement(statement->val.ifElD.elseStatement);
+
+            Instructions *end = newInstruction();
+            end->kind = INSTRUCTION_LABEL;
+            end->val.label = endBuf;
+            appendInstructions(end);
+        } break;
+        case statWhileK: {
+            char *cndBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(cndBuf, "while_cnd_%zu", whileCounter);
+            char *beginBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(beginBuf, "while_%zu_begin", whileCounter);
+            char *endBuf = (char*)malloc(sizeof(char) * 32);
+            sprintf(endBuf, "while_%zu_end", whileCounter);
+            whileCounter++;
+
+            Instructions *cndLbl = newInstruction();
+            cndLbl->kind = INSTRUCTION_LABEL;
+            cndLbl->val.label = cndBuf;
+            appendInstructions(cndLbl);
+
+            Instructions *constant = newInstruction();
+            constant->kind = INSTRUCTION_CONST;
+            constant->val.constant.temp = currentTemporary;
+            constant->val.constant.value = 1;
+            appendInstructions(constant);
+            size_t constantTemp = currentTemporary;
+            currentTemporary++;
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
+            Instructions *boolCmp = newInstruction();
+            boolCmp->kind = INSTRUCTION_CMP;
+            boolCmp->val.arithmetic2.source = boolTemp;
+            boolCmp->val.arithmetic2.dest = constantTemp;
+            appendInstructions(boolCmp);
+
+            Instructions *je = newInstruction();
+            je->kind = INSTRUCTION_JE;
+            je->val.label = beginBuf;
+            appendInstructions(je);
+
+            Instructions *jmp = newInstruction();
+            jmp->kind = INSTRUCTION_JMP;
+            jmp->val.label = endBuf;
+            appendInstructions(jmp);
+
+            Instructions *begin = newInstruction();
+            begin->kind = INSTRUCTION_LABEL;
+            begin->val.label = beginBuf;
+            appendInstructions(begin);
+
+            generateInstructionTreeForStatement(statement->val.ifD.statement);
+
+            Instructions *reset = newInstruction();
+            reset->kind = INSTRUCTION_JMP;
+            reset->val.label = cndBuf;
+            appendInstructions(reset);
+
+            Instructions *end = newInstruction();
+            end->kind = INSTRUCTION_LABEL;
+            end->val.label = endBuf;
+            appendInstructions(end);
+        } break;
         case stmListK: {
             StatementList *statementList = statement->val.stmListD.statementList;
 
@@ -641,7 +744,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case assignmentK: {
             //For now we simply tell that temporary must be moved back to variable number x
             //Fetch variable
-            //Todo unwrap correctly
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable);
 
             size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
@@ -771,9 +873,53 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             ret->kind = INSTRUCTION_VAR;
             ret->val.var = symbol;
             appendInstructions(ret);
-            //TODO RHS evaluation needed for this
-        }
-            break;
+
+            size_t expressionTemp = generateInstructionsForExpression(declaration->val.valD.rhs, declaration->symbolTable);
+
+            size_t frameStackDistanceToVariable = declaration->symbolTable->distanceFromRoot - symbol->distanceFromRoot;
+
+            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, declaration->symbolTable);
+
+            if (frameStackDistanceToVariable == 0) {
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER;
+                    save->val.currentScopeSave.sym = symbol;
+                    save->val.currentScopeSave.tempValue = expressionTemp;
+                    save->val.currentScopeSave.intermediate = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
+            } else {
+                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                } else {
+                    Instructions *save = newInstruction();
+                    save->kind = COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE;
+                    save->val.saveTempToParentScope.uniqueVariableId = symbol->uniqueIdForScope;
+                    save->val.saveTempToParentScope.scopeToFindFrame = symbol->distanceFromRoot;
+                    save->val.saveTempToParentScope.inputTemp = expressionTemp;
+                    save->val.saveTempToParentScope.intermediateTemp = currentTemporary;
+                    appendInstructions(save);
+                    currentTemporary++;
+                }
+            }
+        } break;
         case declClassK:
             //TODO
             break;
@@ -805,21 +951,28 @@ Instructions* generateInstructionTree(Body *body) {
         currentInstruction = instructionHead;
     }
 
+
+    while (declarationList != NULL && declarationList->declaration->kind != declValK) {
+        generateInstructionTreeForDeclaration(declarationList->declaration);
+        declarationList = declarationList->next;
+    }
+
     if (createMain) {
         Instructions *declsEnd = newInstruction();
         declsEnd->kind = METADATA_CREATE_MAIN;
         SymbolTable *st = NULL;
-        if (declarationList != NULL) {
-            st = declarationList->declaration->symbolTable;
-        } else if (statementList != NULL) {
-            st = statementList->statement->symbolTable;
+        if (body->declarationList != NULL) {
+            st = body->declarationList->declaration->symbolTable;
+        } else if (body->statementList != NULL) {
+            st = body->statementList->statement->symbolTable;
         }
         declsEnd->val.tableForFunction = st;
 
         appendInstructions(declsEnd);
     }
 
-    while (declarationList != NULL) {
+    declarationList = body->declarationList;
+    while (declarationList != NULL && declarationList->declaration->kind == declValK) {
         generateInstructionTreeForDeclaration(declarationList->declaration);
         declarationList = declarationList->next;
     }

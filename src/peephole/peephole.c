@@ -138,9 +138,33 @@ Instructions *localAppendInstructions(Instructions *new) {
 
     return iter;
 }
+/*
+size_t smallestRegister(PeepholeTemplates *template, Instructions *instructions) {
+    Instructions *iter = instructions;
+    SimpleInstruction *simpleCounter = template->simpleInstruction;
 
+    int smallestValue = INT_MAX;
+
+    switch (template->apply) {
+        case REMOVE_CONST_REGISTER_ADD: {
+            smallestValue = MIN((int)iter->val.constant.temp, smallestValue);
+            iter = iter->next;
+            smallestValue = MIN((int)iter->val.arithmetic2.source, smallestValue);
+            smallestValue = MIN((int)iter->val.arithmetic2.dest, smallestValue);
+        } break;
+        case REMOVE_CONST_REGISTER_MUL: {
+            smallestValue = MIN((int)iter->val.constant.temp, smallestValue);
+            iter = iter->next;
+            smallestValue = MIN((int)iter->val.arithmetic2.source, smallestValue);
+            smallestValue = MIN((int)iter->val.arithmetic2.dest, smallestValue);
+        } break;
+    }
+
+    return (size_t)smallestValue;
+}
+*/
 //Replacement patterns
-void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_t n, PeepholeApplyType apply) {
+void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_t n, PeepholeApplyType apply) {//, size_t min) {
     SimpleInstruction *simpleIter = simpleHead;
     Instructions *instructionsIter = instrHead;
 
@@ -403,6 +427,11 @@ void peephole(Instructions *instructions) {
                 continue;
             }
 
+            /*
+            simpleInstructionIter = templateIter->simpleInstruction;
+            realInstructionIter = iter;
+            size_t smallestReg = smallestRegister(templateIter, realInstructionIter);*/
+
             //Apply template
             simpleInstructionIter = templateIter->simpleInstruction;
             realInstructionIter = iter;
@@ -410,7 +439,7 @@ void peephole(Instructions *instructions) {
             while (simpleInstructionIter != NULL &&
                    realInstructionIter != NULL) {
 
-                applyTemplate(simpleInstructionIter, realInstructionIter, (size_t)n, templateIter->apply);
+                applyTemplate(simpleInstructionIter, realInstructionIter, (size_t)n, templateIter->apply);//, smallestReg);
 
                 realInstructionIter = skipToNextImportantInstruction(realInstructionIter->next);
                 simpleInstructionIter = simpleInstructionIter->next;
