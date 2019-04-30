@@ -15,7 +15,7 @@ typedef struct Node {
 
 
 int *colorGraph(/*some data*/ int size, int colors){
-    Node *graph = initGraph(size);
+    Node *graph = (Node *) malloc(sizeof(Node) * size);
 
     //@TODO Init graph
 
@@ -51,8 +51,8 @@ int *colorGraph(/*some data*/ int size, int colors){
         Node tempNode = poppedNode;
         while(tempNode.next != NULL){
             tempNode = *tempNode.next;
-            if(tempNode.value != -1){
-                colorsUsedByNeighbors[tempNode.value] = true;
+            if(color_overview[tempNode.value] != -1){
+                colorsUsedByNeighbors[color_overview[tempNode.value]] = true;
             }
         }
 
