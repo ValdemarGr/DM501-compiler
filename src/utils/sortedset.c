@@ -79,3 +79,61 @@ void insertSortedSet(SortedSet *sortedSet, int data) {
         iter = iter->_next;
     }
 }
+
+SortedSet *sortedSetUnion(SortedSet *set1, SortedSet *set2) {
+    SortedSet *iter1 = set1;
+    SortedSet *iter2 = set2;
+
+    SortedSet *newSet = initHeadedSortedSet();
+
+    while (iter1 != NULL) {
+        insertSortedSet(newSet, iter1->data);
+        iter1 = iter1->_next;
+    }
+
+    while (iter2 != NULL) {
+        insertSortedSet(newSet, iter2->data);
+        iter2 = iter2->_next;
+    }
+
+    return newSet;
+}
+
+SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2) {
+    SortedSet *iter1 = set1;
+    SortedSet *iter2 = set2;
+
+    SortedSet *newSet = initHeadedSortedSet();
+
+    while (iter1 != NULL && iter2 != NULL) {
+        if (iter1->data < iter2->data) {
+            insertSortedSet(newSet, iter1->data);
+            iter1 = iter1->_next;
+        } else if (iter1->data > iter2->data) {
+            iter2 = iter2->_next;
+        } else if (iter1->data == iter2->data) {
+            iter1 = iter1->_next;
+            iter2 = iter2->_next;
+        }
+    }
+
+    while (iter1 != NULL) {
+        insertSortedSet(newSet, iter1->data);
+        iter1 = iter1->_next;
+    }
+
+    return newSet;
+}
+
+void freeSortedSet(SortedSet* sortedSet) {
+    SortedSet *iter = sortedSet;
+    SortedSet *next;
+
+    while (iter != NULL) {
+        next = iter->_next;
+
+        free(iter);
+
+        iter = next;
+    }
+}

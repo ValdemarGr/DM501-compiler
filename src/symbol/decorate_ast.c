@@ -495,9 +495,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 if (extensions->type->kind != typeClassK) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                    e->error = NOT_TYPE;
+                    e->val.NOT_TYPE.id = extensions->type->val.idType.id;
+                    e->val.NOT_TYPE.lineno = declaration->lineno;
 
                     return e;
                 }
@@ -507,9 +507,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 if (mixin->value->kind != symTypeClassK) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                    e->error = NOT_CLASS;
+                    e->val.NOT_CLASS.id = extensions->type->val.idType.id;
+                    e->val.NOT_CLASS.lineno = declaration->lineno;
 
                     return e;
                 }
@@ -600,20 +600,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             while (declarationList != NULL) {
                 //No classes or funcs inside of class
-                if (declarationList->declaration->kind == declClassK) {
+                if (declarationList->declaration->kind == declClassK ||
+                        declarationList->declaration->kind == declFuncK) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
-                }
-
-                if (declarationList->declaration->kind == declFuncK) {
-                    e = NEW(Error);
-
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = extensions->type->val.idType.id;
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                    e->error = DECLARATIONS_IN_CLASS;
+                    e->val.DECLARATIONS_IN_CLASS.classId = declaration->val.classD.id;
+                    e->val.DECLARATIONS_IN_CLASS.lineno = declaration->lineno;
                 }
 
                 e = decorateDeclaration(declarationList->declaration, newSt);

@@ -844,7 +844,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e = NEW(Error);
 
                         e->error = SYMBOL_NOT_FOUND;
-                        e->val.SYMBOL_NOT_FOUND_S.id = "FIX ME WRONG ERROR 836";
+                        e->val.SYMBOL_NOT_FOUND_S.id = expectedType->val.idType.id;
                         e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
 
                         return e;
@@ -856,9 +856,11 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                     } else {
                         e = NEW(Error);
 
-                        e->error = SYMBOL_NOT_FOUND;
-                        e->val.SYMBOL_NOT_FOUND_S.id = "FIX ME WRONG ERROR 848";
-                        e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                        e->error = VARIABLE_UNEXPECTED_CLASS;
+                        e->val.VARIABLE_UNEXPECTED_CLASS_S.id = symbol->name;
+                        e->val.VARIABLE_UNEXPECTED_CLASS_S.lineno = variable->lineno;
+                        e->val.VARIABLE_UNEXPECTED_CLASS_S.expectedClass = second->name;
+                        e->val.VARIABLE_UNEXPECTED_CLASS_S.foundClass = symAsType->val.typeClass.classId;
 
                         return e;
                     }
@@ -1360,9 +1362,10 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 }
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR; FIX ME 1173";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                e->error = ILLEGAL_DOWNCAST;
+                e->val.ILLEGAL_DOWNCAST.idFrom = type->val.typeClass.classId;
+                e->val.ILLEGAL_DOWNCAST.idTo = expectedType->val.idType.id;
+                e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
 
                 return e;
             }
@@ -1440,13 +1443,15 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
             //We also want to check if try to perform an integer operation on a null, this we cannot do
             if (expressionType->kind == intStaticType.kind) {
-                if (evaluateExpressionType(expression->val.op.left, symbolTable) == NULL_KITTY_VALUE_INDICATOR ||
-                        evaluateExpressionType(expression->val.op.right, symbolTable) == NULL_KITTY_VALUE_INDICATOR){
+                Type* leftExpType = evaluateExpressionType(expression->val.op.left, symbolTable);
+                Type* rightExpType = evaluateExpressionType(expression->val.op.right, symbolTable);
+
+                if (leftExpType == NULL_KITTY_VALUE_INDICATOR ||
+                            rightExpType == NULL_KITTY_VALUE_INDICATOR) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1178";
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                    e->error = VALUE_IS_NULL;
+                    e->val.VALUE_IS_NULL.lineno = expression->lineno;
 
                     return e;
                 }
@@ -1462,9 +1467,8 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                 if (e == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1200";
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = expression->lineno;
+                    e->error = VALUE_IS_NULL;
+                    e->val.VALUE_IS_NULL.lineno = expression->lineno;
 
                     return e;
                 }
@@ -1487,9 +1491,8 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                         //Cannot compare with null
                         e = NEW(Error);
 
-                        e->error = SYMBOL_NOT_FOUND;
-                        e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1243";
-                        e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                        e->error = NULL_COMPARISON;
+                        e->val.NULL_COMPARISON.lineno = expression->lineno;
 
                         return e;
                     } else {
@@ -1506,9 +1509,8 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                         //Cannot compare with null
                         e = NEW(Error);
 
-                        e->error = SYMBOL_NOT_FOUND;
-                        e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1259";
-                        e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                        e->error = NULL_COMPARISON;
+                        e->val.NULL_COMPARISON.lineno = expression->lineno;
 
                         return e;
                     } else {
@@ -1664,9 +1666,9 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             if (isConst(statement->val.assignmentD.var, statement->symbolTable)) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1654";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
+                e->error = CONST_REASSIGNMENT;
+                e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
+                e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
 
                 return e;
             }
@@ -1675,9 +1677,9 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             isTypedef(statement->val.assignmentD.var->val.idD.id, statement->symbolTable) == true) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1374";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
+                e->error = INVALID_ASSIGMENT_TO_TYPE;
+                e->val.INVALID_ASSIGMENT_TO_TYPE.id = statement->val.assignmentD.var->val.idD.id;
+                e->val.INVALID_ASSIGMENT_TO_TYPE.lineno = statement->lineno;
 
                 return e;
             }
@@ -1687,9 +1689,9 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             if (lhsType == NULL) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1375";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
+                e->error = INVALID_TYPE;
+                e->val.INVALID_TYPE.id = statement->val.assignmentD.var->val.idD.id;
+                e->val.INVALID_TYPE.lineno = statement->lineno;
 
                 return e;
             }
@@ -1701,9 +1703,9 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             lhsType->kind == typeBoolK)) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE 1409";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = statement->lineno;
+                e->error = INVALID_ASSIGMENT_TO_NULL;
+                e->val.INVALID_ASSIGMENT_TO_NULL.id = statement->val.assignmentD.var->val.idD.id;
+                e->val.INVALID_ASSIGMENT_TO_NULL.lineno = statement->lineno;
 
                 return e;
             }
@@ -1814,6 +1816,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
             return NULL;
             break;
     }
+    return NULL;
 }
 
 SYMBOL *unwrapTypedefToClassId(Type *type, SymbolTable *symbolTable) {
@@ -1867,7 +1870,7 @@ bool checkIfIsSubtype(TypeList *extended, char *subType, SymbolTable *symbolTabl
     return false;
 }
 
-Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTable *symbolTable) {
+Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTable *symbolTable, Declaration *declaration) {
     Error *e = NULL;
 
     TypeList *boundCounter = bound;
@@ -1876,18 +1879,29 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
     while (boundCounter != NULL && genericCounter != NULL) {
         //If the bound type is a class check all the classes required arguments
         if (boundCounter->type->kind == typeClassK) {
-            SYMBOL *classSymbol = getSymbol(symbolTable, boundCounter->type->val.typeClass.classId);
+            SYMBOL *symbol = getSymbol(symbolTable, boundCounter->type->val.typeClass.classId);
 
-            if (classSymbol->value->kind == typeK) {
-                classSymbol = unwrapTypedefToClassId(classSymbol->value->val.typeD.tpe, symbolTable);
+            if (symbol == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = boundCounter->type->val.typeClass.classId;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+
+                return e;
+            }
+
+            SYMBOL *classSymbol = symbol;
+            if (symbol->value->kind == typeK) {
+                classSymbol = unwrapTypedefToClassId(symbol->value->val.typeD.tpe, symbolTable);
             }
 
             if (classSymbol == NULL) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1497";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                e->error = NOT_CLASS;
+                e->val.NOT_CLASS.id = symbol->name;
+                e->val.NOT_CLASS.lineno = declaration->lineno;
 
                 return e;
             }
@@ -1895,16 +1909,16 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
             if (classSymbol->value->kind != symTypeClassK) {
                 e = NEW(Error);
 
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1507";
-                e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                e->error = NOT_CLASS;
+                e->val.NOT_CLASS.id = classSymbol->name;
+                e->val.NOT_CLASS.lineno = declaration->lineno;
 
                 return e;
             }
 
             e = checkNestedGenericBoundType(boundCounter->type->val.typeClass.genericBoundValues,
                     classSymbol->value->val.typeClassD.generics,
-                    symbolTable);
+                    symbolTable, declaration);
             if (e != NULL) return e;
         }
 
@@ -1916,9 +1930,8 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
     if (boundCounter != NULL) {
         e = NEW(Error);
 
-        e->error = SYMBOL_NOT_FOUND;
-        e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1536";
-        e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+        e->error = TOO_FEW_GENERICS;
+        e->val.TOO_FEW_GENERICS.lineno = declaration->lineno;
 
         return e;
     }
@@ -1927,9 +1940,8 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
     if (genericCounter != NULL) {
         e = NEW(Error);
 
-        e->error = SYMBOL_NOT_FOUND;
-        e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1547";
-        e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+        e->error = TOO_MANY_GENERICS;
+        e->val.TOO_MANY_GENERICS.lineno = declaration->lineno;
 
         return e;
     }
@@ -1956,9 +1968,9 @@ Error *checkDeclValidity(Declaration *declaration) {
                 if (symbol == NULL) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1415";
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                    e->error = NOT_CLASS;
+                    e->val.NOT_CLASS.id = declaration->val.varD.id;
+                    e->val.NOT_CLASS.lineno = declaration->lineno;
 
                     return e;
                 }
@@ -1966,9 +1978,9 @@ Error *checkDeclValidity(Declaration *declaration) {
                 if (symbol->value->kind != symTypeClassK) {
                     e = NEW(Error);
 
-                    e->error = SYMBOL_NOT_FOUND;
-                    e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1425";
-                    e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                    e->error = NOT_CLASS;
+                    e->val.NOT_CLASS.id = declaration->val.varD.id;
+                    e->val.NOT_CLASS.lineno = declaration->lineno;
 
                     return e;
                 }
@@ -1976,7 +1988,7 @@ Error *checkDeclValidity(Declaration *declaration) {
                 TypeList *classGenerics = symbol->value->val.typeClassD.generics;
 
                 //We check the count, because the next part can abruptly return
-                e = checkNestedGenericBoundType(boundVars, classGenerics, declaration->symbolTable);
+                e = checkNestedGenericBoundType(boundVars, classGenerics, declaration->symbolTable, declaration);
                 if (e != NULL) return e;
 
                 //The real handling
@@ -1994,8 +2006,8 @@ Error *checkDeclValidity(Declaration *declaration) {
                             e = NEW(Error);
 
                             e->error = SYMBOL_NOT_FOUND;
-                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1504";
-                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                            e->val.SYMBOL_NOT_FOUND_S.id = boundVars->type->val.typeClass.classId;
+                            e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
 
                             return e;
                         }
@@ -2003,9 +2015,9 @@ Error *checkDeclValidity(Declaration *declaration) {
                         if (symbols->value->kind != symTypeClassK) {
                             e = NEW(Error);
 
-                            e->error = SYMBOL_NOT_FOUND;
-                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1514";
-                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                            e->error = NOT_CLASS;
+                            e->val.NOT_CLASS.id = symbols->name;
+                            e->val.NOT_CLASS.lineno = declaration->lineno;
 
                             return e;
                         }
@@ -2013,9 +2025,9 @@ Error *checkDeclValidity(Declaration *declaration) {
                         if (symbols->value->val.typeClassD.extendedClasses == NULL) {
                             e = NEW(Error);
 
-                            e->error = SYMBOL_NOT_FOUND;
-                            e->val.SYMBOL_NOT_FOUND_S.id = "WRONG ERROR TYPE; FIX LATER LINE 1524";
-                            e->val.SYMBOL_NOT_FOUND_S.lineno = 42;
+                            e->error = CLASS_NOT_EXTENDED;
+                            e->val.CLASS_NOT_EXTENDED.id = symbols->name;
+                            e->val.CLASS_NOT_EXTENDED.lineno = declaration->lineno;
 
                             return e;
                         }
