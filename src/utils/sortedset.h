@@ -24,4 +24,8 @@ void insertSortedSet(SortedSet *sortedSet, int data);
 
 size_t length(SortedSet *sortedSet);
 
+SortedSet *sortedSetUnion(SortedSet *set1, SortedSet *set2);
+
+SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2);
+
 #endif //HELLO_SORTEDSET_H

@@ -16,6 +16,39 @@ typedef struct AbstractRegister{
     size_t useTimestamp;
 } AbstractRegister;
 
+typedef struct RaFunction{
+    char *id;
+    int dataFlowIndex;
+} RaFunction;
+
+typedef struct IntBox {
+    int value;
+} IntBox;
+
+typedef struct RaAllocation{
+    enum { raRegister, raSpill } kind;
+    size_t givenRegister;
+} RaAllocation;
+
+typedef struct VariableList {
+    int id;
+    struct VariableList *next;
+} VariableList;
+
+typedef struct LineList {
+    int line;
+    struct LineList *next;
+} LineList;
+
+typedef struct DataFlowEntry {
+    SortedSet *defines;
+    SortedSet *uses;
+    SortedSet *in;
+    SortedSet *out;
+    LineList *successors;
+    LineList *predecessors;
+} DataFlowEntry;
+
 void simpleRegisterAllocation(Instructions *head);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H
