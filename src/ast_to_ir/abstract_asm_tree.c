@@ -12,7 +12,7 @@ static size_t whileCounter = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
-static size_t currentTemporary = 0;
+size_t currentTemporary = 0;
 
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable);
 
