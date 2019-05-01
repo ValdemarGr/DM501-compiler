@@ -298,18 +298,6 @@ bool checkForInstructionEquality(SimpleInstruction *simpleHead, Instructions *in
         case COMPLEX_CONSTRAIN_BOOLEAN: {
 
         } break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
-
-        } break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
-
-        } break;
-        case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER: {
-
-        } break;
-        case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE: {
-
-        } break;
         case COMPLEX_SAVE_STATIC_LINK: {
 
         } break;
@@ -382,10 +370,6 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case COMPLEX_ALLOCATE: {return instructions; } break;
         case COMPLEX_ALLOCATE_END: { return instructions;} break;
         case COMPLEX_CONSTRAIN_BOOLEAN: { return instructions;} break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: { return instructions;} break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: { return instructions;} break;
-        case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER: { return instructions;} break;
-        case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE: {return instructions; } break;
         case COMPLEX_SAVE_STATIC_LINK: { return instructions;} break;
         case COMPLEX_RESTORE_STATIC_LINK: { return instructions;} break;
         case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: { return instructions;} break;

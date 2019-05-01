@@ -1,0 +1,6 @@
+var a: array of int;
+val z = 5;
+
+allocate a of length 10;
+
+write |a|;

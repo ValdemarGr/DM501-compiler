@@ -82,9 +82,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 line += 2;
                 insert(labels, makeCharKey(iter->val.functionHead.label), makeIntBox(line));
             } break;
-            case COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE: {
-                line += 2;
-            } break;
             case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
                 line += 2;
             } break;
@@ -147,9 +144,10 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;
             case INSTRUCTION_FUNCTION_LABEL: {
-                dataFlowEntry = initDataFlowEntry();
+                //TODO FIX THIS
+                /*dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
+                //insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
                 dataFlowEntry->uses = NULL;
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -157,9 +155,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = NULL;
                 dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
+                //insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
 
-                dataFlowEntry->successors = makeLineList(line + 1);
+                dataFlowEntry->successors = makeLineList(line + 1);*/
             } break;
             case INSTRUCTION_RETURN: {
                 dataFlowEntry = initDataFlowEntry();
@@ -310,53 +308,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;
-            case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.loadTempFromParentScope.outputTemp);
-
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.currentScopeLoad.temporary);
-
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.currentScopeLoad.temporary);
-
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.inputTemp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = NULL;
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.inputTemp);
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
             case COMPLEX_SAVE_STATIC_LINK: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
@@ -416,54 +367,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->uses = initHeadedSortedSet();
 
                 insertSortedSet(dataFlowEntry->uses, (int)iter->val.art2const.temp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.currentScopeLoad.temporary);
-
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK_IN_SCOPE: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.loadTempFromParentScope.outputTemp);
-
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = NULL;
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.currentScopeSave.tempValue);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            } break;
-            case COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.inputTemp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = NULL;
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.inputTemp);
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;

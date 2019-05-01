@@ -14,7 +14,7 @@ size_t getSizeForType(Type *tpe) {
             return INTEGER_SIZE;
         } break;
         case typeBoolK: {
-            return 1;
+            return 8;
         } break;
         case typeArrayK: {
             //:( TODO

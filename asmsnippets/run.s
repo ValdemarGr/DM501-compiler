@@ -7,7 +7,7 @@ intprint:
 .global main
 .extern printf
 # METADATA_BEGIN_BODY_BLOCK
-# VAR r
+# VAR a
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -15,40 +15,23 @@ intprint:
 	subq $32, %rsp
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
+# VAR z
 # INSTRUCTION_CONST
-		mov $1, %rax
+		mov $5, %rax
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, -16(%rbp)
+# INSTRUCTION_CONST
+		mov $10, %rcx
+# INSTRUCTION_CONST
+		mov $1, %rdx
+# INSTRUCTION_ADD
+		add %rdx, %rcx
 # COMPLEX_ALLOCATE
 		push %rdi
 		push %rax
 		push %r15
 		push %r14
-		mov %rax, %r14
-		mov $0, %rdi
-		mov $12, %rax
-		syscall
-		push %rax
-		mov $16, %r15
-		imul %r14, %r15
-		add %r15, %rax
-		mov %rax, %rdi
-		mov $12, %rax
-		syscall
-		pop %rcx
-# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME
-        mov %rcx, -16(%rbp)
-# COMPLEX_ALLOCATE_END
-		pop %r14
-		pop %r15
-		pop %rax
-		pop %rdi
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# COMPLEX_ALLOCATE
-		push %rdi
-		push %rax
-		push %r15
-		push %r14
-		mov %rbx, %r14
+		mov %rcx, %r14
 		mov $0, %rdi
 		mov $12, %rax
 		syscall
@@ -59,34 +42,36 @@ intprint:
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
-		pop %rsi
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %rdi
+		pop %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -8(%rbp)
+# INSTRUCTION_CONST
+		mov $10, %rsi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -8(%rbp), %rdi
+# INSTRUCTION_CONST
+		mov $0, %r8
+# INSTRUCTION_CONST
+		mov $8, %r9
+# INSTRUCTION_CONST
+		mov $0, %r10
+# INSTRUCTION_ADD
+		add %r10, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rdi)
+		mov %rsi, (%rdi, %r8,1)
 # COMPLEX_ALLOCATE_END
 		pop %r14
 		pop %r15
 		pop %rax
 		pop %rdi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -8(%rbp), %r11
 # INSTRUCTION_CONST
-		mov $2, %r9
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r10
-
-		mov 0(%r10), %r10
-
-		mov %r9, (%r10)
-
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r13
-
-		mov 0(%r13), %r13
-
-        mov 0(%r13), %r13
-
+		mov $0, %r12
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r11, %r12,1), %r11
 # INSTRUCTION_WRITE
-		movq %r13, %rsi
+		movq %r11, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
