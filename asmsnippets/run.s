@@ -12,17 +12,22 @@ intprint:
 	main:
 	push %rbp
 	movq %rsp, %rbp
-	subq $32, %rsp
+	subq $48, %rsp
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
+# VAR o
 # INSTRUCTION_CONST
-		mov $1, %rax
+		mov $69, %rax
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, 24(%rbp)
+# INSTRUCTION_CONST
+		mov $1, %rcx
 # COMPLEX_ALLOCATE
 		push %rdi
 		push %rax
 		push %r15
 		push %r14
-		mov %rax, %r14
+		mov %rcx, %r14
 		mov $0, %rdi
 		mov $12, %rax
 		syscall
@@ -33,9 +38,9 @@ intprint:
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
-		pop %rcx
-# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME
-        mov %rcx, -16(%rbp)
+		pop %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, 16(%rbp)
 # COMPLEX_ALLOCATE_END
 		pop %r14
 		pop %r15
@@ -60,10 +65,12 @@ intprint:
 		mov $12, %rax
 		syscall
 		pop %rsi
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %rdi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov 16(%rbp), %rdi
+# INSTRUCTION_CONST
+		mov $0, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rdi)
+		mov %rsi, (%rdi, %r8,1)
 # COMPLEX_ALLOCATE_END
 		pop %r14
 		pop %r15
@@ -71,22 +78,46 @@ intprint:
 		pop %rdi
 # INSTRUCTION_CONST
 		mov $2, %r9
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r10
-
-		mov 0(%r10), %r10
-
-		mov %r9, (%r10)
-
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r13
-
-		mov 0(%r13), %r13
-
-        mov 0(%r13), %r13
-
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov 16(%rbp), %r10
+# INSTRUCTION_CONST
+		mov $0, %r11
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r10, %r11,1), %r10
+# INSTRUCTION_CONST
+		mov $0, %r12
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r9, (%r10, %r12,1)
+# INSTRUCTION_CONST
+		mov $77, %r13
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %r13, 32(%rbp)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov 16(%rbp), %r14
+# INSTRUCTION_CONST
+		mov $0, %r15
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r14, %r15,1), %r14
+# INSTRUCTION_CONST
+		mov $0, %rax
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r14, %rax,1), %r14
 # INSTRUCTION_WRITE
-		movq %r13, %rsi
+		movq %r14, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov 24(%rbp), %rcx
+# INSTRUCTION_WRITE
+		movq %rcx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov 32(%rbp), %rdx
+# INSTRUCTION_WRITE
+		movq %rdx, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf

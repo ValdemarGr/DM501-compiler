@@ -68,14 +68,10 @@ typedef enum {
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
     COMPLEX_CONSTRAIN_BOOLEAN,
-    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK,
-    COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK_IN_SCOPE,
-    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK,
-    COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE,
-    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK,
-    COMPLEX_MOVE_TEMPORARY_VALUE_TO_STACK_IN_SCOPE,
-    COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER,
-    COMPLEX_MOVE_TEMPORARY_VALUE_INTO_POINTER_IN_SCOPE,
+    COMPLEX_MOVE_TEMPORARY_INTO_STACK,
+    COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE,
+    COMPLEX_MOVE_TEMPORARY_FROM_STACK,
+    COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE,
     COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET,
     COMPLEX_SAVE_STATIC_LINK,
     COMPLEX_RESTORE_STATIC_LINK,
@@ -111,12 +107,16 @@ typedef struct Instructions {
         size_t tempToAbs;
         SymbolTable *tableForFunction;
         char* label;
+        struct { size_t offset; size_t tempToMove; } tempIntoStack;
+        struct { size_t offset; size_t tempToMove; size_t scopeToFindFrame; size_t intermediate; } tempIntoStackScope;
+        struct { size_t offset; size_t inputTemp; } tempFromStack;
+        struct { size_t offset; size_t inputTemp; size_t scopeToFindFrame; size_t intermediate; } tempFromStackScope;
         struct { size_t constant; size_t temp; } rightShift;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToMove; } moveToOffset;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
-        struct { size_t offsetTemp; size_t ptrTemp; } dereferenceOffset;
-        struct {SYMBOL* var; size_t temporary; size_t pointerOffset; } currentScopeLoad;
+        struct { size_t offsetTemp; size_t ptrTemp;  } dereferenceOffset;
+        struct {SYMBOL* var; size_t temporary; size_t pointerOffset;} currentScopeLoad;
         struct {SYMBOL *sym; size_t tempValue; size_t intermediate; size_t pointerOffset; } currentScopeSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; size_t pointerOffset; } loadTempFromParentScope;
         struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; size_t pointerOffset; } saveTempToParentScope;

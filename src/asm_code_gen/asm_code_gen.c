@@ -216,7 +216,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "pop %%rdx\n");
         } break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
+        /*case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
             fprintf(out, "# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE\n");
             printIndentation(out);
             fprintf(out, "leaq staticLink, %%%s\n",
@@ -238,7 +238,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq (%%%s), %%%s\n",
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp),
                     getNextRegister(instruction->val.loadTempFromParentScope.outputTemp));
-        } break;
+        } break;*/
         case COMPLEX_ALLOCATE: {
             fprintf(out, "# COMPLEX_ALLOCATE\n");
             printIndentation(out);
@@ -300,7 +300,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "leaq staticLink, %%rax\n\tmovq %%rbp, (%%rax)\n");
             currentIndendation++;
         } break;
-        case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
+        /*case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK: {
             fprintf(out, "# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK\n");
             SYMBOL *var = instruction->val.currentScopeLoad.var;
             printIndentation(out);
@@ -346,7 +346,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq %%%s, (%%%s)\n",
                     getNextRegister(instruction->val.saveTempToParentScope.inputTemp),
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp));
-        } break;
+        } break;*/
         case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
             fprintf(out, "# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME\n");
             //Fetch static link ptr
@@ -364,7 +364,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     (instruction->val.loadPtrToStaticLink.linkBaseOffset + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp));
         } break;
-        case COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK: {
+        /*case COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK: {
             fprintf(out, "# COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK\n");
             SYMBOL *var = instruction->val.currentScopeLoad.var;
             printIndentation(out);
@@ -414,7 +414,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.saveTempToParentScope.inputTemp),
                     (instruction->val.saveTempToParentScope.uniqueVariableId + 1) * POINTER_SIZE,
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp));
-        } break;
+        } break;*/
         case INSTRUCTION_RIGHT_SHIFT: {
             fprintf(out, "# INSTRUCTION_RIGHT_SHIFT\n");
             printIndentation(out);
@@ -483,7 +483,11 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.label);
         } break;
         case INSTRUCTION_MOVE: {
-
+            fprintf(out, "# INSTRUCTION_MOVE\n");
+            printIndentation(out);
+            fprintf(out, "mov %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_ADD_CONST: {
             fprintf(out, "# INSTRUCTION_ADD_CONST\n");
@@ -504,7 +508,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
             fprintf(out, "# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET\n");
             printIndentation(out);
-            fprintf(out, "mov (%%%s, %%%s, ), %%%s\n",
+            fprintf(out, "mov (%%%s, %%%s,1), %%%s\n",
                     getNextRegister(instruction->val.dereferenceOffset.ptrTemp),
                     getNextRegister(instruction->val.dereferenceOffset.offsetTemp),
                     getNextRegister(instruction->val.dereferenceOffset.ptrTemp));
@@ -512,18 +516,59 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_MOVE_TO_OFFSET: {
             fprintf(out, "# INSTRUCTION_MOVE_TO_OFFSET\n");
             printIndentation(out);
-            fprintf(out, "mov %%%s, (%%%s, %%%s,)\n",
+            fprintf(out, "mov %%%s, (%%%s, %%%s,1)\n",
                     getNextRegister(instruction->val.moveToOffset.tempToMove),
                     getNextRegister(instruction->val.moveToOffset.ptrTemp),
                     getNextRegister(instruction->val.moveToOffset.offsetTemp));
         } break;
         case INSTRUCTION_LEA_TO_OFFSET: {
-            fprintf(out, "# INSTRUCTION_MOVE_TO_OFFSET\n");
+
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK: {
+            fprintf(out, "# COMPLEX_MOVE_TEMPORARY_INTO_STACK\n");
             printIndentation(out);
-            fprintf(out, "leaq %%%s, (%%%s, %%%s,)\n",
-                    getNextRegister(instruction->val.leaToOffset.tempToLea),
-                    getNextRegister(instruction->val.leaToOffset.ptrTemp),
-                    getNextRegister(instruction->val.leaToOffset.offsetTemp));
+            fprintf(out, "mov %%%s, %zu(%%rbp)\n",
+                    getNextRegister(instruction->val.tempIntoStack.tempToMove),
+                    instruction->val.tempIntoStack.offset);
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE: {
+            fprintf(out, "# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE\n");
+            printIndentation(out);
+            fprintf(out, "leaq staticLink, %%%s\n",
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate));
+            printIndentation(out);
+            fprintf(out, "mov %zu(%%%s), %%%s\n",
+                    instruction->val.tempIntoStackScope.scopeToFindFrame,
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate),
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate));
+            printIndentation(out);
+            fprintf(out, "mov %%%s, %zu(%%%s)\n",
+                    getNextRegister(instruction->val.tempIntoStack.tempToMove),
+                    instruction->val.tempIntoStackScope.offset,
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate));
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
+            fprintf(out, "# COMPLEX_MOVE_TEMPORARY_FROM_STACK\n");
+            printIndentation(out);
+            fprintf(out, "mov %zu(%%rbp), %%%s\n",
+                    instruction->val.tempFromStack.offset,
+                    getNextRegister(instruction->val.tempFromStack.inputTemp));
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: {
+            fprintf(out, "# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE\n");
+            printIndentation(out);
+            fprintf(out, "leaq staticLink, %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate));
+            printIndentation(out);
+            fprintf(out, "mov %zu(%%%s), %%%s\n",
+                    instruction->val.tempFromStackScope.scopeToFindFrame,
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate),
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate));
+            printIndentation(out);
+            fprintf(out, "mov %zu(%%%s), %%%s\n",
+                    instruction->val.tempFromStackScope.offset,
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate),
+                    getNextRegister(instruction->val.tempFromStackScope.inputTemp));
         } break;
     }
 }
