@@ -40,6 +40,81 @@ Instructions *getLast(Instructions *current) {
     return iter;
 }
 
+
+typedef struct VDLResult {
+    VarDelList *head;
+    VarDelList *tail;
+} VDLResult;
+
+VDLResult *generateVDLForClassDecls(VarDelList *currentTail, Declaration *declaration) {
+    VDLResult *r = NEW(VDLResult);
+
+    switch (declaration->kind) {
+        case declVarK: {
+            if (currentTail == NULL) {
+                currentTail = NEW(VarDelList);
+                currentTail->identifier = declaration->val.varD.id;
+                currentTail->type = declaration->val.varD.type;
+                currentTail->next = NULL;
+                r->head = currentTail;
+                r->tail = currentTail;
+            } else {
+                VarDelList *next = NEW(VarDelList);
+                next->identifier = declaration->val.varD.id;
+                next->type = declaration->val.varD.type;
+                next->next = NULL;
+                currentTail->next = next;
+                r->tail = next;
+                r->head = currentTail;
+            }
+        } break;
+        case declVarsK: {
+            //For this
+            VarDelList *res = currentTail;
+            if (res == NULL) {
+                res = NEW(VarDelList);
+                res->identifier = declaration->val.varsD.var->val.varD.id;
+                res->type = declaration->val.varsD.var->val.varD.type;
+                res->next = NULL;
+                r->head = res;
+                r->tail = res;
+            } else {
+                VarDelList *next = NEW(VarDelList);
+                next->identifier = declaration->val.varsD.var->val.varD.id;
+                next->type = declaration->val.varsD.var->val.varD.type;
+                next->next = NULL;
+                res->next = next;
+                res = next;
+                r->head = currentTail;
+                r->tail = next;
+            }
+
+            //For the next
+            r->tail = generateVDLForClassDecls(res, declaration->val.varsD.next)->tail;
+        } break;
+        case declValK: {
+            if (currentTail == NULL) {
+                currentTail = NEW(VarDelList);
+                currentTail->identifier = declaration->val.valD.id;
+                currentTail->type = declaration->val.valD.tpe;
+                currentTail->next = NULL;
+                r->head = currentTail;
+                r->tail = currentTail;
+            } else {
+                VarDelList *next = NEW(VarDelList);
+                next->identifier = declaration->val.valD.id;
+                next->type = declaration->val.valD.tpe;
+                next->next = NULL;
+                currentTail->next = next;
+                r->tail = next;
+                r->head = currentTail;
+            }
+        } break;
+    }
+
+    return r;
+}
+
 size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *symbolTable) {
     switch (variable->kind) {
         case varIdK: {
@@ -120,7 +195,31 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
-            VarDelList *varDelList = unwrappedType->val.recordType.types;
+
+            VarDelList *varDelList = NULL;
+
+            if (unwrappedType->kind == typeRecordK) {
+                varDelList = unwrappedType->val.recordType.types;
+            } else {
+                //Must be class
+                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
+
+                VarDelList *vdlIter = NULL;
+
+                //Grab types, allowed decls are val and var
+                while (declarationList != NULL) {
+                    VDLResult *r = generateVDLForClassDecls(vdlIter, declarationList->declaration);
+
+                    if (varDelList == NULL) {
+                        varDelList = r->head;
+                    }
+
+                    vdlIter = r->tail;
+
+                    declarationList = declarationList->next;
+                }
+            }
             size_t sizeAccumulator = POINTER_SIZE;
 
             //Todo classes
@@ -230,10 +329,33 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
-            VarDelList *varDelList = unwrappedType->val.recordType.types;
-            size_t sizeAccumulator = POINTER_SIZE;
 
-            //Todo classes
+            VarDelList *varDelList = NULL;
+
+            if (unwrappedType->kind == typeRecordK) {
+                varDelList = unwrappedType->val.recordType.types;
+            } else {
+                //Must be class
+                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
+
+                VarDelList *vdlIter = NULL;
+
+                //Grab types, allowed decls are val and var
+                while (declarationList != NULL) {
+                    VDLResult *r = generateVDLForClassDecls(vdlIter, declarationList->declaration);
+
+                    if (varDelList == NULL) {
+                        varDelList = r->head;
+                    }
+
+                    vdlIter = r->tail;
+
+                    declarationList = declarationList->next;
+                }
+            }
+
+            size_t sizeAccumulator = POINTER_SIZE;
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
                 Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
