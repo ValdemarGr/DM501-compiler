@@ -8,7 +8,7 @@
 #include "../utils/sortedset.h"
 #include "../utils/memory.h"
 #include <stdbool.h>
-extern size_t currentTemporary;
+extern size_t maxTemporary;
 
 typedef struct Node {
     int  value;
@@ -18,7 +18,7 @@ typedef struct Node {
 
 
 int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
-    int max_size = currentTemporary;
+    int max_size = (int)maxTemporary;
     Node *graph = (Node *) malloc(sizeof(Node) * max_size);
     int *color_overview = (int *) malloc(sizeof(int) * max_size);
     memset(color_overview, -1, sizeof(int) * max_size);
@@ -31,28 +31,32 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
 
     //Fill Graph
     for (int set = 0; set < numberOfSets; ++set) {
-        SortedSet pos1 = *livenessResult[set];
-        while (pos1._next != NULL){
-            SortedSet pos2 = *livenessResult[set];
-            while (pos2._next != NULL){
-                if(pos1.data != pos2.data){
-                    Node *iterator = &graph[pos1.data];
+        SortedSet *pos1 = livenessResult[set];
+        pos1 = iterateSortedSet(pos1);
+        while (pos1 != NULL){
+            SortedSet *pos2 = livenessResult[set];
+            pos2 = iterateSortedSet(pos2);
+            while (pos2 != NULL){
+                if(pos1->data != pos2->data){
+                    Node *iterator = &graph[pos1->data];
                     while (iterator->next != NULL){
                         iterator = iterator->next;
-                        if(iterator->value == pos1.data){
+                        if(iterator->value == pos1->data){
                             break;
                         }
                         if(iterator->next == NULL){
                             Node *tempNode = NEW(Node);
-                            tempNode->value = pos2.data;
+                            tempNode->value = pos2->data;
                             tempNode->next = NULL;
                             iterator->next = tempNode;
-                            graph[pos2.data].value++;
+                            graph[pos2->data].value++;
                             break;
                         }
                     }
                 }
+                pos2 = iterateSortedSet(pos2);
             }
+            pos1 = iterateSortedSet(pos1);
         }
     }
 

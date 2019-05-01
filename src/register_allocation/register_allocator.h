@@ -22,7 +22,7 @@ typedef struct LivenessAnalysisResult {
     SortedSet **sets;
 } LivenessAnalysisResult;
 
-void simpleRegisterAllocation(Instructions *head);
+int *simpleRegisterAllocation(Instructions *head, int numberRegisters);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H
 

@@ -137,3 +137,7 @@ void freeSortedSet(SortedSet* sortedSet) {
         iter = next;
     }
 }
+
+SortedSet *iterateSortedSet(SortedSet* set) {
+    return set->_next;
+}

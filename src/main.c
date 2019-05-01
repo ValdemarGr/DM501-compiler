@@ -17,6 +17,8 @@
 int lineno;
 int stmDeclNum;
 Body *theexpression;
+size_t currentTemporary = 0;
+size_t maxTemporary = 0;
 extern FILE *yyin;
 bool printWithTypes = false;
 bool prettyPrint = false;
@@ -55,7 +57,7 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    //simpleRegisterAllocation(instructions);
+    simpleRegisterAllocation(instructions, 12);
 
     Instructions *iter = instructions;
     while (iter != NULL) {

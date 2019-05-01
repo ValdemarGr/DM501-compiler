@@ -9,17 +9,14 @@
 #include "../utils/sortedset.h"
 #include "register_allocator.h"
 
+typedef int Line;
+
 typedef struct IntBox {
     int value;
 } IntBox;
 
-typedef struct VariableList {
-    int id;
-    struct VariableList *next;
-} VariableList;
-
 typedef struct LineList {
-    int line;
+    Line line;
     struct LineList *next;
 } LineList;
 
@@ -29,6 +26,8 @@ typedef struct DataFlowEntry {
     SortedSet *in;
     SortedSet *out;
     LineList *successors;
+    IntBox *function;
+    Instructions *instruction;
 } DataFlowEntry;
 
 LivenessAnalysisResult *livenessAnalysis(Instructions *instructions);
