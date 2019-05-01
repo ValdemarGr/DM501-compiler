@@ -12,7 +12,8 @@ static size_t whileCounter = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
-size_t currentTemporary = 0;
+extern size_t currentTemporary;
+extern size_t maxTemporary;
 
 size_t generateInstructionsForExpression(Expression *expression, SymbolTable *symbolTable);
 
@@ -1260,6 +1261,9 @@ Instructions* generateInstructionTree(Body *body) {
     currentInstruction = currentInstruction->next;
     currentInstruction->kind = METADATA_END_BODY_BLOCK;
 
+    if (currentTemporary > maxTemporary) {
+        maxTemporary = currentTemporary;
+    }
     currentTemporary = restoreTemporary;
 
     return instructionHead;

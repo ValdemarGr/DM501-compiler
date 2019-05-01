@@ -26,6 +26,7 @@ IntBox *makeIntBox(int value) {
 LineList *makeLineList(int line) {
     LineList *list = NEW(LineList);
     list->line = line;
+    list->next = NULL;
     return list;
 }
 
@@ -55,6 +56,8 @@ Instructions *iter;
 DataFlowEntry *initDataFlowEntry() {
     DataFlowEntry *dataFlowEntry = NEW(DataFlowEntry);
     dataFlowEntry->instruction = iter;
+    dataFlowEntry->successors = NULL;
+    dataFlowEntry->function = NULL;
     line++;
     dataFlow[line] = dataFlowEntry;
     return dataFlowEntry;
@@ -102,8 +105,8 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
     iter = instructions;
 
-    dataFlow = malloc(sizeof(DataFlowEntry) * line);
     int dataFlowSize = count;
+    dataFlow = malloc(sizeof(DataFlowEntry) * dataFlowSize);
 
     line = -1;
     DataFlowEntry *dataFlowEntry = NULL;
@@ -475,7 +478,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
     LineList *successor;
 
-    for (int i = dataFlowSize - 1; i >= 0; --i) {
+    for (int i = dataFlowSize - 1; i >= 0; i--) {
         dataFlowEntry = dataFlow[i];
 
         dataFlowEntry->out = initHeadedSortedSet();
@@ -485,8 +488,8 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             if (successor->line < dataFlowSize) {
                 dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
                                                     dataFlow[successor->line]->in);
-                successor = successor->next;
             }
+            successor = successor->next;
         }
 
         if (dataFlowEntry->function != NULL) {

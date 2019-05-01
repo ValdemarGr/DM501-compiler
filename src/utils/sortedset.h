@@ -30,4 +30,6 @@ SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2);
 
 void freeSortedSet(SortedSet* sortedSet);
 
+SortedSet *iterateSortedSet(SortedSet* set);
+
 #endif //HELLO_SORTEDSET_H
