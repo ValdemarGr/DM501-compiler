@@ -630,17 +630,157 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.timesTemp = constNum;
             ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
+            size_t allocPtrTemp = currentTemporary;
             appendInstructions(ret);
             currentTemporary++;
 
-            Instructions *loadPtr = newInstruction();
-            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
-            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
-            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
-            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
-            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
-            appendInstructions(loadPtr);
-            currentTemporary++;
+            //Instructions for getting getting the address we need to move the pointer to
+            {
+                //For now we simply tell that temporary must be moved back to variable number x
+                //Fetch variable
+                Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, statement->symbolTable);
+
+                if (statement->val.allocateD.var->kind == varIdK) {
+                    Instructions *loadPtr = newInstruction();
+                    loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
+                    loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
+                    loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
+                    loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
+                    loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
+                    appendInstructions(loadPtr);
+                    currentTemporary++;
+                } else if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+                    Variable *variable = statement->val.allocateD.var;
+
+                    //Remove last var
+                    switch (variable->kind) {
+                        case arrayIndexK: {
+                            variable = variable->val.arrayIndexD.var;
+                        } break;
+                        case recordLookupK: {
+                            variable = variable->val.recordLookupD.var;
+                        } break;
+                    }
+
+                    //Now we must assign the ptr to the result
+                    //If rhs is primitive, then its a move else its a pointer move (so still a move)
+                    //We assume this is always correct because of type checking
+
+                    //variable now has a pointer and the final term should be loaded with the new value
+
+                    size_t temporaryWithPointer = generateInstructionsForVariableAccess(variable, statement->symbolTable);
+
+                    Variable *head = statement->val.assignmentD.var;
+
+                    size_t offsetTemp = 0;
+
+                    switch (head->kind) {
+                        case arrayIndexK: {
+                            size_t exprForIndexTemp = generateInstructionsForExpression(head->val.arrayIndexD.idx, statement->symbolTable);
+
+                            Type *typeForArray = unwrapVariable(head, statement->symbolTable);
+
+                            int elementSize = 0;
+
+                            if (typeForArray->kind == typeIntK || typeForArray->kind == typeBoolK) {
+                                elementSize = (int)getSizeForType(typeForArray);
+                            } else {
+                                elementSize = POINTER_SIZE;
+                            }
+
+                            Instructions *constForMul = newInstruction();
+                            constForMul->kind = INSTRUCTION_CONST;
+                            constForMul->val.constant.value = elementSize;
+                            constForMul->val.constant.temp = currentTemporary;
+                            int constForMulTemp = (int)currentTemporary;
+                            appendInstructions(constForMul);
+                            currentTemporary++;
+
+                            Instructions *mul = newInstruction();
+                            mul->kind = INSTRUCTION_MUL;
+                            mul->val.arithmetic2.source = (size_t)constForMulTemp;
+                            mul->val.arithmetic2.dest = exprForIndexTemp;
+                            appendInstructions(mul);
+
+                            offsetTemp = exprForIndexTemp;
+                        } break;
+                        case recordLookupK: {
+                            //Get id for record
+                            Variable *iter = head;
+
+                            int n = -1;
+
+                            while (iter->kind != varIdK) {
+                                switch (iter->kind) {
+                                    case arrayIndexK: {
+                                        iter = iter->val.arrayIndexD.var;
+                                    } break;
+                                    case recordLookupK: {
+                                        iter = iter->val.recordLookupD.var;
+                                    } break;
+                                }
+                                n++;
+                            }
+
+                            SYMBOL *baseRecordSymbol = getSymbol(statement->symbolTable, iter->val.idD.id);
+                            Type *Z = unwrapTypedef(baseRecordSymbol->value->val.typeD.tpe, statement->symbolTable);
+                            Variable *V = dropNVariable(head, n);
+
+                            while (n != 0) {
+                                Z = applyVariableToType(V, Z);
+                                n--;
+                                V = dropNVariable(head, n);
+                            }
+
+                            VarDelList *varDelList = Z->val.recordType.types;
+                            size_t sizeAccumulator = 0;
+
+                            //Todo classes
+
+                            while (strcmp(varDelList->identifier, head->val.recordLookupD.id) != 0) {
+                                Type *unwrapped = unwrapTypedef(varDelList->type, statement->symbolTable);
+                                //If int or bool we store them as primitives, else pointers
+                                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
+                                    sizeAccumulator = sizeAccumulator + getSizeForType(varDelList->type);
+                                } else {
+                                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
+                                }
+
+                                varDelList = varDelList->next;
+                            }
+
+                            Instructions *constOffset = newInstruction();
+                            constOffset->kind = INSTRUCTION_CONST;
+                            constOffset->val.constant.value = (int)sizeAccumulator;
+                            constOffset->val.constant.temp = currentTemporary;
+                            appendInstructions(constOffset);
+                            currentTemporary++;
+
+                            offsetTemp = currentTemporary - 1;
+                        } break;
+                        case varIdK: {
+                            Instructions *constOffset = newInstruction();
+                            constOffset->kind = INSTRUCTION_CONST;
+                            constOffset->val.constant.value = 0;
+                            constOffset->val.constant.temp = currentTemporary;
+                            appendInstructions(constOffset);
+                            currentTemporary++;
+
+                            offsetTemp = currentTemporary - 1;
+                        } break;
+                    }
+
+                    //Now we have our offset in offsetTemp
+
+                    //load
+                    Instructions *move = newInstruction();
+                    move->kind = INSTRUCTION_MOVE_TO_OFFSET;
+                    move->val.moveToOffset.ptrTemp = temporaryWithPointer;
+                    move->val.moveToOffset.offsetTemp = offsetTemp;
+                    move->val.moveToOffset.tempToMove = allocPtrTemp;
+                    appendInstructions(move);
+                }
+            }
 
             Instructions *endAlloc = newInstruction();
             endAlloc->kind = COMPLEX_ALLOCATE_END;
@@ -911,9 +1051,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
                         offsetTemp = exprForIndexTemp;
                     } break;
                     case recordLookupK: {
-                        //We want to remove the last to manually access
-                        Type *typeForRecord = unwrapVariable(head->val.recordLookupD.var, statement->symbolTable);
-
                         //Get id for record
                         Variable *iter = head;
 

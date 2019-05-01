@@ -10,7 +10,7 @@ void printIndentation(FILE *file) {
 }
 
 char *getNextRegister(size_t reg) {
-    switch (reg) {
+    switch (reg % 14) {
         case 0: {
             return "rax";
         } break;
@@ -516,6 +516,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.moveToOffset.tempToMove),
                     getNextRegister(instruction->val.moveToOffset.ptrTemp),
                     getNextRegister(instruction->val.moveToOffset.offsetTemp));
+        } break;
+        case INSTRUCTION_LEA_TO_OFFSET: {
+            fprintf(out, "# INSTRUCTION_MOVE_TO_OFFSET\n");
+            printIndentation(out);
+            fprintf(out, "leaq %%%s, (%%%s, %%%s,)\n",
+                    getNextRegister(instruction->val.leaToOffset.tempToLea),
+                    getNextRegister(instruction->val.leaToOffset.ptrTemp),
+                    getNextRegister(instruction->val.leaToOffset.offsetTemp));
         } break;
     }
 }

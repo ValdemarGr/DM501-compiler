@@ -63,6 +63,7 @@ typedef enum {
     INSTRUCTION_ADD_CONST,
     INSTRUCTION_MUL_CONST,
     INSTRUCTION_MOVE_TO_OFFSET,
+    INSTRUCTION_LEA_TO_OFFSET,
 
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
@@ -112,6 +113,7 @@ typedef struct Instructions {
         char* label;
         struct { size_t constant; size_t temp; } rightShift;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToMove; } moveToOffset;
+        struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
         struct { size_t offsetTemp; size_t ptrTemp; } dereferenceOffset;
         struct {SYMBOL* var; size_t temporary; size_t pointerOffset; } currentScopeLoad;

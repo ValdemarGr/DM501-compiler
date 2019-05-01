@@ -90,6 +90,20 @@ int writeError(Error *e) {
             break;
         default:
             break;
+        case VARIABLE_UNEXPECTED_CLASS:break;
+        case ILLEGAL_DOWNCAST:break;
+        case VALUE_IS_NULL:break;
+        case NULL_COMPARISON:break;
+        case CONST_REASSIGNMENT:break;
+        case INVALID_ASSIGMENT_TO_TYPE:break;
+        case INVALID_ASSIGMENT_TO_NULL:break;
+        case INVALID_TYPE:break;
+        case NOT_CLASS:break;
+        case TOO_MANY_GENERICS:break;
+        case TOO_FEW_GENERICS:break;
+        case CLASS_NOT_EXTENDED:break;
+        case NOT_TYPE:break;
+        case DECLARATIONS_IN_CLASS:break;
     }
 
     return e->error;

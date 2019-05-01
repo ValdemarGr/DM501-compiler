@@ -62,41 +62,44 @@ intprint:
 		mov $12, %rax
 		syscall
 		pop %rsi
-# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME
-		leaq staticLink, %rdi
-		movq 0(%rdi), %rdi
-		movq %rsi, -16(%rdi)
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+		mov -16(%rbp), %rdi
+		add $8, %rdi
+# INSTRUCTION_CONST
+		mov $0, %r8
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rsi, (%rdi, %r8,)
 # COMPLEX_ALLOCATE_END
 		pop %r14
 		pop %r15
 		pop %rax
 		pop %rdi
 # INSTRUCTION_CONST
-		mov $2, %r8
+		mov $2, %r9
 # COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r9
-		mov (%r9), %r9
-# INSTRUCTION_CONST
-		mov $0, %r10
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r9, %r10, ), %r9
+		mov -16(%rbp), %r10
+		mov (%r10), %r10
 # INSTRUCTION_CONST
 		mov $0, %r11
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %r8, (%r9, %r11,)
-# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-		mov -16(%rbp), %r12
-		mov (%r12), %r12
-# INSTRUCTION_CONST
-		mov $0, %r13
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r12, %r13, ), %r12
+		mov (%r10, %r11, ), %r10
+# INSTRUCTION_CONST
+		mov $0, %r12
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r9, (%r10, %r12,)
+# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
+		mov -16(%rbp), %r13
+		mov (%r13), %r13
 # INSTRUCTION_CONST
 		mov $0, %r14
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r12, %r14, ), %r12
+		mov (%r13, %r14, ), %r13
+# INSTRUCTION_CONST
+		mov $0, %r15
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r13, %r15, ), %r13
 # INSTRUCTION_WRITE
-		movq %r12, %rsi
+		movq %r13, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
