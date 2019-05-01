@@ -9,6 +9,7 @@ static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
 static size_t ifCounter = 0;
 static size_t whileCounter = 0;
+size_t returnReg = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -124,8 +125,6 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             //Check how far up the scope stack we need to look for the variable
             size_t frameStackDistanceToVariable = symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
-            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
-
             size_t offset = POINTER_SIZE;
 
             if (frameStackDistanceToVariable == 0) {
@@ -151,8 +150,6 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
-
-            Type *arrayOfType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable)->val.arrayType.type;
 
             size_t sizeAccumulator = POINTER_SIZE;
 
@@ -226,9 +223,6 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             //Todo classes
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
-                //If int or bool we store them as primitives, else pointers
-
                 varDelList = varDelList->next;
             }
 
@@ -403,6 +397,19 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 currentTemporary++;
             }
 
+            //First we prepare if we are lambda
+            size_t functionToCall = 0;
+            //We either want to directly call or invoke a lambda function based on the type of our symbol
+            if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
+                //This means we actually have to load the id as a variable
+                //Dummy variable for access
+                Variable *fvar = NEW(Variable);
+                fvar->val.idD.id = term->val.functionCallD.functionId;
+                fvar->kind = varIdK;
+
+                functionToCall = generateInstructionsForVariableAccess(fvar, symbolTable);
+            }
+
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
 
             while (expressionList != NULL) {
@@ -419,17 +426,41 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 expressionList = expressionList->next;
             }
 
-            Instructions *call = newInstruction();
-            call->kind = INSTRUCTION_FUNCTION_CALL;
-            call->val.function = term->val.functionCallD.functionId;
-            appendInstructions(call);
+            if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
+                Instructions *call = newInstruction();
+                call->kind = INSTRUCTION_REGISTER_CALL;
+                call->val.callRegister = functionToCall;
+                appendInstructions(call);
+            }  else if (symbol->value->kind == typeK && symbol->value->val.typeD.tpe->kind) {
+                //Pseudo var
+                Variable *tmpVar = NEW(Variable);
+                tmpVar->kind = varIdK;
+                tmpVar->val.idD.id = symbol->name;
 
+                //Get variable with function ptr
+                size_t fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
+
+                //Then call
+                Instructions *call = newInstruction();
+                call->kind = INSTRUCTION_REGISTER_CALL;
+                call->val.callRegister = fncPtrTemp;
+                appendInstructions(call);
+            } else {
+                Instructions *call = newInstruction();
+                call->kind = INSTRUCTION_FUNCTION_CALL;
+                call->val.function = term->val.functionCallD.functionId;
+                appendInstructions(call);
+            }
+
+            //Return value is in rax
+
+            /*
             //We have the return value on the stack
             Instructions *pop = newInstruction();
             pop->kind = INSTRUCTION_POP;
             pop->val.tempToPopInto = currentTemporary;
             appendInstructions(pop);
-            currentTemporary++;
+            currentTemporary++;*/
 
             if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
                 //We need to restore the static link
@@ -440,7 +471,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 appendInstructions(popLink);
                 currentTemporary++;
             }
-            return currentTemporary - 1;
+            return 0;
         } break;
         case parenthesesK: {
             return generateInstructionsForExpression(term->val.parenthesesD.expression, symbolTable);
@@ -552,13 +583,23 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case lambdaK: {
-            Instructions *beginGlobalBLock = newInstruction();
-            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-            appendInstructions(beginGlobalBLock);
-
             char *lamPrefix = "lambda_";
             char *buf = (char*)malloc(sizeof(char) * (strlen(lamPrefix) + 10));
             sprintf(buf, "lambda_%i", term->val.lambdaD.lambda->id);
+
+            //BIND THE LAMBDA BY LOADING FROM RIP
+            Instructions *lambdaLoad = newInstruction();
+            lambdaLoad->kind = COMPLEX_RIP_LAMBDA_LOAD;
+            lambdaLoad->val.lambdaLoad.temporary = currentTemporary;
+            lambdaLoad->val.lambdaLoad.lambdaGlobalName = buf;
+            appendInstructions(lambdaLoad);
+            size_t toReturn = currentTemporary;
+            currentTemporary++;
+
+            //CREATE THE LAMBDA IN GLOBAL SCOPE
+            Instructions *beginGlobalBLock = newInstruction();
+            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+            appendInstructions(beginGlobalBLock);
 
             Instructions *label = newInstruction();
             label->val.functionHead.label = buf;
@@ -582,11 +623,15 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
             size_t counter = 0;
 
+            size_t  regForMoving = currentTemporary;
+            currentTemporary++;
+
             while (declarationList != NULL) {
                 //Create arg instr for this argument
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
-                arg->val.argNum = counter;
+                arg->val.args.argNum = counter;
+                arg->val.args.moveReg = regForMoving;
                 appendInstructions(arg);
 
                 declarationList = declarationList->next;
@@ -598,6 +643,8 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             Instructions *endGlobalBLock = newInstruction();
             endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
             appendInstructions(endGlobalBLock);
+
+            return toReturn;
         } break;
         case classDowncastk: {
             //TODO
@@ -1167,11 +1214,15 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             VarDelList *declarationList = declaration->val.functionD.function->head->declarationList;
             size_t counter = 0;
 
+            size_t  regForMoving = currentTemporary;
+            currentTemporary++;
+
             while (declarationList != NULL) {
                 //Create arg instr for this argument
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
-                arg->val.argNum = counter;
+                arg->val.args.argNum = counter;
+                arg->val.args.moveReg = regForMoving;
                 appendInstructions(arg);
 
                 declarationList = declarationList->next;

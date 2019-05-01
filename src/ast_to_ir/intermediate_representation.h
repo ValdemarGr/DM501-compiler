@@ -64,6 +64,8 @@ typedef enum {
     INSTRUCTION_MUL_CONST,
     INSTRUCTION_MOVE_TO_OFFSET,
     INSTRUCTION_LEA_TO_OFFSET,
+    INSTRUCTION_REGISTER_CALL,
+
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
     COMPLEX_CONSTRAIN_BOOLEAN,
@@ -75,6 +77,7 @@ typedef enum {
     COMPLEX_SAVE_STATIC_LINK,
     COMPLEX_RESTORE_STATIC_LINK,
     COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME,
+    COMPLEX_RIP_LAMBDA_LOAD,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -98,7 +101,9 @@ typedef struct Instructions {
         struct { size_t ptrTemp; size_t timesTemp; size_t eleSize;} allocate;
         struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
-        size_t argNum; //METADATA_FUNCTION_ARGUMENT
+        size_t callRegister;
+        struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
+        struct {size_t argNum; size_t moveReg;} args; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
         size_t tempToReturn; //INSTRUCTION_RETURN
         size_t tempToConstrain; //COMPLEX_CONSTRAIN_BOOLEAN

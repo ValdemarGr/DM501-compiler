@@ -108,12 +108,21 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_RETURN: {
             fprintf(out, "# INSTRUCTION_RETURN\n");
             printIndentation(out);
-            fprintf(out, "mov %%%s, %%rax\n", getNextRegister(instruction->val.tempToReturn));
+            fprintf(out, "mov %%%s, %%rax\n",
+                    getNextRegister(instruction->val.tempToReturn));
             printIndentation(out);
             fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
         } break;
         case METADATA_FUNCTION_ARGUMENT: {
-            //fprintf(out, "; arg %zu at stack pos -%zu(%%rbp)\n", instruction->val.argNum, (instruction->val.argNum + 1) * POINTER_SIZE);
+            fprintf(out, "# INSTRUCTION_MINUS\n");
+            printIndentation(out);
+            fprintf(out, "mov %zu(%%rbp), %%%s\n",
+                    instruction->val.args.argNum * POINTER_SIZE + 16,
+                    getNextRegister(instruction->val.args.moveReg));
+            printIndentation(out);
+            fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
+                    getNextRegister(instruction->val.args.moveReg),
+                    (instruction->val.args.argNum + 1) * POINTER_SIZE);
         } break;
         case INSTRUCTION_MINUS: {
             fprintf(out, "# INSTRUCTION_MINUS\n");
@@ -123,7 +132,11 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_MUL: {
-
+            fprintf(out, "# INSTRUCTION_MUL\n");
+            printIndentation(out);
+            fprintf(out, "imul %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_DIV: {
 
@@ -570,6 +583,21 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.inputTemp));
         } break;
+        case INSTRUCTION_REGISTER_CALL:{
+            fprintf(out, "# INSTRUCTION_REGISTER_CALL\n");
+            printIndentation(out);
+            fprintf(out, "call *%%%s\n",
+                    getNextRegister(instruction->val.callRegister));
+        } break;
+        case METADATA_BEGIN_GLOBAL_BLOCK:break;
+        case METADATA_END_GLOBAL_BLOCK:break;
+        case COMPLEX_RIP_LAMBDA_LOAD: {
+            fprintf(out, "# COMPLEX_RIP_LAMBDA_LOAD\n");
+            printIndentation(out);
+            fprintf(out, "leaq %s(%%rip), %%%s\n",
+                    instruction->val.lambdaLoad.lambdaGlobalName,
+                    getNextRegister(instruction->val.lambdaLoad.temporary));
+        } break;
     }
 }
 
@@ -582,7 +610,7 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, ".global main\n");
     fprintf(file, ".extern printf\n");
 }
-
+/*
 void generateInstructionLLForGlobals(Instructions *afterBegin) {
     Instructions *iter = afterBegin;
 
@@ -613,7 +641,7 @@ void generateInstructionLLForGlobals(Instructions *afterBegin) {
         iter = iter->next;
     }
 
-}
+}*/
 
 void generate(FILE *file, Instructions* instructions) {
     generateScopeFrames(file);
@@ -643,8 +671,31 @@ void generate(FILE *file, Instructions* instructions) {
         current_instruction = current_instruction->next;
     }
 
-    current_instruction = instructions;
-    generateInstructionLLForGlobals(current_instruction);
-
     fprintf(file, ASM_TAIL);
+
+    current_instruction = instructions;
+    while (current_instruction != NULL) {
+
+        int globalCounter = 0;
+
+        if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+            globalCounter++;
+        }
+
+        while (globalCounter != 0) {
+            current_instruction = current_instruction->next;
+
+            if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+                globalCounter++;
+            }
+
+            generateInstruction(file, current_instruction);
+
+            if (current_instruction->kind == METADATA_END_GLOBAL_BLOCK) {
+                globalCounter--;
+            }
+        }
+        current_instruction = current_instruction->next;
+    }
+
 }

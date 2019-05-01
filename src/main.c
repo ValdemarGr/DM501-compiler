@@ -57,7 +57,7 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    simpleRegisterAllocation(instructions, 12);
+    //simpleRegisterAllocation(instructions, 12);
 
     Instructions *iter = instructions;
     while (iter != NULL) {

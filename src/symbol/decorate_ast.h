@@ -10,7 +10,7 @@
 #include "../error/error.h"
 #include <string.h>
 
-#define LAMBDA_SUFFIX "_lambda"
+#define LAMBDA_SUFFIX "lambda_"
 
 typedef struct Error Error;
 

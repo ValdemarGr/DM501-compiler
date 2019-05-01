@@ -1,3 +1,13 @@
-val b = (x: int, c: int): int -> {
-    return x + c;
-};
+
+func f(o: int): (int) -> int
+    var l: (int) -> int;
+    l = (x: int): int -> {
+        return x * 2;
+    };
+    return l;
+end f
+
+val b = f(5);
+
+write b(42);
+

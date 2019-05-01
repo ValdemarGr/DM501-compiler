@@ -13,7 +13,7 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
-                     VarDelList *params, Body *body, int stmDeclNum, bool isConst);
+                     VarDelList *params, Body *body, int stmDeclNum, bool isConst, bool isLambda, int lambdaId);
 
 void alterIdTypesToGenerics(Type *tpe, SymbolTable *symbolTable) {
     SYMBOL *symbol;
@@ -118,7 +118,9 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                                      lambda->declarationList,
                                      lambda->body,
                                      0,
-                                     false);
+                                     false,
+                                     true,
+                                     lambda->id);
                 }
 
                 expressionList = expressionList->next;
@@ -132,7 +134,7 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 }
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
-                      VarDelList *params, Body *body, int stmDeclNum, bool isConst) {
+                      VarDelList *params, Body *body, int stmDeclNum, bool isConst, bool isLambda, int lambdaId) {
     Value *value = NULL;
     SymbolTable *child = scopeSymbolTable(symbolTable);
     VarDelList *vdl = params;
@@ -143,6 +145,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
     value->kind = typeFunctionK;
     value->val.typeFunctionD.tpe = vdl;
     value->val.typeFunctionD.returnType = returnType;
+    value->val.typeFunctionD.isLambda = isLambda;
+    value->val.typeFunctionD.lambdaId = lambdaId;
 
     putSymbol(symbolTable,
               id,
@@ -249,7 +253,9 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->declarationList,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body,
                             statement->internal_stmDeclNum,
-                            false);
+                            false,
+                            true,
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->id);
 
                     //Remember to assign the id to the type
                     unwrapVariable(statement->val.assignmentD.var, symbolTable)->val.typeLambdaK.lambdaId =
@@ -312,7 +318,9 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
                                  lambda->declarationList,
                                  lambda->body,
                                  0,
-                                 false);
+                                 false,
+                                 true,
+                                 lambda->id);
             }
             break;
         default:
@@ -441,7 +449,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                              declaration->val.functionD.function->head->declarationList,
                              declaration->val.functionD.function->body,
                              declaration->internal_stmDeclNum,
-                             true);
+                             true,
+                             false,
+                             0);
 
             break;
         case declValK:
@@ -468,7 +478,9 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                                  lambda->declarationList,
                                  lambda->body,
                                  declaration->internal_stmDeclNum,
-                                 true);
+                                 true,
+                                 true,
+                                 lambda->id);
             } else  {
                 value = NEW(Value);
 

@@ -20,7 +20,7 @@ typedef struct Value {
     enum { typeK, typeFunctionK, symTypeClassK } kind;
     union {
         struct { struct Type *tpe; bool isTypedef; } typeD;
-        struct { struct VarDelList *tpe; struct Type *returnType; } typeFunctionD;
+        struct { struct VarDelList *tpe; struct Type *returnType; bool isLambda; int lambdaId; } typeFunctionD;
         struct {
             struct DeclarationList *declarationList;
             struct TypeList *extendedClasses;

@@ -2082,7 +2082,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             if (e != NULL) return e;
             break;
         case declValK:
-            if (declaration->val.valD.tpe->kind == typeLambdaK) {
+            if (declaration->val.valD.tpe->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind != functionCallK) {
                 //Expression can be lambda or an id that references to a lambda
                 if (declaration->val.valD.rhs->val.termD.term->kind == variableK) {
                     //Unpack the id and get the lambda
