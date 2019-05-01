@@ -1,0 +1,9 @@
+
+class ClassA {
+    val h = 5;
+};
+
+var a: class ClassA;
+allocate a;
+a.h = 77;
+write a.h;
