@@ -115,7 +115,7 @@ leaq staticLink, %rax
 	mov $12, %rax
 	syscall
 	push %rax
-	mov $93971510102607, %r15
+	mov $94206353562191, %r15
 	imul %r14, %r15
 	add %r15, %rax
 	mov %rax, %rdi

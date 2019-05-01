@@ -116,10 +116,6 @@ typedef struct Instructions {
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
         struct { size_t offsetTemp; size_t ptrTemp;  } dereferenceOffset;
-        struct {SYMBOL* var; size_t temporary; size_t pointerOffset;} currentScopeLoad;
-        struct {SYMBOL *sym; size_t tempValue; size_t intermediate; size_t pointerOffset; } currentScopeSave; //COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK
-        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t outputTemp; size_t pointerOffset; } loadTempFromParentScope;
-        struct { size_t scopeToFindFrame; size_t uniqueVariableId; size_t intermediateTemp; size_t inputTemp; size_t pointerOffset; } saveTempToParentScope;
         struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
         struct { size_t ptrTemp; size_t scopeToFindFrame; size_t linkBaseOffset; size_t  intermediateTemp;} loadPtrToStaticLink;
     } val;

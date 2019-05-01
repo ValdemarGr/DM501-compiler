@@ -143,9 +143,10 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;
             case INSTRUCTION_FUNCTION_LABEL: {
-                dataFlowEntry = initDataFlowEntry();
+                //TODO FIX THIS
+                /*dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
+                //insertSortedSet(dataFlowEntry->defines, (int)iter->val.saveTempToParentScope.intermediateTemp);
                 dataFlowEntry->uses = NULL;
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -153,9 +154,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = NULL;
                 dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
+                //insertSortedSet(dataFlowEntry->uses, (int)iter->val.saveTempToParentScope.intermediateTemp);
 
-                dataFlowEntry->successors = makeLineList(line + 1);
+                dataFlowEntry->successors = makeLineList(line + 1);*/
             } break;
             case INSTRUCTION_RETURN: {
                 dataFlowEntry = initDataFlowEntry();

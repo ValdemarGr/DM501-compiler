@@ -1022,7 +1022,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             generateInstructionsForVariableSave(tmpVar, declaration->symbolTable, expressionTemp);
         } break;
         case declClassK:
-            //TODO
+            //NONE
             break;
     }
 }
