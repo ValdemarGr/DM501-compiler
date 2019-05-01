@@ -27,6 +27,7 @@ typedef struct DataFlowEntry {
     SortedSet *out;
     LineList *successors;
     IntBox *function;
+    Instructions *instruction;
 } DataFlowEntry;
 
 LivenessAnalysisResult *livenessAnalysis(Instructions *instructions);

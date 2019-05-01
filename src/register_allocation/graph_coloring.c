@@ -18,7 +18,7 @@ typedef struct Node {
 
 
 int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
-    int max_size = currentTemporary;
+    int max_size = (int)currentTemporary;
     Node *graph = (Node *) malloc(sizeof(Node) * max_size);
     int *color_overview = (int *) malloc(sizeof(int) * max_size);
     memset(color_overview, -1, sizeof(int) * max_size);
