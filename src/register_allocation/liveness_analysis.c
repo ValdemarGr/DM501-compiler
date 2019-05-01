@@ -3,6 +3,7 @@
 //
 
 #include "liveness_analysis.h"
+#include "../utils/int_linked_list.h"
 
 size_t line = 0;
 
@@ -50,8 +51,8 @@ void freeDataFlowEntry(DataFlowEntry *entry) {
 
 DataFlowEntry *initDataFlowEntry() {
     DataFlowEntry *dataFlowEntry = NEW(DataFlowEntry);
-    dataFlow[line] = dataFlowEntry;
     line++;
+    dataFlow[line] = dataFlowEntry;
     return dataFlowEntry;
 }
 
@@ -60,7 +61,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
     ConstMap *labels = initMap(2048);
 
-    int line = 0;
+    Line line = 0;
     while(iter != NULL) {
         switch(iter->kind) {
             case METADATA_CREATE_MAIN: break;
@@ -100,7 +101,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     dataFlow = malloc(sizeof(DataFlowEntry) * line);
     int dataFlowSize = line;
 
-    line = 0;
+    line = -1;
     DataFlowEntry *dataFlowEntry = NULL;
     while (iter != NULL) {
         switch (iter->kind) {
@@ -229,15 +230,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;
-            case INSTRUCTION_FUNCTION_CALL: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = NULL;
-                dataFlowEntry->uses = NULL;
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-                int targetLine = ((IntBox*)get(labels, makeCharKey(iter->val.function))->v)->value;
-                dataFlowEntry->successors->next = makeLineList(targetLine);
-            } break;
             case INSTRUCTION_RIGHT_SHIFT: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
@@ -263,6 +255,21 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
                 dataFlowEntry->successors = makeLineList(line + 1);
+            } break;
+            case INSTRUCTION_FUNCTION_CALL: {
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = NULL;
+                dataFlowEntry->uses = NULL;
+                dataFlowEntry->successors = makeLineList(line + 1);
+
+                int targetLine = ((IntBox*)get(labels, makeCharKey(iter->val.function))->v)->value;
+                dataFlowEntry->function = makeIntBox(targetLine);
+
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = NULL;
+                dataFlowEntry->uses = NULL;
+                dataFlowEntry->successors = makeLineList(line + 1);
+
             } break;
             case INSTRUCTION_JE: {
                 dataFlowEntry = initDataFlowEntry();
@@ -478,6 +485,11 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
                                                 dataFlow[successor->line]->in);
             successor = successor->next;
+        }
+
+        if (dataFlowEntry->function != NULL) {
+            dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
+                                                dataFlow[dataFlowEntry->function->value]->in);
         }
 
         dataFlowEntry->in = sortedSetUnion(dataFlowEntry->uses,
