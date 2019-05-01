@@ -1,1 +1,1 @@
-add_library(Utilities memory.c map.c enum_to_string.c stack.c stack.h optional.c sortedset.c)
+add_library(Utilities memory.c map.c enum_to_string.c stack.c stack.h optional.c sortedset.c linked_list.c int_linked_list.c int_linked_list.h)
