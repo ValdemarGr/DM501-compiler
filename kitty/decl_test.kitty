@@ -30,6 +30,7 @@ else
 if a > 4 then
   write true;
 
+
 allocate list of length 16;
 
 allocate origin;
@@ -41,7 +42,8 @@ list[0] = false;
 list[1] = a > origin.y;
 
 i = 0;
-while i <= a do
+while i <= a do {
     write i;
     i = i + 1;
+}
 

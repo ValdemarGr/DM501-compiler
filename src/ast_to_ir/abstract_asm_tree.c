@@ -742,17 +742,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.tpe = type;
+            size_t allocPtrTemp = currentTemporary;
             appendInstructions(ret);
             currentTemporary++;
 
-            Instructions *loadPtr = newInstruction();
-            loadPtr->kind = COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME;
-            loadPtr->val.loadPtrToStaticLink.ptrTemp = currentTemporary - 1;
-            loadPtr->val.loadPtrToStaticLink.linkBaseOffset = symbol->uniqueIdForScope;
-            loadPtr->val.loadPtrToStaticLink.scopeToFindFrame = symbol->distanceFromRoot;
-            loadPtr->val.loadPtrToStaticLink.intermediateTemp = currentTemporary;
-            appendInstructions(loadPtr);
-            currentTemporary++;
+            //Instructions for getting getting the address we need to move the pointer to
+            generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp);
 
             Instructions *endAlloc = newInstruction();
             endAlloc->kind = COMPLEX_ALLOCATE_END;
