@@ -551,7 +551,52 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case lambdaK: {
-            //TODO
+            Instructions *beginGlobalBLock = newInstruction();
+            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+            appendInstructions(beginGlobalBLock);
+
+            char *lamPrefix = "lambda_";
+            char *buf = (char*)malloc(sizeof(char) * (strlen(lamPrefix) + 10));
+            sprintf(buf, "lambda_%i", term->val.lambdaD.lambda->id);
+
+            Instructions *label = newInstruction();
+            label->val.functionHead.label = buf;
+            label->val.functionHead.distance = symbolTable->distanceFromRoot + 1;
+            label->val.functionHead.temporary = currentTemporary;
+            label->kind = INSTRUCTION_FUNCTION_LABEL;
+            currentTemporary++;
+
+            SymbolTable *st = NULL;
+            if (term->val.lambdaD.lambda->body->declarationList != NULL) {
+                st = term->val.lambdaD.lambda->body->declarationList->declaration->symbolTable;
+            } else if (term->val.lambdaD.lambda->body->statementList != NULL) {
+                st = term->val.lambdaD.lambda->body->statementList->statement->symbolTable;
+            }
+            label->val.functionHead.tableForFunction = st;
+
+            //Readjust arg
+            appendInstructions(label);
+
+            //For args we generate metadata for later (maybe this is useless, who knows?)
+            VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
+            size_t counter = 0;
+
+            while (declarationList != NULL) {
+                //Create arg instr for this argument
+                Instructions *arg = newInstruction();
+                arg->kind = METADATA_FUNCTION_ARGUMENT;
+                arg->val.argNum = counter;
+                appendInstructions(arg);
+
+                declarationList = declarationList->next;
+                counter++;
+            }
+
+            generateInstructionTree(term->val.lambdaD.lambda->body);
+
+            Instructions *endGlobalBLock = newInstruction();
+            endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
+            appendInstructions(endGlobalBLock);
         } break;
         case classDowncastk: {
             //TODO
@@ -768,46 +813,6 @@ Instructions *newInstruction() {
     //ret->context = NULL;
 
     return ret;
-}
-
-//Assume var cannot be id
-Type *applyVariableToType(Variable *variable, Type *toApplyTo) {
-    switch (variable->kind) {
-        case arrayIndexK: {
-            return toApplyTo->val.arrayType.type;
-        } break;
-        case recordLookupK: {
-            VarDelList *iter = toApplyTo->val.recordType.types;
-
-            while (iter != NULL) {
-
-                if (strcmp(iter->identifier, variable->val.recordLookupD.id) == 0) {
-                    return iter->type;
-                }
-
-                iter = iter->next;
-            }
-
-        } break;
-    }
-}
-
-Variable *dropNVariable(Variable *variable, int n) {
-    Variable *iter = variable;
-
-    while (n != 0) {
-        switch (iter->kind) {
-            case arrayIndexK: {
-                iter = iter->val.arrayIndexD.var;
-            } break;
-            case recordLookupK: {
-                iter = iter->val.recordLookupD.var;
-            } break;
-        }
-        n--;
-    }
-
-    return iter;
 }
 
 void generateInstructionTreeForStatement(Statement *statement) {
@@ -1172,10 +1177,8 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
                 counter++;
             }
 
-
             generateInstructionTree(declaration->val.functionD.function->body);
-        }
-            break;
+        } break;
         case declValK: {
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.valD.id);
             Instructions *ret = newInstruction();
@@ -1223,8 +1226,10 @@ Instructions* generateInstructionTree(Body *body) {
     }
 
 
-    while (declarationList != NULL && declarationList->declaration->kind != declValK) {
-        generateInstructionTreeForDeclaration(declarationList->declaration);
+    while (declarationList != NULL) {
+        if (declarationList->declaration->kind != declValK) {
+            generateInstructionTreeForDeclaration(declarationList->declaration);
+        }
         declarationList = declarationList->next;
     }
 

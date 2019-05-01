@@ -27,7 +27,7 @@ typedef struct Type {
         struct { char *id;} idType;
         struct { struct Type *type; } arrayType;
         struct { VarDelList *types; } recordType;
-        struct { TypeList *typeList; Type *returnType; } typeLambdaK;
+        struct { TypeList *typeList; Type *returnType; int lambdaId; } typeLambdaK;
         struct { char *classId; TypeList *genericBoundValues; } typeClass;
         struct { char *genericName; char *subType; int typeIndex; } typeGeneric;
     } val;
@@ -55,6 +55,7 @@ typedef struct Lambda {
     VarDelList *declarationList;
     Type *returnType;
     Body *body;
+    int id;
 } Lambda;
 
 typedef struct Function {

@@ -583,14 +583,68 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, ".extern printf\n");
 }
 
+void generateInstructionLLForGlobals(Instructions *afterBegin) {
+    Instructions *iter = afterBegin;
+
+    while (iter != NULL) {
+
+        int beginCounter = 0;
+
+        if (afterBegin->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+            beginCounter++;
+        }
+
+        while (beginCounter != 0) {
+            if (afterBegin->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+                beginCounter++;
+            }
+
+            generateInstructionLLForGlobals(iter->next);
+
+            if (afterBegin->kind == METADATA_END_GLOBAL_BLOCK) {
+                beginCounter--;
+            }
+        }
+
+        if (afterBegin->kind == METADATA_END_GLOBAL_BLOCK) {
+            return;
+        }
+
+        iter = iter->next;
+    }
+
+}
+
 void generate(FILE *file, Instructions* instructions) {
     generateScopeFrames(file);
 
     Instructions* current_instruction = instructions;
     while (current_instruction != NULL) {
+        //Skip until global ends
+        int globalCounter = 0;
+
+        if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+            globalCounter++;
+        }
+
+        while (globalCounter != 0) {
+            current_instruction = current_instruction->next;
+
+            if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+                globalCounter++;
+            }
+
+            if (current_instruction->kind == METADATA_END_GLOBAL_BLOCK) {
+                globalCounter--;
+            }
+        }
+
         generateInstruction(file, current_instruction);
         current_instruction = current_instruction->next;
     }
+
+    current_instruction = instructions;
+    generateInstructionLLForGlobals(current_instruction);
 
     fprintf(file, ASM_TAIL);
 }

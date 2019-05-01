@@ -6,6 +6,7 @@
 extern int lineno;
 extern int stmDeclNum;
 int typeIndex = 0;
+int lambdaId = 0;
 
 TypeList *makeTypeList(TypeList* next, Type *elem) {
     TypeList *tpeLst = NEW(TypeList);
@@ -341,6 +342,8 @@ Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
     lambda->returnType = returnType;
     lambda->body = body;
     lambda->declarationList = varDelList;
+    lambda->id = lambdaId;
+    lambdaId++;
 
     return lambda;
 }

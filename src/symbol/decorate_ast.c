@@ -250,6 +250,10 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->body,
                             statement->internal_stmDeclNum,
                             false);
+
+                    //Remember to assign the id to the type
+                    unwrapVariable(statement->val.assignmentD.var, symbolTable)->val.typeLambdaK.lambdaId =
+                            statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->id;
                 }
             }
             //If the rhs is an expression that contains a function call we have to check if the call itself
@@ -389,7 +393,6 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             value->val.typeD.tpe = declaration->val.varD.type;
             value->val.typeD.isTypedef = false;
 
-
             putSymbol(symbolTable,
                       declaration->val.varD.id,
                       value,
@@ -457,6 +460,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
+                declaration->val.valD.tpe->val.typeLambdaK.lambdaId = lambda->id;
 
                 decorateFunction(declaration->val.valD.id,
                                  lambda->returnType,
