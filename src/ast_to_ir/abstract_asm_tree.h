@@ -10,6 +10,7 @@
 #include "../utils/stack.h"
 #include "../type_checker/type_checker.h"
 #include "../asm_code_gen/sizes.h"
+#include "../ast/tree.h"
 
 typedef enum {
     ACCUMULATE

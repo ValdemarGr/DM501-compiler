@@ -45,21 +45,12 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
         case varIdK: {
             SYMBOL *symbol = getSymbol(symbolTable, variable->val.idD.id);
 
-            //This ID should represent the variable number in the scope
-            size_t uniqueVariableId = symbol->uniqueIdForScope;
-
             //Check how far up the scope stack we need to look for the variable
             size_t frameStackDistanceToVariable = symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
             Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
-            size_t offset = 0;
-
-            if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
-                offset = getSizeForType(unwrapped);
-            } else {
-                offset = POINTER_SIZE;
-            }
+            size_t offset = POINTER_SIZE;
 
             if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
@@ -87,27 +78,36 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             Type *arrayOfType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable)->val.arrayType.type;
 
-            size_t sizeAccumulator = 0;
-
-            if (arrayOfType->kind == typeIntK || arrayOfType->kind == typeBoolK) {
-                sizeAccumulator = getSizeForType(arrayOfType);
-            } else {
-                sizeAccumulator = POINTER_SIZE;
-            }
+            size_t sizeAccumulator = POINTER_SIZE;
 
             Instructions *tpeConst = newInstruction();
             tpeConst->kind = INSTRUCTION_CONST;
             tpeConst->val.constant.temp = currentTemporary;
             tpeConst->val.constant.value = (int)sizeAccumulator;
+            size_t typeSizeTemp = currentTemporary;
             currentTemporary++;
             appendInstructions(tpeConst);
 
+            //Add one for space
+            Instructions *constOne = newInstruction();
+            constOne->kind = INSTRUCTION_CONST;
+            constOne->val.constant.value = 1;
+            constOne->val.constant.temp= currentTemporary;
+            appendInstructions(constOne);
+            currentTemporary++;
+
+            //Reserve space for size
+            Instructions *add = newInstruction();
+            add->kind = INSTRUCTION_ADD;
+            add->val.arithmetic2.source = currentTemporary - 1;
+            add->val.arithmetic2.dest = exprTemp;
+            appendInstructions(add);
+
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
-            mulOffset->val.arithmetic2.source = currentTemporary - 1;
+            mulOffset->val.arithmetic2.source = typeSizeTemp;
             mulOffset->val.arithmetic2.dest = exprTemp;
             appendInstructions(mulOffset);
-
 
             Instructions *ptrAccess = newInstruction();
             ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
@@ -121,18 +121,13 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
             VarDelList *varDelList = unwrappedType->val.recordType.types;
-            size_t sizeAccumulator = 0;
+            size_t sizeAccumulator = POINTER_SIZE;
 
             //Todo classes
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
                 Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
                 //If int or bool we store them as primitives, else pointers
-                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
-                    sizeAccumulator = sizeAccumulator + getSizeForType(varDelList->type);
-                } else {
-                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-                }
 
                 varDelList = varDelList->next;
             }
@@ -154,7 +149,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
     }
 }
 
-void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbolTable, size_t tempToSave) {
+void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbolTable, size_t tempToSave, bool forArrayLen) {
     switch (variable->kind) {
         case varIdK: {
             SYMBOL *symbol = getSymbol(symbolTable, variable->val.idD.id);
@@ -164,13 +159,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
 
-            size_t offset = 0;
-
-            if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
-                offset = getSizeForType(unwrapped);
-            } else {
-                offset = POINTER_SIZE;
-            }
+            size_t offset = POINTER_SIZE;
 
             if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
@@ -194,27 +183,41 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             Type *arrayOfType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable)->val.arrayType.type;
 
-            size_t sizeAccumulator = 0;
-
-            if (arrayOfType->kind == typeIntK || arrayOfType->kind == typeBoolK) {
-                sizeAccumulator = getSizeForType(arrayOfType);
-            } else {
-                sizeAccumulator = POINTER_SIZE;
-            }
+            size_t sizeAccumulator = POINTER_SIZE;
 
             Instructions *tpeConst = newInstruction();
             tpeConst->kind = INSTRUCTION_CONST;
             tpeConst->val.constant.temp = currentTemporary;
             tpeConst->val.constant.value = (int)sizeAccumulator;
+            size_t typeSizeTemp = currentTemporary;
             currentTemporary++;
             appendInstructions(tpeConst);
 
+            int toAdd = 1;
+            if (forArrayLen) {
+                toAdd = 0;
+            }
+
+            //Add one for space
+            Instructions *constOne = newInstruction();
+            constOne->kind = INSTRUCTION_CONST;
+            constOne->val.constant.value = toAdd;
+            constOne->val.constant.temp= currentTemporary;
+            appendInstructions(constOne);
+            currentTemporary++;
+
+            //Reserve space for size
+            Instructions *add = newInstruction();
+            add->kind = INSTRUCTION_ADD;
+            add->val.arithmetic2.source = currentTemporary - 1;
+            add->val.arithmetic2.dest = exprTemp;
+            appendInstructions(add);
+
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
-            mulOffset->val.arithmetic2.source = currentTemporary - 1;
+            mulOffset->val.arithmetic2.source = typeSizeTemp;
             mulOffset->val.arithmetic2.dest = exprTemp;
             appendInstructions(mulOffset);
-
 
             Instructions *ptrAccess = newInstruction();
             ptrAccess->kind = INSTRUCTION_MOVE_TO_OFFSET;
@@ -228,18 +231,13 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
             VarDelList *varDelList = unwrappedType->val.recordType.types;
-            size_t sizeAccumulator = 0;
+            size_t sizeAccumulator = POINTER_SIZE;
 
             //Todo classes
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
                 Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
                 //If int or bool we store them as primitives, else pointers
-                if (unwrapped->kind == typeIntK || unwrapped->kind == typeBoolK) {
-                    sizeAccumulator = sizeAccumulator + getSizeForType(varDelList->type);
-                } else {
-                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-                }
 
                 varDelList = varDelList->next;
             }
@@ -338,44 +336,61 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //TODO DO this manually or MMX SSSE3 PABSD OR USE PROVIDED METHOD
             // mask = n >> (sizeof(int) * bitsof(char) - 1)
             // (mask + n)^mask
+            Type *e = evaluateExpressionType(term->val.absD.expression, symbolTable);
             size_t tempToAbsOn = generateInstructionsForExpression(term->val.absD.expression, symbolTable);
 
-            //We must evaluate (sizeof(int) * bitsof(char) - 1)
-            int bitsofChar = 8;
-            int sizeInt = INTEGER_SIZE;
-            int maskSize = bitsofChar * sizeInt - 1;
+            if (e->kind == typeArrayK) {
+                Instructions *num = newInstruction();
+                num->kind = INSTRUCTION_CONST;
+                num->val.constant.value = 0;
+                num->val.constant.temp = currentTemporary;
+                appendInstructions(num);
+                currentTemporary++;
 
-            //Make copy of n
-            Instructions *copyN = newInstruction();
-            copyN->kind = INSTRUCTION_COPY;
-            copyN->val.arithmetic2.source = tempToAbsOn; //maskConstant
-            copyN->val.arithmetic2.dest = currentTemporary;
-            appendInstructions(copyN);
-            size_t maskTemp = currentTemporary;
-            currentTemporary++;
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+                ptrAccess->val.dereferenceOffset.ptrTemp = tempToAbsOn;
+                ptrAccess->val.dereferenceOffset.offsetTemp = currentTemporary - 1;
+                appendInstructions(ptrAccess);
+                return tempToAbsOn;
+            } else {
+                //We must evaluate (sizeof(int) * bitsof(char) - 1)
+                int bitsofChar = 8;
+                int sizeInt = INTEGER_SIZE;
+                int maskSize = bitsofChar * sizeInt - 1;
 
-            // Bitmask right arithmetic shift
-            Instructions *mask = newInstruction();
-            mask->kind = INSTRUCTION_RIGHT_SHIFT;
-            mask->val.rightShift.constant = maskSize; //maskConstant
-            mask->val.rightShift.temp = maskTemp; //Ntemp is now the mask
-            appendInstructions(mask);
+                //Make copy of n
+                Instructions *copyN = newInstruction();
+                copyN->kind = INSTRUCTION_COPY;
+                copyN->val.arithmetic2.source = tempToAbsOn; //maskConstant
+                copyN->val.arithmetic2.dest = currentTemporary;
+                appendInstructions(copyN);
+                size_t maskTemp = currentTemporary;
+                currentTemporary++;
 
-            //Addition (mask + n) we can corrupt n
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = maskTemp; //add mask
-            add->val.arithmetic2.dest = tempToAbsOn;
-            appendInstructions(add);
+                // Bitmask right arithmetic shift
+                Instructions *mask = newInstruction();
+                mask->kind = INSTRUCTION_RIGHT_SHIFT;
+                mask->val.rightShift.constant = maskSize; //maskConstant
+                mask->val.rightShift.temp = maskTemp; //Ntemp is now the mask
+                appendInstructions(mask);
 
-            //mask + n now resides in tempToAbsOn and mask in current - 1
-            Instructions *xor = newInstruction();
-            xor->kind = INSTRUCTION_XOR;
-            xor->val.arithmetic2.source = tempToAbsOn;
-            xor->val.arithmetic2.dest = maskTemp;
-            appendInstructions(xor);
+                //Addition (mask + n) we can corrupt n
+                Instructions *add = newInstruction();
+                add->kind = INSTRUCTION_ADD;
+                add->val.arithmetic2.source = maskTemp; //add mask
+                add->val.arithmetic2.dest = tempToAbsOn;
+                appendInstructions(add);
 
-            return currentTemporary - 1;
+                //mask + n now resides in tempToAbsOn and mask in current - 1
+                Instructions *xor = newInstruction();
+                xor->kind = INSTRUCTION_XOR;
+                xor->val.arithmetic2.source = tempToAbsOn;
+                xor->val.arithmetic2.dest = maskTemp;
+                appendInstructions(xor);
+
+                return currentTemporary - 1;
+            }
         } break;
         case numK: {
             Instructions *num = newInstruction();
@@ -711,21 +726,19 @@ void generateInstructionTreeForStatement(Statement *statement) {
             size_t constNum = currentTemporary;
             currentTemporary++;
 
-            SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
-
             //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
             Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = constNum;
             ret->val.allocate.ptrTemp = currentTemporary;
-            ret->val.allocate.tpe = type;
+            ret->val.allocate.eleSize = 8;
             size_t allocPtrTemp = currentTemporary;
             appendInstructions(ret);
             currentTemporary++;
 
             //Instructions for getting getting the address we need to move the pointer to
-            generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp);
+            generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp, false);
 
             Instructions *endAlloc = newInstruction();
             endAlloc->kind = COMPLEX_ALLOCATE_END;
@@ -733,21 +746,56 @@ void generateInstructionTreeForStatement(Statement *statement) {
         } break;
         case statAllocateLenK: {
             size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+
+            Instructions *constOne = newInstruction();
+            constOne->kind = INSTRUCTION_CONST;
+            constOne->val.constant.value = 1;
+            constOne->val.constant.temp= currentTemporary;
+            size_t constOneTemp = currentTemporary;
+            appendInstructions(constOne);
+            currentTemporary++;
+
+            //Reserve space for size
+            Instructions *add = newInstruction();
+            add->kind = INSTRUCTION_ADD;
+            add->val.arithmetic2.source = constOneTemp;
+            add->val.arithmetic2.dest = lenExp;
+            appendInstructions(add);
+
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
-            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
-            Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.ptrTemp = currentTemporary;
-            ret->val.allocate.tpe = type;
+            ret->val.allocate.eleSize = POINTER_SIZE;
             size_t allocPtrTemp = currentTemporary;
             appendInstructions(ret);
             currentTemporary++;
 
             //Instructions for getting getting the address we need to move the pointer to
-            generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp);
+            generateInstructionsForVariableSave(statement->val.allocateLenD.var, statement->symbolTable, allocPtrTemp, false);
+
+            //Artificial var
+            Variable *artiVar = NEW(Variable);
+            artiVar->kind = arrayIndexK;
+            artiVar->val.arrayIndexD.var = statement->val.allocateLenD.var;
+
+            //Arti term
+            Term *term = NEW(Term);
+            term->kind = numK;
+            term->val.numD.num = 0;
+
+            //Artificial 0 expression
+            Expression *artiExp = NEW(Expression);
+            artiExp->kind = termK;
+            artiExp->val.termD.term = term;
+            artiVar->val.arrayIndexD.idx = artiExp;
+
+            lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+
+            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);
 
             Instructions *endAlloc = newInstruction();
             endAlloc->kind = COMPLEX_ALLOCATE_END;
@@ -929,7 +977,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             size_t expressionTemp = generateInstructionsForExpression(statement->val.assignmentD.exp, statement->symbolTable);
 
-            generateInstructionsForVariableSave(statement->val.assignmentD.var, statement->symbolTable, expressionTemp);
+            generateInstructionsForVariableSave(statement->val.assignmentD.var, statement->symbolTable, expressionTemp, false);
         } break;
     }
 }
@@ -1019,7 +1067,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             tmpVar->kind = varIdK;
             tmpVar->val.idD.id = declaration->val.valD.id;
 
-            generateInstructionsForVariableSave(tmpVar, declaration->symbolTable, expressionTemp);
+            generateInstructionsForVariableSave(tmpVar, declaration->symbolTable, expressionTemp, false);
         } break;
         case declClassK:
             //NONE
@@ -1076,7 +1124,6 @@ Instructions* generateInstructionTree(Body *body) {
     while (declarationList != NULL) {
         if (declarationList->declaration->kind == declValK) {
             generateInstructionTreeForDeclaration(declarationList->declaration);
-            declarationList = declarationList->next;
         }
 
         declarationList = declarationList->next;

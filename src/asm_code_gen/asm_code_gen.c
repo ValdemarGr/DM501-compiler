@@ -263,7 +263,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "push %%rax\n");
             printIndentation(out);
             fprintf(out, "mov $%zu, %%r15\n",
-                    getSizeForType(instruction->val.allocate.tpe));
+                    instruction->val.allocate.eleSize);
             printIndentation(out);
             fprintf(out, "imul %%r14, %%r15\n");
             printIndentation(out);
@@ -527,7 +527,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_MOVE_TEMPORARY_INTO_STACK: {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_INTO_STACK\n");
             printIndentation(out);
-            fprintf(out, "mov %%%s, %zu(%%rbp)\n",
+            fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
                     getNextRegister(instruction->val.tempIntoStack.tempToMove),
                     instruction->val.tempIntoStack.offset);
         } break;
@@ -542,7 +542,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate),
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
             printIndentation(out);
-            fprintf(out, "mov %%%s, %zu(%%%s)\n",
+            fprintf(out, "mov %%%s, -%zu(%%%s)\n",
                     getNextRegister(instruction->val.tempIntoStack.tempToMove),
                     instruction->val.tempIntoStackScope.offset,
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
@@ -550,7 +550,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_FROM_STACK\n");
             printIndentation(out);
-            fprintf(out, "mov %zu(%%rbp), %%%s\n",
+            fprintf(out, "mov -%zu(%%rbp), %%%s\n",
                     instruction->val.tempFromStack.offset,
                     getNextRegister(instruction->val.tempFromStack.inputTemp));
         } break;
@@ -565,7 +565,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
-            fprintf(out, "mov %zu(%%%s), %%%s\n",
+            fprintf(out, "mov -%zu(%%%s), %%%s\n",
                     instruction->val.tempFromStackScope.offset,
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.inputTemp));
