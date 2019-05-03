@@ -8,6 +8,7 @@
 #include "symbol.h"
 
 int lambdaCount = 0;
+bool inClassContext = false;
 
 void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -221,6 +222,7 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             if (statement->val.assignmentD.exp->kind == termK) {
                 if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
                     //Give the lambda a name for future reference
+                    statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->inClassContext = inClassContext;
                     int suffix_len = strlen(LAMBDA_SUFFIX);
 
                     //Unwrap the whole variable
@@ -299,6 +301,7 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
 
             } else if (expression->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = expression->val.termD.term->val.lambdaD.lambda;
+                lambda->inClassContext = inClassContext;
                 char intToString[16];
 
                 sprintf(intToString, "%i", lambdaCount);
@@ -470,6 +473,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
+                lambda->inClassContext = inClassContext;
                 declaration->val.valD.tpe->val.typeLambdaK.lambdaId = lambda->id;
 
                 decorateFunction(declaration->val.valD.id,
@@ -497,6 +501,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             break;
         case declClassK:
+            inClassContext = true;
             value = NEW(Value);
             SymbolTable *newSt = scopeSymbolTable(symbolTable);
 
@@ -631,6 +636,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 declarationList = declarationList->next;
             }
 
+            inClassContext = false;
             break;
         default:
             break;

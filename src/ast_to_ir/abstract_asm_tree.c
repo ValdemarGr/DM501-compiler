@@ -218,11 +218,12 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                     declarationList = declarationList->next;
                 }
             }
-            size_t sizeAccumulator = POINTER_SIZE;
+            size_t sizeAccumulator = 0;
 
             //Todo classes
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
+                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
                 varDelList = varDelList->next;
             }
 
@@ -350,11 +351,12 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
                 }
             }
 
-            size_t sizeAccumulator = POINTER_SIZE;
+            size_t sizeAccumulator = 0;
 
             while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
+                //Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
                 //If int or bool we store them as primitives, else pointers
+                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
 
                 varDelList = varDelList->next;
             }
@@ -595,6 +597,8 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(lambdaLoad);
             size_t toReturn = currentTemporary;
             currentTemporary++;
+
+            //Save ptr to class context
 
             //CREATE THE LAMBDA IN GLOBAL SCOPE
             Instructions *beginGlobalBLock = newInstruction();
@@ -902,18 +906,66 @@ void generateInstructionTreeForStatement(Statement *statement) {
             currentTemporary++;
 
             //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
-            Type *type = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            //TODO IF CLASS CONSTRUCT BY ASSIGNING VALUES
+            Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+
+            size_t fieldCount = 0;
+
+            if (tpe->kind == typeRecordK) {
+                //Record
+                VarDelList *iter = tpe->val.recordType.types;
+
+                while (iter != NULL) {
+                    fieldCount++;
+                    iter = iter->next;
+                }
+            } else {
+                //Class
+                SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+
+                DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
+
+                while (iter != NULL) {
+                    fieldCount++;
+                    iter = iter->next;
+                }
+            }
+
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = constNum;
             ret->val.allocate.ptrTemp = currentTemporary;
-            ret->val.allocate.eleSize = 8;
+            ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
             size_t allocPtrTemp = currentTemporary;
             appendInstructions(ret);
             currentTemporary++;
 
             //Instructions for getting getting the address we need to move the pointer to
             generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp, false);
+
+            //If there are any vals in the class "construct" them
+            if (tpe->kind == typeClassK) {
+                SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+
+                DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
+
+                while (iter != NULL) {
+                    if (iter->declaration->kind == declValK) {
+                        size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
+
+                        //Create artificial variable for access
+                        //Val access
+                        Variable *valAccess = NEW(Variable);
+                        valAccess->kind = recordLookupK;
+                        valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
+                        valAccess->val.recordLookupD.var = statement->val.allocateD.var;
+
+                        generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                    }
+
+                    iter = iter->next;
+                }
+            }
 
             Instructions *endAlloc = newInstruction();
             endAlloc->kind = COMPLEX_ALLOCATE_END;

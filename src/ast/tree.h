@@ -56,6 +56,7 @@ typedef struct Lambda {
     Type *returnType;
     Body *body;
     int id;
+    bool inClassContext;
 } Lambda;
 
 typedef struct Function {

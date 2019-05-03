@@ -344,6 +344,7 @@ Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
     lambda->declarationList = varDelList;
     lambda->id = lambdaId;
     lambdaId++;
+    lambda->inClassContext = false;
 
     return lambda;
 }
