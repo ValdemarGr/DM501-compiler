@@ -59,11 +59,6 @@ int compile_file(FILE *file) {
 
     //simpleRegisterAllocation(instructions, 12);
 
-    Instructions *iter = instructions;
-    while (iter != NULL) {
-        iter = iter->next;
-    }
-
     //peephole(instructions);
 
     generate(stdout, instructions);

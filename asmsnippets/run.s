@@ -20,7 +20,6 @@ intprint:
 		mov $1, %rax
 # COMPLEX_ALLOCATE
 		push %rdi
-		push %rax
 		push %r15
 		push %r14
 		mov %rax, %r14
@@ -34,79 +33,93 @@ intprint:
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
-		pop %rcx
+		pop %rax
+		pop %r14
+		pop %r15
+		pop %rdi
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rcx, -16(%rbp)
+		mov %rax, -16(%rbp)
 # INSTRUCTION_CONST
-		mov $22, %rdx
+		mov $22, %rcx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %rax
-		mov 0(%rax), %rax
-		mov -16(%rax), %rbx
+		leaq staticLink, %rbx
+		mov 0(%rbx), %rbx
+		mov -16(%rbx), %rdx
 # INSTRUCTION_CONST
 		mov $0, %rsi
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rdx, (%rbx, %rsi,1)
+		mov %rcx, (%rdx, %rsi,1)
 # COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_0(%rip), %r15
+		leaq lambda_0(%rip), %rdi
+# INSTRUCTION_CONST
+		mov $2, %r8
 # COMPLEX_ALLOCATE
 		push %rdi
-		push %rax
 		push %r15
 		push %r14
-		mov %rax, %r14
+		mov %r8, %r14
 		mov $0, %rdi
 		mov $12, %rax
 		syscall
 		push %rax
-		mov $16, %r15
+		mov $8, %r15
 		imul %r14, %r15
 		add %r15, %rax
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
-		pop %r10
-# INSTRUCTION_CONST
-		mov $0, %r11
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %r15, (%r10, %r11,1)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %rax
-		mov 0(%rax), %rax
-		mov -16(%rax), %r12
-# INSTRUCTION_CONST
-		mov $8, %r13
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %r10, (%r12, %r13,1)
-# COMPLEX_ALLOCATE_END
+		pop %rax
 		pop %r14
 		pop %r15
-		pop %rax
 		pop %rdi
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -16(%rbp), %r14
 # INSTRUCTION_CONST
-		mov $8, %r15
+		mov $0, %r9
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rdi, (%rax, %r9,1)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+		leaq staticLink, %r13
+		mov 0(%r13), %r13
+		mov -16(%r13), %r12
+# INSTRUCTION_CONST
+		mov $8, %r14
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rax, (%r12, %r14,1)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -16(%rbp), %r15
+# INSTRUCTION_CONST
+		mov $8, %rcx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r14, %r15,1), %r14
+		mov (%r15, %rcx,1), %r15
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %r14, -24(%rbp)
+		mov %r15, -24(%rbp)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -16(%rbp), %rax
-# INSTRUCTION_CONST
-		mov $0, %rcx
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rax, %rcx,1), %rax
-# INSTRUCTION_PUSH
-		push %rax
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %rdx
+		mov -16(%rbp), %rdx
 # INSTRUCTION_CONST
 		mov $0, %rbx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
 		mov (%rdx, %rbx,1), %rdx
+# INSTRUCTION_PUSH
+		push %rdx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -24(%rbp), %rsi
+# INSTRUCTION_CONST
+		mov $0, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rsi, %rdi,1), %rsi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -24(%rbp), %r8
+# INSTRUCTION_CONST
+		mov $0, %r9
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r8, %r9,1), %r8
 # INSTRUCTION_REGISTER_CALL
-		call *%rdx
+		call *%r8
+		mov -24(%rbp), %rax
+
+		mov $8, %r8
+		mov (%rax,%r8,1), %rax
+
+		mov
 # INSTRUCTION_WRITE
 		movq %rax, %rsi
 		movq $intprint, %rdi
@@ -122,19 +135,19 @@ lambda_0:
 push %rbp
 mov %rsp,%rbp
 	subq $24, %rsp
-	leaq staticLink, %r8
-	movq %rbp, 16(%r8)
+	leaq staticLink, %r10
+	movq %rbp, 16(%r10)
 # INSTRUCTION_MINUS
-	mov 16(%rbp), %r9
-	mov %r9, -8(%rbp)
+	mov 16(%rbp), %r11
+	mov %r11, -8(%rbp)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -8(%rbp), %r10
+	mov -8(%rbp), %r12
 # INSTRUCTION_CONST
-	mov $2, %r11
+	mov $2, %r13
 # INSTRUCTION_MUL
-	imul %r10, %r11
+	imul %r12, %r13
 # INSTRUCTION_RETURN
-	mov %r11, %rax
+	mov %r13, %rax
 	mov %rbp,%rsp
 pop %rbp
 ret

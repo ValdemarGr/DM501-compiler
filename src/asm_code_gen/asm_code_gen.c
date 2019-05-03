@@ -10,10 +10,11 @@ void printIndentation(FILE *file) {
 }
 
 char *getNextRegister(size_t reg) {
-    switch (reg % 14) {
-        case 0: {
-            return "rax";
-        } break;
+    if (reg == 0) {
+        return "rax";
+    }
+
+    switch (reg % 13) {
         case 1: {
             return "rcx";
         } break;
@@ -50,7 +51,7 @@ char *getNextRegister(size_t reg) {
         case 12: {
             return "r14";
         } break;
-        case 13: {
+        case 0: {
             return "r15";
         } break;
         default:
@@ -257,8 +258,6 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "push %%rdi\n");
             printIndentation(out);
-            fprintf(out, "push %%rax\n");
-            printIndentation(out);
             fprintf(out, "push %%r15\n");
             printIndentation(out);
             fprintf(out, "push %%r14\n");
@@ -288,10 +287,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "syscall\n");
             printIndentation(out);
-            fprintf(out, "pop %%%s\n",
-                    getNextRegister(instruction->val.allocate.ptrTemp));
+            fprintf(out, "pop %%rax\n");//,
+                    //getNextRegister(instruction->val.allocate.ptrTemp));
+
+            printIndentation(out);
+            fprintf(out, "pop %%r14\n");
+            printIndentation(out);
+            fprintf(out, "pop %%r15\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rdi\n");
         } break;
-        case COMPLEX_ALLOCATE_END : {
+        /*case COMPLEX_ALLOCATE_END : {
             fprintf(out, "# COMPLEX_ALLOCATE_END\n");
             printIndentation(out);
             fprintf(out, "pop %%r14\n");
@@ -301,7 +307,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "pop %%rax\n");
             printIndentation(out);
             fprintf(out, "pop %%rdi\n");
-        } break;
+        } break;*/
         case METADATA_CREATE_MAIN: {
             fprintf(out, "# METADATA_CREATE_MAIN\n");
             printIndentation(out);

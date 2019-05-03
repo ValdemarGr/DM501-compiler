@@ -307,7 +307,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_ALLOCATE: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.allocate.ptrTemp);
+//                insertSortedSet(dataFlowEntry->defines, (int) iter->val.allocate.ptrTemp);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
 
