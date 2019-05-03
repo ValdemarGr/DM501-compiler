@@ -150,6 +150,7 @@ SortedSet *getTemporaries(int *colors, struct RaTemporaries *temporaries, RaStat
     temporary = temporaries;
     while (temporary != NULL) {
         if (temporary->assigned) {
+            temporary = temporary->next;
             continue;
         }
 
