@@ -41,6 +41,8 @@ typedef struct RaVariableLocation {
 typedef struct RaState {
     Instructions *previous;
     Instructions *current;
+    Instructions *latest;
+    bool hasAddedPop;
     SortedSet *allRegs;
     SortedSet *regsInUse;
     SortedSet *tempsInUse;

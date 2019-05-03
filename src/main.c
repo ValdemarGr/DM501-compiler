@@ -23,6 +23,7 @@ extern FILE *yyin;
 bool printWithTypes = false;
 bool prettyPrint = false;
 bool verbose = false;
+bool registerAllocation = false;
 size_t maxDistFromRoot = 0;
 
 int compile_file(FILE *file) {
@@ -57,7 +58,9 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    //simpleRegisterAllocation(instructions, 12);
+    if (registerAllocation) {
+        simpleRegisterAllocation(instructions, 12);
+    }
 
     //peephole(instructions);
 
@@ -83,6 +86,9 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'v':
                     verbose = true;
+                    break;
+                case 'l':
+                    registerAllocation = true;
                     break;
                 default:
                     printf("Please supply the correct argument for %s\n", arg);

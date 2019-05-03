@@ -41,6 +41,11 @@ int getTemporary(int *colors, int temporary, RaState *state) {
     popInstruction->next = state->current->next;
     state->current->next = popInstruction;
 
+    if (!state->hasAddedPop) {
+        state->latest = popInstruction;
+        state->hasAddedPop = true;
+    }
+
     insertSortedSet(state->regsInUse, reg);
     return reg;
 }
@@ -218,6 +223,8 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
     RaTemporaries *temporaries;
     while (state->current != NULL) {
         nextInstruction = state->current->next;
+        state->latest = state->current;
+        state->hasAddedPop = false;
         switch (state->current->kind) {
             case INSTRUCTION_ADD:state->regsInUse = initHeadedSortedSet();
                 handleArithmetic2(colors, state);
@@ -329,7 +336,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
 
         freeSortedSet(state->regsInUse);
         state->regsInUse = initHeadedSortedSet();
-        state->previous = state->current;
+        state->previous = state->latest;
         state->current = nextInstruction;
     }
 
