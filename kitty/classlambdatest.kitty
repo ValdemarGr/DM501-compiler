@@ -7,6 +7,9 @@ class ClassA {
 };
 
 var a: class ClassA;
+var binded: (int) -> int;
 allocate a;
 
-write a.i;
+binded = a.f;
+
+write binded(a.i);
