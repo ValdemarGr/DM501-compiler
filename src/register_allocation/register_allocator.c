@@ -209,6 +209,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
     state->regsInUse = NULL;
     state->allRegs = initHeadedSortedSet();
     state->stackLocation = initMap(128);
+    Instructions *nextInstruction;
 
     for (int i = 0; i < numberRegisters; ++i) {
         insertSortedSet(state->allRegs, i);
@@ -216,6 +217,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
 
     RaTemporaries *temporaries;
     while (state->current != NULL) {
+        nextInstruction = state->current->next;
         switch (state->current->kind) {
             case INSTRUCTION_ADD:state->regsInUse = initHeadedSortedSet();
                 handleArithmetic2(colors, state);
@@ -328,7 +330,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
         freeSortedSet(state->regsInUse);
         state->regsInUse = initHeadedSortedSet();
         state->previous = state->current;
-        state->current = state->current->next;
+        state->current = nextInstruction;
     }
 
     return head;
