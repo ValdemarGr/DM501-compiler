@@ -674,12 +674,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 Instructions *ret = newInstruction();
                 ret->kind = COMPLEX_ALLOCATE;
                 ret->val.allocate.timesTemp = const2Temp;
-                //ret->val.allocate.ptrTemp = currentTemporary;
                 ret->val.allocate.eleSize = POINTER_SIZE;
                 size_t allocPtrTemp = 0;
                 arrayTemp = allocPtrTemp;
                 appendInstructions(ret);
-                //currentTemporary++;
+
 
                 //Instructions for getting getting the address we need to move the pointer to
                 {
@@ -754,7 +753,15 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(endGlobalBLock);
 
             inLambdaContext = false;
-            return arrayTemp;
+
+            Instructions *cpy = newInstruction();
+            cpy->kind = INSTRUCTION_COPY;
+            cpy->val.arithmetic2.source = arrayTemp;
+            cpy->val.arithmetic2.dest = currentTemporary;
+            appendInstructions(cpy);
+            currentTemporary++;
+
+            return currentTemporary - 1;
         } break;
         case classDowncastk: {
             //TODO
@@ -1044,7 +1051,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
-            //currentTemporary++;
+
+            //Save class ptr
+            Instructions *push = newInstruction();
+            push->kind = INSTRUCTION_PUSH;
+            push->val.tempToPush = allocPtrTemp;
+            appendInstructions(push);
 
             //Instructions for getting getting the address we need to move the pointer to
             generateInstructionsForVariableSave(statement->val.allocateD.var, statement->symbolTable, allocPtrTemp, false);
@@ -1059,45 +1071,50 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
                 while (iter != NULL) {
                     if (iter->declaration->kind == declValK) {
-                        size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
+                        if (evaluateExpressionType(iter->declaration->val.valD.rhs, iter->declaration->symbolTable)->kind == typeLambdaK) {
+                            size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
 
-                        Variable *valAccess = NEW(Variable);
-                        valAccess->kind = recordLookupK;
-                        valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
-                        valAccess->val.recordLookupD.var = statement->val.allocateD.var;
-
-
-                       /* if (evaluateExpressionType(iter->declaration->val.valD.rhs, iter->declaration->symbolTable)->kind == typeLambdaK) {
-                            inClassLambdaContext = true;
-
-                            Instructions *alloc = newInstruction();
-                            alloc->kind = COMPLEX_ALLOCATE;
-                            alloc->val.allocate.timesTemp = constNum;
-                            alloc->val.allocate.ptrTemp = currentTemporary;
-                            alloc->val.allocate.eleSize = POINTER_SIZE * 2;
-                            size_t allocPtrTemp = currentTemporary;
-                            appendInstructions(alloc);
+                            Instructions *constPtr = newInstruction();
+                            constPtr->kind = INSTRUCTION_CONST;
+                            constPtr->val.constant.value = POINTER_SIZE;
+                            constPtr->val.constant.temp = currentTemporary;
+                            size_t ptrSizeTmp = currentTemporary;
+                            appendInstructions(constPtr);
                             currentTemporary++;
 
-                            Instructions *zero = newInstruction();
-                            zero->kind = INSTRUCTION_CONST;
-                            zero->val.constant.value = 0;
-                            zero->val.constant.temp = currentTemporary;
-                            appendInstructions(zero);
-                            size_t zeroTemp = currentTemporary;
-                            currentTemporary++;
+                            Instructions *pop = newInstruction();
+                            pop->kind = INSTRUCTION_POP;
+                            pop->val.tempToPopInto = allocPtrTemp;
+                            appendInstructions(pop);
 
                             Instructions *ptrAccess = newInstruction();
                             ptrAccess->kind = INSTRUCTION_MOVE_TO_OFFSET;
-                            ptrAccess->val.moveToOffset.ptrTemp = allocPtrTemp;
-                            ptrAccess->val.moveToOffset.offsetTemp = zeroTemp;
-                            ptrAccess->val.moveToOffset.tempToMove = exprResult;
+                            ptrAccess->val.moveToOffset.ptrTemp = exprResult;
+                            ptrAccess->val.moveToOffset.offsetTemp = ptrSizeTmp;
+                            ptrAccess->val.moveToOffset.tempToMove = allocPtrTemp;
                             appendInstructions(ptrAccess);
 
-                            exprResult = allocPtrTemp;
-                        }*/
+                            Instructions *push = newInstruction();
+                            push->kind = INSTRUCTION_PUSH;
+                            push->val.tempToPush = allocPtrTemp;
+                            appendInstructions(push);
 
-                        generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                            Variable *valAccess = NEW(Variable);
+                            valAccess->kind = recordLookupK;
+                            valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
+                            valAccess->val.recordLookupD.var = statement->val.allocateD.var;
+
+                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                        } else {
+                            size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
+
+                            Variable *valAccess = NEW(Variable);
+                            valAccess->kind = recordLookupK;
+                            valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
+                            valAccess->val.recordLookupD.var = statement->val.allocateD.var;
+
+                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                        }
                     }
 
                     iter = iter->next;
@@ -1105,6 +1122,11 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
                 inClassContextCurrent = false;
             }
+
+            Instructions *pop = newInstruction();
+            pop->kind = INSTRUCTION_POP;
+            pop->val.tempToPopInto = allocPtrTemp;
+            appendInstructions(pop);
 
             //Instructions *endAlloc = newInstruction();
             //endAlloc->kind = COMPLEX_ALLOCATE_END;
