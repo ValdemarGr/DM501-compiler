@@ -115,7 +115,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
         } break;
         case METADATA_FUNCTION_ARGUMENT: {
-            fprintf(out, "# INSTRUCTION_MINUS\n");
+            fprintf(out, "# METADATA_FUNCTION_ARGUMENT\n");
             printIndentation(out);
             fprintf(out, "mov %zu(%%rbp), %%%s\n",
                     instruction->val.args.argNum * POINTER_SIZE + 16,
