@@ -10,6 +10,7 @@ static bool mainCreated = false;
 static size_t ifCounter = 0;
 static size_t whileCounter = 0;
 size_t returnReg = 0;
+bool inClassLambdaContext = false;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -252,8 +253,6 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             //Check how far up the scope stack we need to look for the variable
             size_t frameStackDistanceToVariable = symbolTable->distanceFromRoot - symbol->distanceFromRoot;
 
-            Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
-
             size_t offset = POINTER_SIZE;
 
             if (frameStackDistanceToVariable == 0) {
@@ -442,6 +441,21 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //Get variable with function ptr
                 size_t fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
 
+                Instructions *num = newInstruction();
+                num->kind = INSTRUCTION_CONST;
+                num->val.constant.value = 0;
+                num->val.constant.temp = currentTemporary;
+                size_t numTemp = currentTemporary;
+                appendInstructions(num);
+                currentTemporary++;
+
+                //Deref an extra time, lambda's are always double dereferenced
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+                ptrAccess->val.dereferenceOffset.ptrTemp = fncPtrTemp;
+                ptrAccess->val.dereferenceOffset.offsetTemp = numTemp;
+                appendInstructions(ptrAccess);
+
                 //Then call
                 Instructions *call = newInstruction();
                 call->kind = INSTRUCTION_REGISTER_CALL;
@@ -597,8 +611,6 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(lambdaLoad);
             size_t toReturn = currentTemporary;
             currentTemporary++;
-
-            //Save ptr to class context
 
             //CREATE THE LAMBDA IN GLOBAL SCOPE
             Instructions *beginGlobalBLock = newInstruction();
@@ -953,16 +965,46 @@ void generateInstructionTreeForStatement(Statement *statement) {
                     if (iter->declaration->kind == declValK) {
                         size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
 
-                        //Create artificial variable for access
-                        //Val access
                         Variable *valAccess = NEW(Variable);
                         valAccess->kind = recordLookupK;
                         valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
                         valAccess->val.recordLookupD.var = statement->val.allocateD.var;
 
+
+                        if (evaluateExpressionType(iter->declaration->val.valD.rhs, iter->declaration->symbolTable)->kind == typeLambdaK) {
+                            inClassLambdaContext = true;
+
+                            Instructions *alloc = newInstruction();
+                            alloc->kind = COMPLEX_ALLOCATE;
+                            alloc->val.allocate.timesTemp = constNum;
+                            alloc->val.allocate.ptrTemp = currentTemporary;
+                            alloc->val.allocate.eleSize = POINTER_SIZE * 2;
+                            size_t allocPtrTemp = currentTemporary;
+                            appendInstructions(alloc);
+                            currentTemporary++;
+
+                            Instructions *zero = newInstruction();
+                            zero->kind = INSTRUCTION_CONST;
+                            zero->val.constant.value = 0;
+                            zero->val.constant.temp = currentTemporary;
+                            appendInstructions(zero);
+                            size_t zeroTemp = currentTemporary;
+                            currentTemporary++;
+
+                            Instructions *ptrAccess = newInstruction();
+                            ptrAccess->kind = INSTRUCTION_MOVE_TO_OFFSET;
+                            ptrAccess->val.moveToOffset.ptrTemp = allocPtrTemp;
+                            ptrAccess->val.moveToOffset.offsetTemp = zeroTemp;
+                            ptrAccess->val.moveToOffset.tempToMove = exprResult;
+                            appendInstructions(ptrAccess);
+
+                            exprResult = allocPtrTemp;
+                        }
+
                         generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
                     }
 
+                    inClassLambdaContext = false;
                     iter = iter->next;
                 }
             }

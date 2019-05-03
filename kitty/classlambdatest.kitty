@@ -11,5 +11,4 @@ var binded: (int) -> int;
 allocate a;
 
 binded = a.f;
-
 write binded(a.i);
