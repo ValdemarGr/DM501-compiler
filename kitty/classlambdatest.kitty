@@ -1,4 +1,9 @@
 
+func hello(): (int) -> int
+    val lam = (x: int): int -> { return x * 2; };
+    return lam;
+end hello
+
 class ClassA {
     val i = 22;
     val f = (x: int): int -> {
@@ -6,9 +11,18 @@ class ClassA {
     };
 };
 
+
+var binder: (int) -> int;
+
+binder = hello();
+
+write binder(5);
+
+(*
 var a: class ClassA;
 var binded: (int) -> int;
 allocate a;
 
 binded = a.f;
 write binded(a.i);
+*)

@@ -12,7 +12,8 @@ static size_t whileCounter = 0;
 size_t returnReg = 0;
 bool inClassContextCurrent = false;
 bool inLambdaContext = false;
-int lambdaBodyScope = 0;
+int lambdaDefineScope = 0;
+int lambdaArgCount = 0;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -130,7 +131,11 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t offset = POINTER_SIZE;
 
-            if (frameStackDistanceToVariable == 0) {
+            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+                //We are accessing a class value from lambda (capture)
+                //Fetch the class pointer
+
+            } if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
                 ptrAccess->val.tempFromStack.offset = offset * (symbol->uniqueIdForScope + 1);
@@ -614,7 +619,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
         } break;
         case lambdaK: {
             inLambdaContext = true;
-            lambdaBodyScope = (int)symbolTable->distanceFromRoot;
+            lambdaDefineScope = (int)symbolTable->distanceFromRoot;
             char *lamPrefix = "lambda_";
             char *buf = (char*)malloc(sizeof(char) * (strlen(lamPrefix) + 10));
             sprintf(buf, "lambda_%i", term->val.lambdaD.lambda->id);
@@ -746,6 +751,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 counter++;
             }
 
+            lambdaArgCount = (int)counter;
             generateInstructionTree(term->val.lambdaD.lambda->body);
 
             Instructions *endGlobalBLock = newInstruction();
