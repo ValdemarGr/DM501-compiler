@@ -32,4 +32,6 @@ void freeSortedSet(SortedSet* sortedSet);
 
 SortedSet *iterateSortedSet(SortedSet* set);
 
+int sortedSetFirst(SortedSet* set);
+
 #endif //HELLO_SORTEDSET_H

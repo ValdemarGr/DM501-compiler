@@ -81,6 +81,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
+            case INSTRUCTION_REGISTER_CALL: break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
             case INSTRUCTION_LABEL: {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(count));
             }
@@ -117,13 +120,13 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case METADATA_END_BODY_BLOCK: break;
             case METADATA_BEGIN_ARITHMETIC_EVALUATION: break;
             case METADATA_END_ARITHMETIC_EVALUATION: break;
-            case METADATA_FUNCTION_ARGUMENT: break;
             case COMPLEX_ALLOCATE_END: break;
             case INSTRUCTION_FUNCTION_END: break;
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
             case INSTRUCTION_LABEL: break;
+            case METADATA_FUNCTION_ARGUMENT:break;
             case INSTRUCTION_ADD: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
@@ -307,7 +310,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_ALLOCATE: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
-//                insertSortedSet(dataFlowEntry->defines, (int) iter->val.allocate.ptrTemp);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
 
@@ -471,6 +473,18 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
+            case COMPLEX_RIP_LAMBDA_LOAD:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.lambdaLoad.temporary);
+
+                dataFlowEntry->uses = initHeadedSortedSet();
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case INSTRUCTION_REGISTER_CALL:break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
         }
 
         iter = iter->next;

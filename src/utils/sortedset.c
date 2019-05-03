@@ -141,3 +141,7 @@ void freeSortedSet(SortedSet* sortedSet) {
 SortedSet *iterateSortedSet(SortedSet* set) {
     return set->_next;
 }
+
+int sortedSetFirst(SortedSet* set) {
+    return set->_next->data;
+}

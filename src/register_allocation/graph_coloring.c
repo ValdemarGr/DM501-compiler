@@ -13,11 +13,12 @@ extern size_t maxTemporary;
 typedef struct Node {
     int  value;
     struct Node* next;
+    bool beenSimplified;
 } Node;
 
 
 
-int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
+int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
     int max_size = (int)maxTemporary;
     Node *graph = (Node *) malloc(sizeof(Node) * max_size);
     int *color_overview = (int *) malloc(sizeof(int) * max_size);
@@ -27,6 +28,7 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
     for (int i = 0; i < max_size; i++) {
         graph[i].value = -1;
         graph[i].next = NULL;
+        graph[i].beenSimplified = false;
     }
 
     //Fill Graph
@@ -39,11 +41,7 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
             while (pos2 != NULL){
                 if(pos1->data != pos2->data){
                     Node *iterator = &graph[pos1->data];
-                    while (iterator->next != NULL){
-                        iterator = iterator->next;
-                        if(iterator->value == pos1->data){
-                            break;
-                        }
+                    while (iterator != NULL){
                         if(iterator->next == NULL){
                             Node *tempNode = NEW(Node);
                             tempNode->value = pos2->data;
@@ -52,6 +50,10 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
                             graph[pos2->data].value++;
                             break;
                         }
+                        if(iterator->value == pos1->data){
+                            break;
+                        }
+                        iterator = iterator->next;
                     }
                 }
                 pos2 = iterateSortedSet(pos2);
@@ -68,15 +70,15 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
     while (couldSimplify == true){
         couldSimplify = false;
         for (int i = 0; i < max_size; i++){
-            if ( 0 <= graph[i].value && graph[i].value < colors){
-                Node iterator = graph[i];
-                while (iterator.next != NULL) {
-                    iterator = *iterator.next;
-                    graph[iterator.value].value--;
+            if ( 0 <= graph[i].value && graph[i].value < colors && !graph[i].beenSimplified){
+                Node *iterator = graph[i].next;
+                while (iterator != NULL) {
+                    graph[iterator->value].value--;
+                    iterator = iterator->next;
                 }
                 graph[i].value = i;
                 push(stack, (void *) &graph[i]);
-                graph[i].value = -1;
+                graph[i].beenSimplified = true;
                 couldSimplify = true;
             }
         }
@@ -84,23 +86,25 @@ int *colorGraph(SortedSet *livenessResult[], int numberOfSets,  int colors){
 
     //Color nodes
     while (isEmpty(stack) == false) {
-        Node poppedNode = *(Node *) pop(stack);
+        Node *poppedNode = (Node *) pop(stack);
         bool colorsUsedByNeighbors[colors];
-        memset(colorsUsedByNeighbors, false, sizeof(int) * colors);
+        memset(colorsUsedByNeighbors, false, sizeof(bool) * colors);
 
-        Node iterator = poppedNode;
-        while(iterator.next != NULL){
-            iterator = *iterator.next;
-            if(color_overview[iterator.value] != -1){
-                colorsUsedByNeighbors[color_overview[iterator.value]] = true;
+        Node *iterator = poppedNode;
+        iterator = iterator->next;
+        while(iterator != NULL){
+            if(color_overview[iterator->value] != -1){
+                colorsUsedByNeighbors[color_overview[iterator->value]] = true;
             }
+            iterator = iterator->next;
         }
 
         for (int i = 0; i < colors; i++) {
             if (colorsUsedByNeighbors[i] == false){
-                color_overview[poppedNode.value] = i;
+                color_overview[poppedNode->value] = i;
                 break;
             }
         }
     }
+    return color_overview;
 }

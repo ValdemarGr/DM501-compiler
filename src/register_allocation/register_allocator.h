@@ -22,7 +22,32 @@ typedef struct LivenessAnalysisResult {
     SortedSet **sets;
 } LivenessAnalysisResult;
 
-int *simpleRegisterAllocation(Instructions *head, int numberRegisters);
+typedef enum { RaRead, RaWrite, RaReadWrite, RaIntermidiate } RaTemporariesKind;
+
+typedef struct RaTemporaries {
+    int id;
+    RaTemporariesKind kind;
+    int reg;
+    bool assigned;
+    struct RaTemporaries *next;
+} RaTemporaries;
+
+typedef struct RaVariableLocation {
+    int offset;
+    size_t scope;
+    bool useScope;
+} RaVariableLocation;
+
+typedef struct RaState {
+    Instructions *previous;
+    Instructions *current;
+    SortedSet *allRegs;
+    SortedSet *regsInUse;
+    SortedSet *tempsInUse;
+    ConstMap *stackLocation;
+} RaState;
+
+Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H
 
