@@ -13,6 +13,7 @@
 #include "../symbol/decorate_ast.h"
 
 #define NULL_KITTY_VALUE_INDICATOR ((void *)1)
+#define ANY_TYPE ((void *)2)
 
 typedef struct Error Error;
 

@@ -116,7 +116,7 @@ typedef struct Statement {
     int lineno;
     int internal_stmDeclNum;
 
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK } kind;
     SymbolTable *symbolTable;
     union {
         struct { Expression* exp; } returnD;
@@ -128,6 +128,7 @@ typedef struct Statement {
         struct { Expression* exp; struct Statement* statement; } whileD;
         struct { struct StatementList* statementList; } stmListD;
         struct { Variable* var; Expression* exp; } assignmentD;
+        struct { Expression* exp; } empty;
     } val;
 } Statement;
 
@@ -160,7 +161,7 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk, shorthandCallK } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
@@ -170,6 +171,7 @@ typedef struct Term {
         struct { int num; } numD;
         struct { Lambda *lambda; } lambdaD;
         struct { char* varId; char* downcastId; } classDowncastD;
+        struct { struct Variable *var; ExpressionList *expressionList; } shorthandCallD;
     } val;
 } Term;
 
@@ -211,6 +213,8 @@ Term *makeNullTerm();
 Term *makeLambdaTerm(Lambda *lambda);
 
 Term *makeDowncastTerm(char* varId, char *downcastId);
+
+Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -273,6 +277,8 @@ Statement *makeWriteStatement(Expression *exp);
 Statement *makeWhileStatement(Expression *exp, Statement *stm);
 
 Statement *makeStatementFromList(StatementList *statementList);
+
+Statement *makeEmptyExpression(Expression *expression);
 
 Type *makeIdType(char* id);
 

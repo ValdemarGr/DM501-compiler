@@ -225,6 +225,10 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
         return false;
     }
 
+    if (first == ANY_TYPE || second == ANY_TYPE) {
+        return true;
+    }
+
     VarDelList *firstDelList;
     VarDelList *secondDelList;
 
@@ -350,6 +354,9 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
     SYMBOL *symbol;
+    if (type == ANY_TYPE) {
+        return type;
+    }
 
     switch (type->kind) {
         case typeIdK:
@@ -1374,6 +1381,54 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             break;
         default:
             break;
+        case shorthandCallK: {
+            //Fetch lambda
+            Type *lambda = unwrapVariable(term->val.shorthandCallD.var, symbolTable);
+
+            ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
+
+            TypeList *varDelList = lambda->val.typeLambdaK.typeList;
+
+            int paramNum = 0;
+
+            while (expressionList != NULL && varDelList != NULL) {
+                e = typeCheckExpression(expressionList->expression, varDelList->type, symbolTable);
+                if (e != NULL) return e;
+
+                expressionList = expressionList->next;
+                varDelList = varDelList->next;
+                paramNum++;
+            }
+
+            if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
+                //Error
+                e = NEW(Error);
+
+                int expectedCount = paramNum;
+
+                if (varDelList == NULL) {
+                    while (expressionList != NULL) {
+                        paramNum++;
+                        expressionList = expressionList->next;
+                    }
+                } else {
+                    while (varDelList != NULL) {
+                        expectedCount++;
+                        varDelList = varDelList->next;
+                    }
+                }
+
+                e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+
+                return e;
+            }
+
+
+        } break;
     }
 
     return NULL;
@@ -1717,6 +1772,9 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             break;
         default:
             break;
+        case emptyK: {
+            e = typeCheckExpression(statement->val.empty.exp, ANY_TYPE, statement->symbolTable);
+        } break;
     }
 
     return NULL;

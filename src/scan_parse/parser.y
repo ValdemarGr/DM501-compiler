@@ -172,6 +172,8 @@ statement : tRETURN expression ';'
         {$$ = makeWhileStatement($2, $4);}
         | '{' stm_list '}'
         {$$ = makeStatementFromList($2);}
+        | expression ';'
+        {$$ = makeEmptyExpression($1);}
 ;
 
 type_list : type ',' type_list
@@ -328,6 +330,8 @@ term : variable
         {$$ = makeLambdaTerm($1);}
         | tIDENTIFIER ':' tIDENTIFIER
         {$$ = makeDowncastTerm($1, $3);}
+        | variable '(' act_list ')'
+        {$$ = makeShorthandLambdaCall($1, $3);}
 ;
 
 %%

@@ -146,6 +146,12 @@ void prettyTerm(Term *term, SymbolTable *symbolTable) {
         case classDowncastk:
             printf("%s : \033[0;36m%s\033[0m", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
             break;
+        case shorthandCallK: {
+            prettyVariable(term->val.shorthandCallD.var, symbolTable);
+            printf("(");
+            prettyExpressionList(term->val.shorthandCallD.expressionList, symbolTable);
+            printf(")");
+        } break;
     }
 }
 
@@ -459,6 +465,10 @@ void prettyStatement(Statement *statement) {
             printf("\b");
             prettyStatementList(statement->val.stmListD.statementList);
             break;
+        case emptyK: {
+            prettyEXP(statement->val.empty.exp, statement->symbolTable);
+            printf(";\n");
+        } break;
     }
 }
 

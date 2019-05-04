@@ -428,16 +428,16 @@ union yyalloc
 /* YYFINAL -- State number of the termination state.  */
 #define YYFINAL  18
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   427
+#define YYLAST   475
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  54
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  22
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  83
+#define YYNRULES  85
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  202
+#define YYNSTATES  207
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -490,12 +490,12 @@ static const yytype_uint16 yyrline[] =
        0,    99,    99,   103,   108,   109,   114,   115,   119,   121,
      123,   125,   129,   131,   133,   135,   139,   141,   143,   145,
      147,   149,   151,   153,   157,   159,   161,   163,   165,   167,
-     169,   171,   173,   177,   179,   182,   185,   187,   189,   191,
-     193,   195,   197,   199,   203,   207,   211,   215,   219,   222,
-     225,   227,   231,   235,   237,   239,   241,   243,   245,   247,
-     249,   251,   253,   255,   257,   259,   263,   266,   269,   271,
-     301,   303,   305,   309,   311,   313,   315,   317,   319,   321,
-     323,   325,   327,   329
+     169,   171,   173,   175,   179,   181,   184,   187,   189,   191,
+     193,   195,   197,   199,   201,   205,   209,   213,   217,   221,
+     224,   227,   229,   233,   237,   239,   241,   243,   245,   247,
+     249,   251,   253,   255,   257,   259,   261,   265,   268,   271,
+     273,   303,   305,   307,   311,   313,   315,   317,   319,   321,
+     323,   325,   327,   329,   331,   333
 };
 #endif
 
@@ -533,12 +533,12 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF -114
+#define YYPACT_NINF -116
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-114)))
+  (!!((Yystate) == (-116)))
 
-#define YYTABLE_NINF -37
+#define YYTABLE_NINF -38
 
 #define yytable_value_is_error(Yytable_value) \
   0
@@ -547,27 +547,27 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
-     119,    16,    47,    62,    96,   101,   112,  -114,    95,   119,
-    -114,   119,    67,    71,    80,    77,    79,    68,  -114,  -114,
-      10,    10,   124,    10,    10,    95,  -114,    95,    44,  -114,
-     126,    62,    18,    18,  -114,    10,   129,   145,   119,  -114,
-      -5,  -114,  -114,  -114,    88,    10,    99,  -114,   204,   -28,
-    -114,   228,    17,   324,   366,   103,  -114,    10,    10,   151,
-     153,  -114,   127,  -114,  -114,  -114,  -114,    18,   131,   175,
-      18,   140,   158,   252,    27,   154,    23,   171,   169,   198,
-      10,    -2,   168,   166,   136,    88,  -114,    10,    10,    10,
-      10,    10,    10,    10,    10,    10,    10,    10,    10,  -114,
-    -114,    10,  -114,    95,    95,  -114,   343,   276,  -114,  -114,
-     178,  -114,    62,   177,   184,   179,  -114,    62,  -114,    18,
-     194,   119,   234,   145,   -18,   195,  -114,   385,   189,  -114,
-      39,   217,  -114,  -114,   185,   143,   143,   106,   106,   106,
-     106,   159,   208,    32,    32,  -114,  -114,   300,   238,  -114,
-    -114,  -114,    18,   212,    18,   229,    18,  -114,   219,    18,
-     213,   222,  -114,   129,   119,  -114,    10,  -114,     8,    18,
-    -114,  -114,    95,  -114,  -114,   225,    18,  -114,  -114,   226,
-     227,   145,   224,   235,  -114,   249,  -114,  -114,  -114,  -114,
-    -114,  -114,   119,   239,   240,   237,  -114,   119,   241,   245,
-    -114,  -114
+      13,    33,    36,    71,    73,    75,    85,  -116,    99,    13,
+    -116,    13,    45,    50,    59,    74,    70,    -2,  -116,  -116,
+     -27,    39,    39,   117,    39,    39,  -116,  -116,  -116,    99,
+      94,    39,   124,  -116,    99,  -116,   224,    89,  -116,  -116,
+     116,    71,    15,    15,  -116,    39,   129,   130,    13,   136,
+      39,   248,   115,   272,  -116,    56,   368,   410,   101,    -5,
+      92,  -116,   186,   156,    94,  -116,  -116,    39,    39,    39,
+      39,    39,    39,    39,    39,    39,    39,    39,    39,  -116,
+      39,    39,    39,   147,   149,  -116,   109,  -116,  -116,  -116,
+      15,   113,   157,    15,   121,   126,   296,    25,   127,    65,
+     132,   123,  -116,   429,   137,  -116,  -116,  -116,    39,  -116,
+      99,    99,  -116,   153,   145,  -116,  -116,   205,   435,   435,
+     228,   228,   228,   228,   160,    44,   -13,   -13,  -116,  -116,
+     387,   320,   141,  -116,  -116,   151,  -116,    71,   158,   154,
+     161,  -116,    71,  -116,    15,   162,    13,   202,   130,    42,
+     171,    39,  -116,   344,   196,  -116,    -4,    15,  -116,  -116,
+    -116,  -116,    15,   170,    15,   187,    15,  -116,   175,    15,
+     173,   180,  -116,   129,    13,  -116,  -116,  -116,    99,   204,
+    -116,  -116,   191,    15,  -116,  -116,   194,   195,   130,   192,
+     193,  -116,   207,  -116,  -116,  -116,  -116,  -116,    13,   213,
+      13,   211,  -116,   212,   233,  -116,  -116
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -576,42 +576,42 @@ static const yytype_int16 yypact[] =
 static const yytype_uint8 yydefact[] =
 {
        4,     0,     0,     0,     0,     0,     0,     2,     6,     4,
-      17,     4,     0,     0,     0,     0,     0,     0,     1,    70,
-       0,     0,     0,     0,     0,     6,     3,     6,     0,     5,
-       0,    49,     0,     0,    16,     0,     0,     0,     4,    78,
-      70,    79,    80,    81,    49,     0,     0,    82,     0,    73,
-      65,     0,     0,     0,     0,     0,     7,     0,     0,     0,
-       0,    45,     0,    48,    36,    39,    40,     0,     0,     0,
-      35,     0,    51,     0,    12,     0,    10,     0,     0,     0,
-      67,    70,     0,     0,     0,    49,    76,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,    24,
-      30,     0,    27,     0,     0,    32,     0,     0,    72,    47,
-       0,    41,     0,    37,     0,    34,    18,    49,    19,    35,
-      14,     4,     0,     0,     0,     0,    83,    68,     0,    66,
-       0,     0,    52,    77,     0,    57,    58,    59,    60,    61,
-      62,    63,    64,    55,    56,    53,    54,     0,    26,    31,
-      71,    29,     0,     0,    35,     0,    35,    50,     0,    35,
-       0,    11,     9,     0,     4,    20,     0,    74,    83,     0,
-      75,    28,     0,    46,    42,     0,     0,    33,    13,     0,
-       0,     0,     0,     0,    69,     0,    25,    38,    43,    15,
-      23,     8,     4,     0,     0,     0,    21,     4,     0,     0,
-      22,    44
+      17,     4,     0,     0,     0,     0,     0,     0,     1,    79,
+      71,     0,     0,     0,     0,     0,    80,    81,    82,     6,
+      50,     0,     0,     3,     6,    83,     0,    74,    66,     5,
+       0,    50,     0,     0,    16,     0,     0,     0,     4,     0,
+      68,     0,    74,     0,    71,     0,     0,     0,     0,    71,
+       0,    49,     0,     0,    50,    77,     7,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    33,
+       0,     0,    68,     0,     0,    46,     0,    37,    40,    41,
+       0,     0,     0,    36,     0,    52,     0,    12,     0,    10,
+       0,     0,    84,    69,     0,    67,    24,    30,     0,    27,
+       0,     0,    32,     0,     0,    53,    78,     0,    58,    59,
+      60,    61,    62,    63,    64,    65,    56,    57,    54,    55,
+       0,     0,     0,    73,    48,     0,    42,     0,    38,     0,
+      35,    18,    50,    19,    36,    14,     4,     0,     0,     0,
+       0,     0,    75,     0,    26,    31,    84,     0,    76,    72,
+      29,    85,     0,     0,    36,     0,    36,    51,     0,    36,
+       0,    11,     9,     0,     4,    20,    70,    28,     0,     0,
+      47,    43,     0,     0,    34,    13,     0,     0,     0,     0,
+       0,    25,     0,    39,    44,    15,    23,     8,     4,     0,
+       4,     0,    21,     0,     0,    45,    22
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
-    -114,  -114,   -11,    -8,   111,  -113,   -68,  -114,   -78,  -102,
-     -29,  -114,  -114,  -114,  -114,   -24,     2,   -12,  -114,   122,
-      -6,   248
+    -116,  -116,   -10,    -9,    57,  -115,   -86,  -116,   -98,   -49,
+     -39,  -116,  -116,  -116,  -116,   -33,     2,   -15,   197,   131,
+      -6,   249
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_int16 yydefgoto[] =
 {
-      -1,     6,     7,     8,    26,    77,    75,     9,    27,   114,
-     115,    47,    10,    11,    61,    82,    63,   127,   128,   129,
-      49,    50
+      -1,     6,     7,     8,    33,   100,    98,     9,    34,   139,
+     140,    35,    10,    11,    85,    60,    61,    36,   104,   105,
+      52,    38
 };
 
   /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
@@ -619,96 +619,106 @@ static const yytype_int16 yydefgoto[] =
      number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_int16 yytable[] =
 {
-      30,    29,    28,    71,    72,    15,   120,    62,    48,    51,
-     162,    53,    54,    39,    40,    57,    52,   158,   163,    28,
-      12,    28,    64,    73,    59,   148,   149,    65,    66,   164,
-      78,    74,    83,    84,    67,    68,    79,   101,   111,   130,
-      41,    42,    43,   168,    80,   106,   107,    80,    65,    66,
-     -36,    13,   175,    69,   177,    67,    68,   179,   -36,    44,
-      57,    45,   102,    46,   122,   123,    14,    70,   191,    59,
-     119,    97,    98,   134,    69,   135,   136,   137,   138,   139,
-     140,   141,   142,   143,   144,   145,   146,    57,    70,   147,
-      58,    39,    81,   157,   186,   182,    59,    28,    28,    19,
-      16,    72,    39,    40,    36,    17,    20,    21,    22,    23,
-      24,    37,    18,   160,   153,    38,    31,    32,    41,    42,
-      43,    33,    34,   173,     1,    35,     2,     3,    19,    41,
-      42,    43,    60,    74,    93,    94,    55,    44,    56,    45,
-     185,    46,    25,    95,    96,    97,    98,   188,    85,    76,
-      45,   105,    46,     4,     5,   108,   183,   109,    87,    88,
-      89,    90,    91,    92,    93,    94,    28,    89,    90,    91,
-      92,    93,    94,    95,    96,    97,    98,   110,   112,   113,
-      95,    96,    97,    98,   195,   116,   199,   133,    87,    88,
-      89,    90,    91,    92,    93,    94,    95,    96,    97,    98,
-     117,   121,   126,    95,    96,    97,    98,    87,    88,    89,
-      90,    91,    92,    93,    94,   124,   132,   125,   131,   152,
-     154,   156,    95,    96,    97,    98,    87,    88,    89,    90,
-      91,    92,    93,    94,   155,   170,    93,   159,   161,   167,
-     165,    95,    96,    97,    98,    95,    96,    97,    98,    99,
-      87,    88,    89,    90,    91,    92,    93,    94,   169,   172,
-     174,   180,   176,   178,   181,    95,    96,    97,    98,   187,
-     189,   192,   190,   100,    87,    88,    89,    90,    91,    92,
-      93,    94,   194,   193,   196,   198,   200,   197,   184,    95,
-      96,    97,    98,   201,    86,     0,     0,   118,    87,    88,
-      89,    90,    91,    92,    93,    94,     0,     0,     0,     0,
-       0,     0,     0,    95,    96,    97,    98,     0,     0,     0,
-       0,   151,    87,    88,    89,    90,    91,    92,    93,    94,
-       0,     0,     0,     0,     0,     0,     0,    95,    96,    97,
-      98,     0,   103,     0,     0,   171,    87,    88,    89,    90,
-      91,    92,    93,    94,     0,     0,     0,     0,     0,     0,
-       0,    95,    96,    97,    98,    87,    88,    89,    90,    91,
-      92,    93,    94,     0,     0,     0,     0,     0,     0,     0,
-      95,    96,    97,    98,     0,   104,     0,   150,    87,    88,
-      89,    90,    91,    92,    93,    94,     0,     0,     0,     0,
-       0,     0,     0,    95,    96,    97,    98,    87,    88,    89,
-      90,    91,    92,    93,    94,     0,     0,     0,     0,     0,
-       0,     0,    95,    96,    97,    98,     0,   166
+      39,    40,    37,    94,    95,    15,    51,    53,    86,    56,
+      57,   145,   154,   155,    49,    62,    63,    55,     1,    87,
+       2,     3,    50,    37,    88,    89,    77,    78,    37,    97,
+      96,    90,    91,   172,    46,   103,   113,    12,   -37,   101,
+      13,    47,    19,    20,    50,    48,   -37,     4,     5,   117,
+      92,   136,   118,   119,   120,   121,   122,   123,   124,   125,
+     126,   127,   128,   129,    93,   130,   131,   103,   144,    26,
+      27,    28,    73,   197,    95,    14,   108,    16,   173,    17,
+     191,    75,    76,    77,    78,    18,    58,   189,    30,   174,
+      31,    66,    32,   153,    41,   168,    42,    19,    59,    80,
+      43,   109,    19,    20,    37,    37,   147,   148,    83,   167,
+      21,    22,    23,    24,    25,   182,    45,   184,   179,    44,
+     186,    54,    84,   180,    26,    27,    28,    19,    20,    26,
+      27,    28,    80,    97,    99,    81,   103,   170,    82,   163,
+     102,    83,   114,    30,   194,    31,    29,    32,    30,   112,
+      31,   133,    32,   134,    26,    27,    28,   156,    80,   135,
+     137,   138,    88,    89,    82,   190,   141,    83,   142,    90,
+      91,   150,    37,    64,   146,    31,   149,    32,    67,    68,
+      69,    70,    71,    72,    73,    74,   157,   152,    92,   201,
+     203,   161,   162,    75,    76,    77,    78,    75,    76,    77,
+      78,   164,    93,   166,   165,   169,   171,   116,    67,    68,
+      69,    70,    71,    72,    73,    74,   175,   178,   181,   185,
+     183,   187,   188,    75,    76,    77,    78,    67,    68,    69,
+      70,    71,    72,    73,    74,   193,   115,   192,   195,   198,
+     196,   199,    75,    76,    77,    78,    67,    68,    69,    70,
+      71,    72,    73,    74,   200,   158,    73,    74,   202,   204,
+     205,    75,    76,    77,    78,    75,    76,    77,    78,    79,
+      67,    68,    69,    70,    71,    72,    73,    74,   206,   132,
+       0,    65,   176,     0,     0,    75,    76,    77,    78,     0,
+       0,     0,     0,   106,    67,    68,    69,    70,    71,    72,
+      73,    74,     0,     0,     0,     0,     0,     0,     0,    75,
+      76,    77,    78,     0,     0,     0,     0,   107,    67,    68,
+      69,    70,    71,    72,    73,    74,     0,     0,     0,     0,
+       0,     0,     0,    75,    76,    77,    78,     0,     0,     0,
+       0,   143,    67,    68,    69,    70,    71,    72,    73,    74,
+       0,     0,     0,     0,     0,     0,     0,    75,    76,    77,
+      78,     0,     0,     0,     0,   160,    67,    68,    69,    70,
+      71,    72,    73,    74,     0,     0,     0,     0,     0,     0,
+       0,    75,    76,    77,    78,     0,   110,     0,     0,   177,
+      67,    68,    69,    70,    71,    72,    73,    74,     0,     0,
+       0,     0,     0,     0,     0,    75,    76,    77,    78,    67,
+      68,    69,    70,    71,    72,    73,    74,     0,     0,     0,
+       0,     0,     0,     0,    75,    76,    77,    78,     0,   111,
+       0,   159,    67,    68,    69,    70,    71,    72,    73,    74,
+       0,     0,     0,     0,     0,     0,     0,    75,    76,    77,
+      78,    67,    68,    69,    70,    71,    72,    73,    74,    69,
+      70,    71,    72,    73,    74,     0,    75,    76,    77,    78,
+       0,   151,    75,    76,    77,    78
 };
 
 static const yytype_int16 yycheck[] =
 {
-      11,     9,     8,    32,    33,     3,    74,    31,    20,    21,
-     123,    23,    24,     3,     4,    43,    22,   119,    36,    25,
-       4,    27,     4,    35,    52,   103,   104,     9,    10,    47,
-      38,     4,    44,    45,    16,    17,    41,    20,    67,    41,
-      30,    31,    32,     4,    49,    57,    58,    49,     9,    10,
-      42,     4,   154,    35,   156,    16,    17,   159,    50,    49,
-      43,    51,    45,    53,    41,    42,     4,    49,   181,    52,
-      43,    39,    40,    85,    35,    87,    88,    89,    90,    91,
-      92,    93,    94,    95,    96,    97,    98,    43,    49,   101,
-      46,     3,     4,   117,   172,   163,    52,   103,   104,     4,
-       4,   130,     3,     4,    36,     4,    11,    12,    13,    14,
-      15,    43,     0,   121,   112,    47,    49,    46,    30,    31,
-      32,    41,    45,   152,     5,    46,     7,     8,     4,    30,
-      31,    32,     6,     4,    28,    29,    25,    49,    27,    51,
-     169,    53,    47,    37,    38,    39,    40,   176,    49,     4,
-      51,    48,    53,    34,    35,     4,   164,     4,    22,    23,
-      24,    25,    26,    27,    28,    29,   172,    24,    25,    26,
-      27,    28,    29,    37,    38,    39,    40,    50,    47,     4,
-      37,    38,    39,    40,   192,    45,   197,    51,    22,    23,
-      24,    25,    26,    27,    28,    29,    37,    38,    39,    40,
-      42,    47,     4,    37,    38,    39,    40,    22,    23,    24,
-      25,    26,    27,    28,    29,    44,    50,    48,    50,    41,
-      43,    42,    37,    38,    39,    40,    22,    23,    24,    25,
-      26,    27,    28,    29,    50,    50,    28,    43,     4,    50,
-      45,    37,    38,    39,    40,    37,    38,    39,    40,    45,
-      22,    23,    24,    25,    26,    27,    28,    29,    41,    21,
-      48,    48,    33,    44,    42,    37,    38,    39,    40,    44,
-      44,    47,    45,    45,    22,    23,    24,    25,    26,    27,
-      28,    29,    33,    48,    45,    48,    45,    47,   166,    37,
-      38,    39,    40,    48,    46,    -1,    -1,    45,    22,    23,
+       9,    11,     8,    42,    43,     3,    21,    22,    41,    24,
+      25,    97,   110,   111,    41,    30,    31,    23,     5,     4,
+       7,     8,    49,    29,     9,    10,    39,    40,    34,     4,
+      45,    16,    17,   148,    36,    50,    41,     4,    42,    48,
+       4,    43,     3,     4,    49,    47,    50,    34,    35,    64,
+      35,    90,    67,    68,    69,    70,    71,    72,    73,    74,
+      75,    76,    77,    78,    49,    80,    81,    82,    43,    30,
+      31,    32,    28,   188,   113,     4,    20,     4,    36,     4,
+     178,    37,    38,    39,    40,     0,    29,   173,    49,    47,
+      51,    34,    53,   108,    49,   144,    46,     3,     4,    43,
+      41,    45,     3,     4,   110,   111,    41,    42,    52,   142,
+      11,    12,    13,    14,    15,   164,    46,   166,   157,    45,
+     169,     4,     6,   162,    30,    31,    32,     3,     4,    30,
+      31,    32,    43,     4,     4,    46,   151,   146,    49,   137,
+       4,    52,    50,    49,   183,    51,    47,    53,    49,    48,
+      51,     4,    53,     4,    30,    31,    32,     4,    43,    50,
+      47,     4,     9,    10,    49,   174,    45,    52,    42,    16,
+      17,    48,   178,    49,    47,    51,    44,    53,    22,    23,
+      24,    25,    26,    27,    28,    29,    41,    50,    35,   198,
+     200,    50,    41,    37,    38,    39,    40,    37,    38,    39,
+      40,    43,    49,    42,    50,    43,     4,    51,    22,    23,
+      24,    25,    26,    27,    28,    29,    45,    21,    48,    44,
+      33,    48,    42,    37,    38,    39,    40,    22,    23,    24,
+      25,    26,    27,    28,    29,    44,    50,    33,    44,    47,
+      45,    48,    37,    38,    39,    40,    22,    23,    24,    25,
+      26,    27,    28,    29,    47,    50,    28,    29,    45,    48,
+      48,    37,    38,    39,    40,    37,    38,    39,    40,    45,
+      22,    23,    24,    25,    26,    27,    28,    29,    45,    82,
+      -1,    32,   151,    -1,    -1,    37,    38,    39,    40,    -1,
+      -1,    -1,    -1,    45,    22,    23,    24,    25,    26,    27,
+      28,    29,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    37,
+      38,    39,    40,    -1,    -1,    -1,    -1,    45,    22,    23,
       24,    25,    26,    27,    28,    29,    -1,    -1,    -1,    -1,
       -1,    -1,    -1,    37,    38,    39,    40,    -1,    -1,    -1,
       -1,    45,    22,    23,    24,    25,    26,    27,    28,    29,
       -1,    -1,    -1,    -1,    -1,    -1,    -1,    37,    38,    39,
-      40,    -1,    18,    -1,    -1,    45,    22,    23,    24,    25,
+      40,    -1,    -1,    -1,    -1,    45,    22,    23,    24,    25,
       26,    27,    28,    29,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    37,    38,    39,    40,    22,    23,    24,    25,    26,
-      27,    28,    29,    -1,    -1,    -1,    -1,    -1,    -1,    -1,
-      37,    38,    39,    40,    -1,    19,    -1,    44,    22,    23,
-      24,    25,    26,    27,    28,    29,    -1,    -1,    -1,    -1,
-      -1,    -1,    -1,    37,    38,    39,    40,    22,    23,    24,
-      25,    26,    27,    28,    29,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    37,    38,    39,    40,    -1,    42
+      -1,    37,    38,    39,    40,    -1,    18,    -1,    -1,    45,
+      22,    23,    24,    25,    26,    27,    28,    29,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    37,    38,    39,    40,    22,
+      23,    24,    25,    26,    27,    28,    29,    -1,    -1,    -1,
+      -1,    -1,    -1,    -1,    37,    38,    39,    40,    -1,    19,
+      -1,    44,    22,    23,    24,    25,    26,    27,    28,    29,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    37,    38,    39,
+      40,    22,    23,    24,    25,    26,    27,    28,    29,    24,
+      25,    26,    27,    28,    29,    -1,    37,    38,    39,    40,
+      -1,    42,    37,    38,    39,    40
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -716,26 +726,26 @@ static const yytype_int16 yycheck[] =
 static const yytype_uint8 yystos[] =
 {
        0,     5,     7,     8,    34,    35,    55,    56,    57,    61,
-      66,    67,     4,     4,     4,    70,     4,     4,     0,     4,
-      11,    12,    13,    14,    15,    47,    58,    62,    74,    57,
-      56,    49,    46,    41,    45,    46,    36,    43,    47,     3,
-       4,    30,    31,    32,    49,    51,    53,    65,    71,    74,
-      75,    71,    74,    71,    71,    58,    58,    43,    46,    52,
-       6,    68,    69,    70,     4,     9,    10,    16,    17,    35,
-      49,    64,    64,    71,     4,    60,     4,    59,    57,    41,
-      49,     4,    69,    71,    71,    49,    75,    22,    23,    24,
+      66,    67,     4,     4,     4,    70,     4,     4,     0,     3,
+       4,    11,    12,    13,    14,    15,    30,    31,    32,    47,
+      49,    51,    53,    58,    62,    65,    71,    74,    75,    57,
+      56,    49,    46,    41,    45,    46,    36,    43,    47,    41,
+      49,    71,    74,    71,     4,    74,    71,    71,    58,     4,
+      69,    70,    71,    71,    49,    75,    58,    22,    23,    24,
       25,    26,    27,    28,    29,    37,    38,    39,    40,    45,
-      45,    20,    45,    18,    19,    48,    71,    71,     4,     4,
-      50,    64,    47,     4,    63,    64,    45,    42,    45,    43,
-      60,    47,    41,    42,    44,    48,     4,    71,    72,    73,
-      41,    50,    50,    51,    71,    71,    71,    71,    71,    71,
-      71,    71,    71,    71,    71,    71,    71,    71,    62,    62,
-      44,    45,    41,    70,    43,    50,    42,    69,    63,    43,
-      57,     4,    59,    36,    47,    45,    42,    50,     4,    41,
-      50,    45,    21,    64,    48,    63,    33,    63,    44,    63,
-      48,    42,    60,    57,    73,    64,    62,    44,    64,    44,
-      45,    59,    47,    48,    33,    57,    45,    47,    48,    56,
-      45,    48
+      43,    46,    49,    52,     6,    68,    69,     4,     9,    10,
+      16,    17,    35,    49,    64,    64,    71,     4,    60,     4,
+      59,    57,     4,    71,    72,    73,    45,    45,    20,    45,
+      18,    19,    48,    41,    50,    50,    51,    71,    71,    71,
+      71,    71,    71,    71,    71,    71,    71,    71,    71,    71,
+      71,    71,    72,     4,     4,    50,    64,    47,     4,    63,
+      64,    45,    42,    45,    43,    60,    47,    41,    42,    44,
+      48,    42,    50,    71,    62,    62,     4,    41,    50,    44,
+      45,    50,    41,    70,    43,    50,    42,    69,    63,    43,
+      57,     4,    59,    36,    47,    45,    73,    45,    21,    64,
+      64,    48,    63,    33,    63,    44,    63,    48,    42,    60,
+      57,    62,    33,    44,    64,    44,    45,    59,    47,    48,
+      47,    57,    45,    56,    48,    48,    45
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -744,12 +754,12 @@ static const yytype_uint8 yyr1[] =
        0,    54,    55,    56,    57,    57,    58,    58,    59,    59,
       59,    59,    60,    60,    60,    60,    61,    61,    61,    61,
       61,    61,    61,    61,    62,    62,    62,    62,    62,    62,
-      62,    62,    62,    63,    63,    63,    64,    64,    64,    64,
-      64,    64,    64,    64,    65,    66,    67,    68,    69,    69,
-      70,    70,    71,    71,    71,    71,    71,    71,    71,    71,
-      71,    71,    71,    71,    71,    71,    72,    72,    73,    73,
-      74,    74,    74,    75,    75,    75,    75,    75,    75,    75,
-      75,    75,    75,    75
+      62,    62,    62,    62,    63,    63,    63,    64,    64,    64,
+      64,    64,    64,    64,    64,    65,    66,    67,    68,    69,
+      69,    70,    70,    71,    71,    71,    71,    71,    71,    71,
+      71,    71,    71,    71,    71,    71,    71,    72,    72,    73,
+      73,    74,    74,    74,    75,    75,    75,    75,    75,    75,
+      75,    75,    75,    75,    75,    75
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -758,12 +768,12 @@ static const yytype_uint8 yyr2[] =
        0,     2,     1,     2,     0,     2,     0,     2,     5,     3,
        1,     3,     1,     4,     2,     5,     3,     1,     5,     5,
        6,     9,    11,     8,     3,     6,     4,     3,     5,     4,
-       3,     4,     3,     3,     1,     0,     1,     2,     5,     1,
-       1,     2,     4,     5,     9,     3,     7,     2,     1,     0,
-       5,     3,     3,     3,     3,     3,     3,     3,     3,     3,
-       3,     3,     3,     3,     3,     1,     1,     0,     1,     3,
-       1,     4,     3,     1,     4,     3,     2,     3,     1,     1,
-       1,     1,     1,     3
+       3,     4,     3,     2,     3,     1,     0,     1,     2,     5,
+       1,     1,     2,     4,     5,     9,     3,     7,     2,     1,
+       0,     5,     3,     3,     3,     3,     3,     3,     3,     3,
+       3,     3,     3,     3,     3,     3,     1,     1,     0,     1,
+       3,     1,     4,     3,     1,     4,     3,     2,     3,     1,
+       1,     1,     1,     1,     3,     4
 };
 
 
@@ -1442,497 +1452,509 @@ yyreduce:
         case 2:
 #line 100 "parser.y" /* yacc.c:1645  */
     { theexpression = (yyvsp[0].body);}
-#line 1446 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1456 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 3:
 #line 104 "parser.y" /* yacc.c:1645  */
     {(yyval.body) = makeBody((yyvsp[-1].declarationList), (yyvsp[0].statementList));}
-#line 1452 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1462 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 4:
 #line 108 "parser.y" /* yacc.c:1645  */
     {(yyval.declarationList) = NULL;}
-#line 1458 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1468 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 5:
 #line 110 "parser.y" /* yacc.c:1645  */
     {(yyval.declarationList) = makeDeclarationList((yyvsp[-1].declaration), (yyvsp[0].declarationList));}
-#line 1464 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1474 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 6:
 #line 114 "parser.y" /* yacc.c:1645  */
     {(yyval.statementList) = NULL;}
-#line 1470 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1480 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 7:
 #line 116 "parser.y" /* yacc.c:1645  */
     {(yyval.statementList) = makeStatementList((yyvsp[-1].statement), (yyvsp[0].statementList));}
-#line 1476 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1486 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 8:
 #line 120 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeGenericTypeList((yyvsp[0].typeList), (yyvsp[-4].stringconst), (yyvsp[-2].stringconst));}
-#line 1482 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1492 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 9:
 #line 122 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeGenericTypeList((yyvsp[0].typeList), (yyvsp[-2].stringconst), NULL);}
-#line 1488 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1498 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 10:
 #line 124 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeGenericTypeList(NULL, (yyvsp[0].stringconst), NULL);}
-#line 1494 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1504 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 11:
 #line 126 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeGenericTypeList(NULL, (yyvsp[-2].stringconst), (yyvsp[0].stringconst));}
-#line 1500 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1510 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 12:
 #line 130 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeExtensionList(NULL, (yyvsp[0].stringconst), NULL);}
-#line 1506 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1516 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 13:
 #line 132 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeExtensionList(NULL, (yyvsp[-3].stringconst), (yyvsp[-1].typeList));}
-#line 1512 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1522 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 14:
 #line 134 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeExtensionList((yyvsp[0].typeList), (yyvsp[-1].stringconst), NULL);}
-#line 1518 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1528 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 15:
 #line 136 "parser.y" /* yacc.c:1645  */
     {(yyval.typeList) = makeExtensionList((yyvsp[-3].typeList), (yyvsp[-4].stringconst), (yyvsp[-1].typeList));}
-#line 1524 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1534 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 16:
 #line 140 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeVarDeclarations((yyvsp[-1].varDelList)); }
-#line 1530 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1540 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 17:
 #line 142 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeFunctionDecleration((yyvsp[0].function)); }
-#line 1536 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1546 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 18:
 #line 144 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeTypeDeclaration((yyvsp[-3].stringconst), (yyvsp[-1].type)); }
-#line 1542 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1552 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 19:
 #line 146 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeValDeclaration((yyvsp[-3].stringconst), (yyvsp[-1].expression));}
-#line 1548 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1558 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 20:
 #line 148 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeClassDeclaration((yyvsp[-4].stringconst), (yyvsp[-2].declarationList), NULL, NULL);}
-#line 1554 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1564 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 21:
 #line 150 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeClassDeclaration((yyvsp[-7].stringconst), (yyvsp[-2].declarationList), (yyvsp[-5].typeList), NULL);}
-#line 1560 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1570 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 22:
 #line 152 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeClassDeclaration((yyvsp[-9].stringconst), (yyvsp[-2].declarationList), (yyvsp[-7].typeList), (yyvsp[-4].typeList));}
-#line 1566 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1576 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 23:
 #line 154 "parser.y" /* yacc.c:1645  */
     {(yyval.declaration) = makeClassDeclaration((yyvsp[-6].stringconst), (yyvsp[-2].declarationList), NULL, (yyvsp[-4].typeList));}
-#line 1572 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1582 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 24:
 #line 158 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeReturnStatement((yyvsp[-1].expression));}
-#line 1578 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1588 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 25:
 #line 160 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeIfElseStatement((yyvsp[-4].expression), (yyvsp[-2].statement), (yyvsp[0].statement));}
-#line 1584 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1594 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 26:
 #line 162 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeIfStatement((yyvsp[-2].expression), (yyvsp[0].statement));}
-#line 1590 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1600 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 27:
 #line 164 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeAllocateStatement((yyvsp[-1].variable));}
-#line 1596 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1606 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 28:
 #line 166 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeAllocateOfLenStatement((yyvsp[-3].variable), (yyvsp[-1].expression));}
-#line 1602 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1612 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 29:
 #line 168 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeAssignment((yyvsp[-3].variable), (yyvsp[-1].expression));}
-#line 1608 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1618 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 30:
 #line 170 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeWriteStatement((yyvsp[-1].expression));}
-#line 1614 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1624 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 31:
 #line 172 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeWhileStatement((yyvsp[-2].expression), (yyvsp[0].statement));}
-#line 1620 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1630 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 32:
 #line 174 "parser.y" /* yacc.c:1645  */
     {(yyval.statement) = makeStatementFromList((yyvsp[-1].statementList));}
-#line 1626 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1636 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 33:
-#line 178 "parser.y" /* yacc.c:1645  */
-    {(yyval.typeList) = makeTypeList((yyvsp[0].typeList), (yyvsp[-2].type));}
-#line 1632 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 176 "parser.y" /* yacc.c:1645  */
+    {(yyval.statement) = makeEmptyExpression((yyvsp[-1].expression));}
+#line 1642 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 34:
 #line 180 "parser.y" /* yacc.c:1645  */
-    {(yyval.typeList) = makeTypeList(NULL, (yyvsp[0].type));}
-#line 1638 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.typeList) = makeTypeList((yyvsp[0].typeList), (yyvsp[-2].type));}
+#line 1648 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 35:
 #line 182 "parser.y" /* yacc.c:1645  */
-    {(yyval.typeList) = NULL;}
-#line 1644 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.typeList) = makeTypeList(NULL, (yyvsp[0].type));}
+#line 1654 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 36:
-#line 186 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeIdType((yyvsp[0].stringconst)); }
-#line 1650 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 184 "parser.y" /* yacc.c:1645  */
+    {(yyval.typeList) = NULL;}
+#line 1660 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 37:
 #line 188 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeClassType((yyvsp[0].stringconst), NULL); }
-#line 1656 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeIdType((yyvsp[0].stringconst)); }
+#line 1666 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 38:
 #line 190 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeClassType((yyvsp[-3].stringconst), (yyvsp[-1].typeList)); }
-#line 1662 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeClassType((yyvsp[0].stringconst), NULL); }
+#line 1672 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 39:
 #line 192 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeIntType(); }
-#line 1668 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeClassType((yyvsp[-3].stringconst), (yyvsp[-1].typeList)); }
+#line 1678 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 40:
 #line 194 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeBoolType(); }
-#line 1674 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeIntType(); }
+#line 1684 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 41:
 #line 196 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeArrayType((yyvsp[0].type)); }
-#line 1680 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeBoolType(); }
+#line 1690 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 42:
 #line 198 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeRecordType((yyvsp[-1].varDelList)); }
-#line 1686 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeArrayType((yyvsp[0].type)); }
+#line 1696 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 43:
 #line 200 "parser.y" /* yacc.c:1645  */
-    {(yyval.type) = makeLambdaType((yyvsp[-3].typeList), (yyvsp[0].type));}
-#line 1692 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.type) = makeRecordType((yyvsp[-1].varDelList)); }
+#line 1702 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 44:
-#line 204 "parser.y" /* yacc.c:1645  */
-    {(yyval.lambda) = makeLambda((yyvsp[-7].varDelList), (yyvsp[-4].type), (yyvsp[-1].body));}
-#line 1698 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 202 "parser.y" /* yacc.c:1645  */
+    {(yyval.type) = makeLambdaType((yyvsp[-3].typeList), (yyvsp[0].type));}
+#line 1708 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 45:
-#line 208 "parser.y" /* yacc.c:1645  */
-    {(yyval.function) = makeFunction((yyvsp[-2].functionHead), (yyvsp[-1].body), (yyvsp[0].functionTail));}
-#line 1704 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 206 "parser.y" /* yacc.c:1645  */
+    {(yyval.lambda) = makeLambda((yyvsp[-7].varDelList), (yyvsp[-4].type), (yyvsp[-1].body));}
+#line 1714 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 46:
-#line 212 "parser.y" /* yacc.c:1645  */
-    {(yyval.functionHead) = makeFunctionHead((yyvsp[-5].stringconst), (yyvsp[-3].varDelList), (yyvsp[0].type));}
-#line 1710 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 210 "parser.y" /* yacc.c:1645  */
+    {(yyval.function) = makeFunction((yyvsp[-2].functionHead), (yyvsp[-1].body), (yyvsp[0].functionTail));}
+#line 1720 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 47:
-#line 216 "parser.y" /* yacc.c:1645  */
-    {(yyval.functionTail) = makeFunctionTail((yyvsp[0].stringconst));}
-#line 1716 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 214 "parser.y" /* yacc.c:1645  */
+    {(yyval.functionHead) = makeFunctionHead((yyvsp[-5].stringconst), (yyvsp[-3].varDelList), (yyvsp[0].type));}
+#line 1726 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 48:
-#line 220 "parser.y" /* yacc.c:1645  */
-    {(yyval.varDelList)=(yyvsp[0].varDelList);}
-#line 1722 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 218 "parser.y" /* yacc.c:1645  */
+    {(yyval.functionTail) = makeFunctionTail((yyvsp[0].stringconst));}
+#line 1732 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 49:
 #line 222 "parser.y" /* yacc.c:1645  */
-    {(yyval.varDelList)=NULL;}
-#line 1728 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.varDelList)=(yyvsp[0].varDelList);}
+#line 1738 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 50:
-#line 226 "parser.y" /* yacc.c:1645  */
-    {(yyval.varDelList) = makeVarDelList((yyvsp[-4].stringconst), (yyvsp[-2].type), (yyvsp[0].varDelList));}
-#line 1734 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 224 "parser.y" /* yacc.c:1645  */
+    {(yyval.varDelList)=NULL;}
+#line 1744 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 51:
 #line 228 "parser.y" /* yacc.c:1645  */
-    {(yyval.varDelList) = makeVarDelList((yyvsp[-2].stringconst), (yyvsp[0].type), NULL); }
-#line 1740 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.varDelList) = makeVarDelList((yyvsp[-4].stringconst), (yyvsp[-2].type), (yyvsp[0].varDelList));}
+#line 1750 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 52:
-#line 232 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = (yyvsp[-1].expression);}
-#line 1746 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 230 "parser.y" /* yacc.c:1645  */
+    {(yyval.varDelList) = makeVarDelList((yyvsp[-2].stringconst), (yyvsp[0].type), NULL); }
+#line 1756 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 53:
-#line 236 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeMultOp(), (yyvsp[0].expression));}
-#line 1752 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 234 "parser.y" /* yacc.c:1645  */
+    {(yyval.expression) = (yyvsp[-1].expression);}
+#line 1762 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 54:
 #line 238 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeDivOp(), (yyvsp[0].expression));}
-#line 1758 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeMultOp(), (yyvsp[0].expression));}
+#line 1768 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 55:
 #line 240 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makePlusOp(), (yyvsp[0].expression));}
-#line 1764 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeDivOp(), (yyvsp[0].expression));}
+#line 1774 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 56:
 #line 242 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeMinusOp(), (yyvsp[0].expression));}
-#line 1770 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makePlusOp(), (yyvsp[0].expression));}
+#line 1780 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 57:
 #line 244 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeEqualityOp(), (yyvsp[0].expression));}
-#line 1776 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeMinusOp(), (yyvsp[0].expression));}
+#line 1786 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 58:
 #line 246 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeInequalityOp(), (yyvsp[0].expression));}
-#line 1782 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeEqualityOp(), (yyvsp[0].expression));}
+#line 1792 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 59:
 #line 248 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeGreaterOp(), (yyvsp[0].expression));}
-#line 1788 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeInequalityOp(), (yyvsp[0].expression));}
+#line 1798 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 60:
 #line 250 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeLessOp(), (yyvsp[0].expression));}
-#line 1794 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeGreaterOp(), (yyvsp[0].expression));}
+#line 1804 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 61:
 #line 252 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeGeqOp(), (yyvsp[0].expression));}
-#line 1800 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeLessOp(), (yyvsp[0].expression));}
+#line 1810 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 62:
 #line 254 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeLeqOp(), (yyvsp[0].expression));}
-#line 1806 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeGeqOp(), (yyvsp[0].expression));}
+#line 1816 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 63:
 #line 256 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeAndOp(), (yyvsp[0].expression));}
-#line 1812 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeLeqOp(), (yyvsp[0].expression));}
+#line 1822 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 64:
 #line 258 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeOrOp(), (yyvsp[0].expression));}
-#line 1818 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeAndOp(), (yyvsp[0].expression));}
+#line 1828 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 65:
 #line 260 "parser.y" /* yacc.c:1645  */
-    {(yyval.expression) = makeEXPFromTerm((yyvsp[0].term));}
-#line 1824 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPOpEXP((yyvsp[-2].expression), makeOrOp(), (yyvsp[0].expression));}
+#line 1834 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 66:
-#line 264 "parser.y" /* yacc.c:1645  */
-    {(yyval.expressionList) = (yyvsp[0].expressionList);}
-#line 1830 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 262 "parser.y" /* yacc.c:1645  */
+    {(yyval.expression) = makeEXPFromTerm((yyvsp[0].term));}
+#line 1840 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 67:
 #line 266 "parser.y" /* yacc.c:1645  */
-    {(yyval.expressionList) = NULL;}
-#line 1836 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expressionList) = (yyvsp[0].expressionList);}
+#line 1846 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 68:
-#line 270 "parser.y" /* yacc.c:1645  */
-    {(yyval.expressionList) = makeExpList((yyvsp[0].expression), NULL); }
-#line 1842 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 268 "parser.y" /* yacc.c:1645  */
+    {(yyval.expressionList) = NULL;}
+#line 1852 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 69:
 #line 272 "parser.y" /* yacc.c:1645  */
-    {(yyval.expressionList) = makeExpList((yyvsp[-2].expression), (yyvsp[0].expressionList)); }
-#line 1848 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.expressionList) = makeExpList((yyvsp[0].expression), NULL); }
+#line 1858 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 70:
-#line 302 "parser.y" /* yacc.c:1645  */
-    {(yyval.variable) = makeVariable((yyvsp[0].stringconst));}
-#line 1854 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 274 "parser.y" /* yacc.c:1645  */
+    {(yyval.expressionList) = makeExpList((yyvsp[-2].expression), (yyvsp[0].expressionList)); }
+#line 1864 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 71:
 #line 304 "parser.y" /* yacc.c:1645  */
-    {(yyval.variable) = makeArraySubscript((yyvsp[-3].variable), (yyvsp[-1].expression));}
-#line 1860 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.variable) = makeVariable((yyvsp[0].stringconst));}
+#line 1870 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 72:
 #line 306 "parser.y" /* yacc.c:1645  */
-    {(yyval.variable) = makeRecordSubscript((yyvsp[-2].variable), (yyvsp[0].stringconst));}
-#line 1866 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.variable) = makeArraySubscript((yyvsp[-3].variable), (yyvsp[-1].expression));}
+#line 1876 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 73:
-#line 310 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeTermFromVariable((yyvsp[0].variable));}
-#line 1872 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 308 "parser.y" /* yacc.c:1645  */
+    {(yyval.variable) = makeRecordSubscript((yyvsp[-2].variable), (yyvsp[0].stringconst));}
+#line 1882 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 74:
 #line 312 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeFunctionCallTerm((yyvsp[-3].stringconst), (yyvsp[-1].expressionList));}
-#line 1878 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeTermFromVariable((yyvsp[0].variable));}
+#line 1888 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 75:
 #line 314 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeParentheses((yyvsp[-1].expression));}
-#line 1884 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeFunctionCallTerm((yyvsp[-3].stringconst), (yyvsp[-1].expressionList));}
+#line 1894 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 76:
 #line 316 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeNegatedTerm((yyvsp[0].term));}
-#line 1890 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeParentheses((yyvsp[-1].expression));}
+#line 1900 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 77:
 #line 318 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeAbsTerm((yyvsp[-1].expression));}
-#line 1896 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeNegatedTerm((yyvsp[0].term));}
+#line 1906 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 78:
 #line 320 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeNumTerm((yyvsp[0].intconst));}
-#line 1902 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeAbsTerm((yyvsp[-1].expression));}
+#line 1912 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 79:
 #line 322 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeTrueTerm();}
-#line 1908 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeNumTerm((yyvsp[0].intconst));}
+#line 1918 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 80:
 #line 324 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeFalseTerm();}
-#line 1914 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeTrueTerm();}
+#line 1924 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 81:
 #line 326 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeNullTerm();}
-#line 1920 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeFalseTerm();}
+#line 1930 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 82:
 #line 328 "parser.y" /* yacc.c:1645  */
-    {(yyval.term) = makeLambdaTerm((yyvsp[0].lambda));}
-#line 1926 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    {(yyval.term) = makeNullTerm();}
+#line 1936 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
   case 83:
 #line 330 "parser.y" /* yacc.c:1645  */
+    {(yyval.term) = makeLambdaTerm((yyvsp[0].lambda));}
+#line 1942 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    break;
+
+  case 84:
+#line 332 "parser.y" /* yacc.c:1645  */
     {(yyval.term) = makeDowncastTerm((yyvsp[-2].stringconst), (yyvsp[0].stringconst));}
-#line 1932 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1948 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+    break;
+
+  case 85:
+#line 334 "parser.y" /* yacc.c:1645  */
+    {(yyval.term) = makeShorthandLambdaCall((yyvsp[-3].variable), (yyvsp[-1].expressionList));}
+#line 1954 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
     break;
 
 
-#line 1936 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
+#line 1958 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.c" /* yacc.c:1645  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2159,4 +2181,4 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 333 "parser.y" /* yacc.c:1903  */
+#line 337 "parser.y" /* yacc.c:1903  */

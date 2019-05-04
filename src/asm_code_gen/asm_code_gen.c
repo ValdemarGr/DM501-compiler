@@ -123,7 +123,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
                     getNextRegister(instruction->val.args.moveReg),
-                    (instruction->val.args.argNum + 1) * POINTER_SIZE);
+                    (instruction->val.args.stackNum + 1) * POINTER_SIZE);
         } break;
         case INSTRUCTION_MINUS: {
             fprintf(out, "# INSTRUCTION_MINUS\n");

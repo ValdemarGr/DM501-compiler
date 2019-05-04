@@ -184,6 +184,15 @@ Term *makeDowncastTerm(char* varId, char *downcastId) {
     return returning;
 }
 
+Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList) {
+    Term* returning = NEW(Term);
+
+    returning->kind = shorthandCallK;
+    returning->val.shorthandCallD.var = access;
+    returning->val.shorthandCallD.expressionList = expressionList;
+
+    return returning;
+}
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     Expression *e = NEW(Expression);
@@ -489,6 +498,17 @@ Statement *makeStatementFromList(StatementList *statementList) {
     returning->lineno = lineno;
     returning->kind = stmListK;
     returning->val.stmListD.statementList = statementList;
+    return returning;
+}
+
+Statement *makeEmptyExpression(Expression *expression) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+
+    returning->lineno = lineno;
+    returning->kind = emptyK;
+    returning->val.empty.exp = expression;
     return returning;
 }
 

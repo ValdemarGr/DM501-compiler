@@ -14,6 +14,7 @@ bool inClassContextCurrent = false;
 bool inLambdaContext = false;
 int lambdaDefineScope = 0;
 int lambdaArgCount = 0;
+int staticLinkDepth = -1;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -805,30 +806,42 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             //For args we generate metadata for later (maybe this is useless, who knows?)
             VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
-            size_t counter = 0;
+            size_t max = 1;
 
             size_t  regForMoving = currentTemporary;
             currentTemporary++;
 
+            //We need to move from opposite direction since pushing on stack goes opposite
             while (declarationList != NULL) {
-                //Create arg instr for this argument
-                Instructions *arg = newInstruction();
-                arg->kind = METADATA_FUNCTION_ARGUMENT;
-                arg->val.args.argNum = counter;
-                arg->val.args.moveReg = regForMoving;
-                appendInstructions(arg);
-
+                max++;
                 declarationList = declarationList->next;
-                counter++;
             }
+
+            size_t counter = 0;
 
             //And the lambda context
             Instructions *arg = newInstruction();
             arg->kind = METADATA_FUNCTION_ARGUMENT;
             arg->val.args.argNum = counter;
             arg->val.args.moveReg = regForMoving;
+            arg->val.args.stackNum = max - counter - 1;
             appendInstructions(arg);
             counter++;
+
+            declarationList = term->val.lambdaD.lambda->declarationList;
+            while (declarationList != NULL) {
+
+                //Create arg instr for this argument
+                Instructions *arg = newInstruction();
+                arg->kind = METADATA_FUNCTION_ARGUMENT;
+                arg->val.args.argNum = counter;
+                arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
+                appendInstructions(arg);
+
+                declarationList = declarationList->next;
+                counter++;
+            }
 
             lambdaArgCount = (int)counter;
             generateInstructionTree(term->val.lambdaD.lambda->body);
@@ -850,6 +863,93 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
         } break;
         case classDowncastk: {
             //TODO
+        } break;
+        case shorthandCallK: {
+            //Give arguments on stack
+            //For each expression argument, evaluate it and push it to the stack
+            size_t fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
+
+            //We need to save the current static link pointer
+            Instructions *push = newInstruction();
+            push->kind = COMPLEX_SAVE_STATIC_LINK;
+            push->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
+            push->val.pushPopStaticLink.temporary = currentTemporary;
+            appendInstructions(push);
+            currentTemporary++;
+
+            ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
+
+            while (expressionList != NULL) {
+                //Evaluate
+                size_t temporaryForArgument = generateInstructionsForExpression(expressionList->expression, symbolTable);
+
+                //Then push
+                Instructions *push = newInstruction();
+                push->kind = INSTRUCTION_PUSH;
+                push->val.tempToPush = temporaryForArgument;
+                appendInstructions(push);
+
+                expressionList = expressionList->next;
+            }
+
+            Instructions *captureOffset = newInstruction();
+            captureOffset->kind = INSTRUCTION_CONST;
+            captureOffset->val.constant.value = POINTER_SIZE;
+            captureOffset->val.constant.temp = currentTemporary;
+            size_t captureTemp = currentTemporary;
+            appendInstructions(captureOffset);
+            currentTemporary++;
+
+            //Deref an extra time, lambda's are always double dereferenced
+            Instructions *capturePtr = newInstruction();
+            capturePtr->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+            capturePtr->val.dereferenceOffset.ptrTemp = fncPtrTemp;
+            capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
+            appendInstructions(capturePtr);
+
+            Instructions *debug = newInstruction();
+            debug->kind = METADATA_DEBUG_INFO;
+            debug->val.debugInfo = "CAPTURE PUSH";
+            appendInstructions(debug);
+
+            //Push capture pointer
+            Instructions *push2 = newInstruction();
+            push2->kind = INSTRUCTION_PUSH;
+            push2->val.tempToPush = fncPtrTemp;
+            appendInstructions(push2);
+
+            fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
+
+            //Off by one since we have arr of ptrs and first is len
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = 0;
+            num->val.constant.temp = currentTemporary;
+            size_t numTemp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+
+            //Deref an extra time, lambda's are always double dereferenced
+            Instructions *ptrAccess = newInstruction();
+            ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+            ptrAccess->val.dereferenceOffset.ptrTemp = fncPtrTemp;
+            ptrAccess->val.dereferenceOffset.offsetTemp = numTemp;
+            appendInstructions(ptrAccess);
+
+            //Then call
+            Instructions *call = newInstruction();
+            call->kind = INSTRUCTION_REGISTER_CALL;
+            call->val.callRegister = fncPtrTemp;
+            appendInstructions(call);
+
+            //We need to restore the static link
+            Instructions *popLink = newInstruction();
+            popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
+            popLink->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
+            popLink->val.pushPopStaticLink.temporary = currentTemporary;
+            appendInstructions(popLink);
+            currentTemporary++;
+            return 0;
         } break;
     }
 }
@@ -1480,6 +1580,9 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 }
             }
         } break;
+        case emptyK: {
+            generateInstructionsForExpression(statement->val.empty.exp, statement->symbolTable);
+        } break;
     }
 }
 
@@ -1538,17 +1641,27 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 
             //For args we generate metadata for later (maybe this is useless, who knows?)
             VarDelList *declarationList = declaration->val.functionD.function->head->declarationList;
-            size_t counter = 0;
+            size_t max = 0;
 
             size_t  regForMoving = currentTemporary;
             currentTemporary++;
 
+            //We need to move from opposite direction since pushing on stack goes opposite
             while (declarationList != NULL) {
+                max++;
+                declarationList = declarationList->next;
+            }
+
+            size_t counter = 0;
+            declarationList = declaration->val.functionD.function->head->declarationList;
+            while (declarationList != NULL) {
+
                 //Create arg instr for this argument
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
                 arg->val.args.argNum = counter;
                 arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
                 appendInstructions(arg);
 
                 declarationList = declarationList->next;
@@ -1578,6 +1691,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 }
 
 Instructions* generateInstructionTree(Body *body) {
+    staticLinkDepth++;
     //Save temporary counter
     bool createMain = false;
 
@@ -1647,5 +1761,6 @@ Instructions* generateInstructionTree(Body *body) {
     }
     currentTemporary = restoreTemporary;
 
+    staticLinkDepth--;
     return instructionHead;
 }
