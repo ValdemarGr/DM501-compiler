@@ -368,9 +368,17 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             add->val.arithmetic2.dest = exprTemp;
             appendInstructions(add);
 
+            Instructions *constPtrSize = newInstruction();
+            constPtrSize->kind = INSTRUCTION_CONST;
+            constPtrSize->val.constant.value = POINTER_SIZE;
+            constPtrSize->val.constant.temp= currentTemporary;
+            appendInstructions(constPtrSize);
+            size_t ptrReg = currentTemporary;
+            currentTemporary++;
+
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
-            mulOffset->val.arithmetic2.source = POINTER_SIZE;
+            mulOffset->val.arithmetic2.source = ptrReg;
             mulOffset->val.arithmetic2.dest = exprTemp;
             appendInstructions(mulOffset);
 

@@ -1,0 +1,15 @@
+var arr: array of int;
+var i: int;
+
+allocate arr of length 10;
+i = 0;
+while (i < 10) do {
+    arr[i] = i;
+    i = i + 1;
+}
+
+i = 0;
+while (i < 10) do {
+    write arr[i];
+    i = i + 1;
+}
