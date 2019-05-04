@@ -1,0 +1,25 @@
+
+class ClassA {
+    var o : int;
+    val getter = (): int -> {
+        return o;
+    };
+    val setter = (new: int): int -> {
+        o = new;
+        return new;
+    };
+};
+
+
+var a: class ClassA;
+
+var get: () -> int;
+var set: (int) -> int;
+
+allocate a;
+
+get = a.getter;
+set = a.setter;
+
+write set(42);
+write get();

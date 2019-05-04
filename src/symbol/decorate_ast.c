@@ -173,6 +173,11 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
         vdl = vdl->next;
     }
 
+    //Make room for 1 more potential argument (lambda capture context)
+    if (isLambda) {
+        child->nextSymbolId++;
+    }
+
     //Recurse to body
     decorateAstWithSymbols(body, child);
 }

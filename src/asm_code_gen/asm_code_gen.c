@@ -604,6 +604,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.lambdaLoad.lambdaGlobalName,
                     getNextRegister(instruction->val.lambdaLoad.temporary));
         } break;
+        case COMPLEX_ALLOCATE_END:break;
+        case METADATA_DEBUG_INFO: {
+            fprintf(out, "# METADATA_DEBUG_INFO\n");
+            printIndentation(out);
+            fprintf(out, "# %s\n", instruction->val.debugInfo);
+        }break;
     }
 }
 

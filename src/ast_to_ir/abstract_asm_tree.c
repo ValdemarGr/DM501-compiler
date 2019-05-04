@@ -55,6 +55,12 @@ typedef struct VDLResult {
 VDLResult *generateVDLForClassDecls(VarDelList *currentTail, Declaration *declaration) {
     VDLResult *r = NEW(VDLResult);
 
+    if (declaration == NULL) {
+        r->head = currentTail;
+        r->tail = currentTail;
+        return r;
+    }
+
     switch (declaration->kind) {
         case declVarK: {
             if (currentTail == NULL) {
@@ -132,9 +138,37 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             size_t offset = POINTER_SIZE;
 
             if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
-                //We are accessing a class value from lambda (capture)
-                //Fetch the class pointer
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CLASS LOAD";
+                appendInstructions(debug);
 
+                //We are accessing a class value from lambda (capture)
+                //Fetch the class pointer which is the last pushed argument
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+                ptrAccess->val.tempFromStack.offset = offset * lambdaArgCount;
+                ptrAccess->val.tempFromStack.inputTemp = currentTemporary;
+                appendInstructions(ptrAccess);
+                size_t classPtrTemp = currentTemporary;
+                currentTemporary++;
+
+                Instructions *constOffset = newInstruction();
+                constOffset->kind = INSTRUCTION_CONST;
+                constOffset->val.constant.value = POINTER_SIZE * (int)symbol->uniqueIdForScope;
+                constOffset->val.constant.temp = currentTemporary;
+                size_t constOffsetTemp = currentTemporary;
+                appendInstructions(constOffset);
+                currentTemporary++;
+
+                //Now we must find the member we are accessing
+                Instructions *memberAccess = newInstruction();
+                memberAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+                memberAccess->val.dereferenceOffset.ptrTemp = classPtrTemp;
+                memberAccess->val.dereferenceOffset.offsetTemp = constOffsetTemp;
+                appendInstructions(memberAccess);
+
+                return classPtrTemp;
             } if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
@@ -263,7 +297,37 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             size_t offset = POINTER_SIZE;
 
-            if (frameStackDistanceToVariable == 0) {
+            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CLASS LOAD";
+                appendInstructions(debug);
+
+                //We are accessing a class value from lambda (capture)
+                //Fetch the class pointer which is the last pushed argument
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+                ptrAccess->val.tempFromStack.offset = offset * lambdaArgCount;
+                ptrAccess->val.tempFromStack.inputTemp = currentTemporary;
+                appendInstructions(ptrAccess);
+                size_t classPtrTemp = currentTemporary;
+                currentTemporary++;
+
+                Instructions *constOffset = newInstruction();
+                constOffset->kind = INSTRUCTION_CONST;
+                constOffset->val.constant.value = POINTER_SIZE * (int)symbol->uniqueIdForScope;
+                constOffset->val.constant.temp = currentTemporary;
+                size_t constOffsetTemp = currentTemporary;
+                appendInstructions(constOffset);
+                currentTemporary++;
+
+                Instructions *memberSave = newInstruction();
+                memberSave->kind = INSTRUCTION_MOVE_TO_OFFSET;
+                memberSave->val.moveToOffset.ptrTemp = classPtrTemp;
+                memberSave->val.moveToOffset.offsetTemp = constOffsetTemp;
+                memberSave->val.moveToOffset.tempToMove = tempToSave;
+                appendInstructions(memberSave);
+            } else if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
                 ptrAccess->val.tempIntoStack.offset = offset * (symbol->uniqueIdForScope + 1);
@@ -439,7 +503,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
                 Instructions *captureOffset = newInstruction();
                 captureOffset->kind = INSTRUCTION_CONST;
-                captureOffset->val.constant.value = 0;
+                captureOffset->val.constant.value = POINTER_SIZE;
                 captureOffset->val.constant.temp = currentTemporary;
                 size_t captureTemp = currentTemporary;
                 appendInstructions(captureOffset);
@@ -452,10 +516,17 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
                 appendInstructions(capturePtr);
 
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CAPTURE PUSH";
+                appendInstructions(debug);
+
                 //Push capture pointer
                 Instructions *push = newInstruction();
                 push->kind = INSTRUCTION_PUSH;
                 push->val.tempToPush = fncPtrTemp;
+                appendInstructions(push);
+
 
                 fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
 
@@ -750,6 +821,14 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 declarationList = declarationList->next;
                 counter++;
             }
+
+            //And the lambda context
+            Instructions *arg = newInstruction();
+            arg->kind = METADATA_FUNCTION_ARGUMENT;
+            arg->val.args.argNum = counter;
+            arg->val.args.moveReg = regForMoving;
+            appendInstructions(arg);
+            counter++;
 
             lambdaArgCount = (int)counter;
             generateInstructionTree(term->val.lambdaD.lambda->body);
