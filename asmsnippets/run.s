@@ -206,6 +206,9 @@ intprint:
 		movq $0, %rax
 		call printf
 # METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
 mov $60, %rax
 mov $0, %rdi
 syscall
@@ -234,6 +237,9 @@ mov %rsp,%rbp
 pop %rbp
 ret
 # METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
 # INSTRUCTION_FUNCTION_LABEL
 .type lambda_1, @function
 lambda_1:
@@ -258,11 +264,7 @@ mov -16(%rbp), %rdi
 mov $0, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
 mov %rsi, (%rdi, %r8,1)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -8(%rbp), %r9
-# INSTRUCTION_RETURN
-mov %r9, %rax
+# METADATA_END_BODY_BLOCK
 mov %rbp,%rsp
 pop %rbp
 ret
-# METADATA_END_BODY_BLOCK

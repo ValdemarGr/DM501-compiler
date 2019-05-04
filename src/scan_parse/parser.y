@@ -67,6 +67,7 @@ void yyerror(char const *s) {
 %token tVAL
 %token tCLASS
 %token tWITH
+%token tVOID
 
 %type <expression> expression
 %type <lambda> lambda
@@ -74,7 +75,7 @@ void yyerror(char const *s) {
 %type <declarationList> decl_list
 %type <varDelList> var_decl_list par_decl_list
 %type <declaration> declaration
-%type <type> type
+%type <type> type voidType
 %type <function> function
 %type <functionHead> head
 %type <functionTail> tail
@@ -202,7 +203,13 @@ type :  tIDENTIFIER
         {$$ = makeLambdaType($2, $5);}
 ;
 
+voidType :  tVOID
+        {$$ = makeVoidType(); }
+;
+
 lambda : '(' par_decl_list ')' ':' type tLAMBDA_ARROW '{' body '}'
+        {$$ = makeLambda($2, $5, $8);}
+        | '(' par_decl_list ')' ':' voidType tLAMBDA_ARROW '{' body '}'
         {$$ = makeLambda($2, $5, $8);}
 ;
 

@@ -1631,6 +1631,16 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
     switch (statement->kind) {
         case statReturnK:
+            if (functionReturnType->kind == typeVoidK) {
+                e = NEW(Error);
+
+                e->error = RETURN_IN_VOID_LAMBDA;
+                e->val.RETURN_IN_VOID_LAMBDA.foundReturnType = evaluateExpressionType(statement->val.returnD.exp, statement->symbolTable)->kind;
+                e->val.RETURN_IN_VOID_LAMBDA.lineno = statement->lineno;
+
+                return e;
+            }
+
             if (statement->symbolTable->next != NULL) {
                 parentScope = statement->symbolTable->next;
             }

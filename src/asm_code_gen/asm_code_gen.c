@@ -77,6 +77,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case METADATA_END_BODY_BLOCK:
             fprintf(out, "# METADATA_END_BODY_BLOCK\n");
+            fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
             currentIndendation--;
             //SKIP
             break;

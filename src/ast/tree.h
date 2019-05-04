@@ -18,7 +18,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK
 } TypeKind;
 
 typedef struct Type {
@@ -293,6 +293,8 @@ Type *makeArrayType(Type *type);
 Type *makeRecordType(VarDelList *record);
 
 Type *makeLambdaType(TypeList *typeList, Type *type);
+
+Type *makeVoidType();
 
 Expression *makeEXPfunction(char *identifier, Expression *body);
 

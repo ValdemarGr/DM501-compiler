@@ -4,9 +4,8 @@ class ClassA {
     val get = (): int -> {
         return o;
     };
-    val set = (new: int): int -> {
+    val set = (new: int): void -> {
         o = new;
-        return new;
     };
 };
 

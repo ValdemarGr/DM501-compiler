@@ -621,6 +621,14 @@ Type *makeLambdaType(TypeList *typeList, Type *type) {
     return t;
 }
 
+Type *makeVoidType() {
+    Type *t = NEW(Type);
+
+    t->kind = typeVoidK;
+
+    return t;
+}
+
 ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
     ExpressionList *list = NEW(ExpressionList);
     list->lineno = lineno;

@@ -167,6 +167,9 @@ void prettyType(Type *type) {
     }
 
     switch(type->kind) {
+        case typeVoidK: {
+            printf("\033[0;36mvoid\033[0m");
+        } break;
         case typeIdK:
             printf("\033[0;36m%s\033[0m", type->val.idType.id);
             break;
