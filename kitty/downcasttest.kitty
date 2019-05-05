@@ -1,0 +1,22 @@
+class A {
+    val a = 1;
+};
+
+class C {
+    val y = 44;
+};
+
+class B with A {
+    val b = 22;
+};
+
+var clsB: class B;
+var clsA: class A;
+allocate clsB;
+
+write clsB.b;
+write clsB.a;
+
+clsA = clsB : class A;
+
+write clsA.a;

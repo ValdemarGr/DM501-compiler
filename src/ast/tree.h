@@ -170,7 +170,7 @@ typedef struct Term {
         struct { Expression* expression; } absD;
         struct { int num; } numD;
         struct { Lambda *lambda; } lambdaD;
-        struct { char* varId; char* downcastId; } classDowncastD;
+        struct { Variable* var; Type *toCastTo; } classDowncastD;
         struct { struct Variable *var; ExpressionList *expressionList; } shorthandCallD;
     } val;
 } Term;
@@ -212,7 +212,7 @@ Term *makeNullTerm();
 
 Term *makeLambdaTerm(Lambda *lambda);
 
-Term *makeDowncastTerm(char* varId, char *downcastId);
+Term *makeDowncastTerm(Variable *var, Type *toCastTo);
 
 Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList);
 

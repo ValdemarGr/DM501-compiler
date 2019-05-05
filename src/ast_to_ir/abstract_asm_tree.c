@@ -157,7 +157,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
                 Instructions *constOffset = newInstruction();
                 constOffset->kind = INSTRUCTION_CONST;
-                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope - classGenericCount);
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope);
                 constOffset->val.constant.temp = currentTemporary;
                 size_t constOffsetTemp = currentTemporary;
                 appendInstructions(constOffset);
@@ -240,9 +240,17 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
 
             VarDelList *varDelList = NULL;
+            size_t sizeAccumulator = 0;
 
             if (unwrappedType->kind == typeRecordK) {
                 varDelList = unwrappedType->val.recordType.types;
+
+                //Todo classes
+
+                while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
+                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
+                    varDelList = varDelList->next;
+                }
             } else {
                 //Must be class or genericly type constrianed class
                 SYMBOL *classSym;
@@ -253,6 +261,11 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                     char *typeConstriantClass = unwrappedType->val.typeGeneric.subType;
                     classSym = getSymbol(symbolTable, typeConstriantClass);
                 }
+
+                SymbolTable *bodyTable = classSym->value->val.typeClassD.tableForClassBody;
+
+                sizeAccumulator = (getSymbol(bodyTable, variable->val.recordLookupD.id)->uniqueIdForScope) * POINTER_SIZE;
+/*
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
                 VarDelList *vdlIter = NULL;
@@ -268,16 +281,9 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                     vdlIter = r->tail;
 
                     declarationList = declarationList->next;
-                }
+                }*/
             }
-            size_t sizeAccumulator = 0;
 
-            //Todo classes
-
-            while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-                varDelList = varDelList->next;
-            }
 
             Instructions *constOffset = newInstruction();
             constOffset->kind = INSTRUCTION_CONST;
@@ -324,7 +330,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
                 Instructions *constOffset = newInstruction();
                 constOffset->kind = INSTRUCTION_CONST;
-                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope - classGenericCount);
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope);
                 constOffset->val.constant.temp = currentTemporary;
                 size_t constOffsetTemp = currentTemporary;
                 appendInstructions(constOffset);
@@ -404,11 +410,32 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             VarDelList *varDelList = NULL;
 
+            size_t sizeAccumulator = 0;
+
             if (unwrappedType->kind == typeRecordK) {
                 varDelList = unwrappedType->val.recordType.types;
+
+                //Todo classes
+
+                while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
+                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
+                    varDelList = varDelList->next;
+                }
             } else {
-                //Must be class
-                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                //Must be class or genericly type constrianed class
+                SYMBOL *classSym;
+                if (unwrappedType->kind == typeClassK) {
+                    classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                } else {
+                    //Generic with constraint, get sym by looking for generic name in this class's generics
+                    char *typeConstriantClass = unwrappedType->val.typeGeneric.subType;
+                    classSym = getSymbol(symbolTable, typeConstriantClass);
+                }
+
+                SymbolTable *bodyTable = classSym->value->val.typeClassD.tableForClassBody;
+
+                sizeAccumulator = (getSymbol(bodyTable, variable->val.recordLookupD.id)->uniqueIdForScope) * POINTER_SIZE;
+/*
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
                 VarDelList *vdlIter = NULL;
@@ -424,17 +451,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
                     vdlIter = r->tail;
 
                     declarationList = declarationList->next;
-                }
-            }
-
-            size_t sizeAccumulator = 0;
-
-            while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                //Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
-                //If int or bool we store them as primitives, else pointers
-                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-
-                varDelList = varDelList->next;
+                }*/
             }
 
             Instructions *constOffset = newInstruction();
@@ -878,7 +895,48 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case classDowncastk: {
-            //TODO
+            //We simply want to return the original class + an offset which is the downcasted version
+            //We find the offset by finding the first declaration in the downcast class and comapring them
+
+            SYMBOL *downcastSym = getSymbol(symbolTable, term->val.classDowncastD.toCastTo->val.typeClass.classId);
+            SYMBOL *varTypeSym = getSymbol(symbolTable,
+                    unwrapVariable(term->val.classDowncastD.var, symbolTable)->val.typeClass.classId);
+
+            //Must be class
+            SymbolTable *bodyTable = varTypeSym->value->val.typeClassD.tableForClassBody;
+            Declaration *toSearchFor = downcastSym->value->val.typeClassD.declarationList->declaration;
+
+            char *identifier = NULL;
+
+            if (toSearchFor->kind == declValK) {
+                identifier = toSearchFor->val.valD.id;
+            } else if (toSearchFor->kind == declVarK) {
+                identifier = toSearchFor->val.varD.id;
+            } else if (toSearchFor->kind == declValK) {
+                identifier = toSearchFor->val.varsD.var->val.varD.id;
+            }
+
+            SYMBOL *offsetSymbol = getSymbol(bodyTable, identifier);
+
+            size_t variableTemp = generateInstructionsForVariableAccess(term->val.classDowncastD.var, symbolTable);
+
+            size_t downcastOffset = offsetSymbol->uniqueIdForScope;
+
+            Instructions *constOffset = newInstruction();
+            constOffset->kind = INSTRUCTION_CONST;
+            constOffset->val.constant.value = (int)downcastOffset * POINTER_SIZE;
+            constOffset->val.constant.temp= currentTemporary;
+            size_t constOffsetTemp = currentTemporary;
+            appendInstructions(constOffset);
+            currentTemporary++;
+
+            Instructions *instruction = newInstruction();
+            instruction->kind = INSTRUCTION_ADD;
+            instruction->val.arithmetic2.source = constOffsetTemp;
+            instruction->val.arithmetic2.dest = variableTemp;
+            appendInstructions(instruction);
+
+            return variableTemp;
         } break;
         case shorthandCallK: {
             //Give arguments on stack
@@ -1219,8 +1277,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             size_t constNum = currentTemporary;
             currentTemporary++;
 
-            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
-            //TODO IF CLASS CONSTRUCT BY ASSIGNING VALUES
             Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
 
             size_t fieldCount = 0;
@@ -1248,7 +1304,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = constNum;
-            //ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);

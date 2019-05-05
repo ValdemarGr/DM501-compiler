@@ -33,6 +33,29 @@ SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
 }
 //Go all the way down through variable, then once at bottom get type
 //when we get type start returning, apply subscripting and such as we go up
+Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable);
+
+bool canDowncastVariable(Variable *variable, Type *toCastTo, SymbolTable *symbolTable) {
+    if (toCastTo->kind != typeClassK) {
+        return false;
+    }
+
+    Type *variableType = unwrapVariable(variable, symbolTable);
+
+    if (variableType->kind != typeClassK) {
+        return false;
+    }
+
+    if (strcmp(variableType->val.typeClass.classId, toCastTo->val.typeClass.classId) == 0) {
+        return true;
+    }
+
+    Type *res = getClassSubtype(variableType->val.typeClass.classId, toCastTo->val.typeClass.classId, symbolTable);
+
+    if (res != NULL) return true;
+
+    return false;
+}
 
 Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable) {
     SYMBOL *symbol = getSymbol(symbolTable, varId);
@@ -175,11 +198,11 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
 
             return type;
             break;
-        case classDowncastk:
-            type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
+        case classDowncastk: {
+            //SYMBOL *sym = getSymbol(symbolTable, term->val.classDowncastD.downcastId);
 
             return type;
-            break;
+        } break;
     }
 
     return NULL;
@@ -340,6 +363,8 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
         } else if (first->kind == typeGenericK) {
             return strcmp(first->val.typeGeneric.genericName, second->val.typeGeneric.genericName) == 0;
+        } else if (first->kind == typeClassK) {
+            return strcmp(first->val.typeClass.classId, second->val.typeClass.classId) == 0;
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
@@ -1405,11 +1430,11 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             return NULL_KITTY_VALUE_INDICATOR;
             break;
         case classDowncastk:
-            type = getClassSubtype(term->val.classDowncastD.varId, term->val.classDowncastD.downcastId, symbolTable);
 
-            if (areTypesEqual(type, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
-                if (strcmp(type->val.typeClass.classId, expectedType->val.idType.id) == 0) {
-                    return 0;
+
+            if (canDowncastVariable(term->val.classDowncastD.var, term->val.classDowncastD.toCastTo, symbolTable)) {
+                if (areTypesEqual(term->val.classDowncastD.toCastTo, expectedType, symbolTable)) {
+                    return NULL;
                 }
                 e = NEW(Error);
 
@@ -1419,7 +1444,30 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
 
                 return e;
+            } else {
+                e = NEW(Error);
+
+                e->error = ILLEGAL_DOWNCAST;
+                e->val.ILLEGAL_DOWNCAST.idFrom = type->val.typeClass.classId;
+                e->val.ILLEGAL_DOWNCAST.idTo = expectedType->val.idType.id;
+                e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
+
+                return e;
             }
+
+            /*if (areTypesEqual(type, unwrapTypedef(expectedType, symbolTable), symbolTable) == false) {
+                if (strcmp(type->val.typeClass.classId, expectedType->val.idType.id) == 0) {
+                    return NULL;
+                }
+                e = NEW(Error);
+
+                e->error = ILLEGAL_DOWNCAST;
+                e->val.ILLEGAL_DOWNCAST.idFrom = type->val.typeClass.classId;
+                e->val.ILLEGAL_DOWNCAST.idTo = expectedType->val.idType.id;
+                e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
+
+                return e;
+            }*/
 
             break;
         default:
@@ -1476,6 +1524,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
     return NULL;
 }
+
+
 
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable) {
 
@@ -1721,16 +1771,31 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
             return NULL;
             break;
-        /*case statAllocateK:
-            e = typeCheckExpression(statement->val.allocateD.exp,);
-            if (e != NULL) return e;
-            break;*/
-        case statAllocateLenK:
+        case statAllocateK: {
+            Type* unwrapped = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            if (unwrapped->kind != typeClassK && unwrapped->kind != typeRecordK) {
+                e = NEW(Error);
+
+                e->error = INVALID_ALLOCATE_TARGET;
+
+                return e;
+            }
+        } break;
+        case statAllocateLenK: {
+            Type* unwrapped = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
+            if (unwrapped->kind != typeClassK && unwrapped->kind != typeRecordK) {
+                e = NEW(Error);
+
+                e->error = INVALID_ALLOCATE_TARGET;
+
+                return e;
+            }
+
             e = typeCheckExpression(statement->val.allocateLenD.len,
                                     &intStaticType,
                                     statement->symbolTable);
             if (e != NULL) return e;
-            break;
+        } break;
         case statIfK:
             e = typeCheckExpression(statement->val.ifD.exp,
                                     &booleanStaticType,
@@ -1992,7 +2057,7 @@ bool checkIfIsSubtype(TypeList *extended, char *subType, SymbolTable *symbolTabl
     return false;
 }
 
-Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTable *symbolTable, Declaration *declaration) {
+Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTable *symbolTable, int lineno) {
     Error *e = NULL;
 
     TypeList *boundCounter = bound;
@@ -2008,7 +2073,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
 
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = boundCounter->type->val.typeClass.classId;
-                e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
 
                 return e;
             }
@@ -2023,7 +2088,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
 
                 e->error = NOT_CLASS;
                 e->val.NOT_CLASS.id = symbol->name;
-                e->val.NOT_CLASS.lineno = declaration->lineno;
+                e->val.NOT_CLASS.lineno = lineno;
 
                 return e;
             }
@@ -2033,14 +2098,14 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
 
                 e->error = NOT_CLASS;
                 e->val.NOT_CLASS.id = classSymbol->name;
-                e->val.NOT_CLASS.lineno = declaration->lineno;
+                e->val.NOT_CLASS.lineno = lineno;
 
                 return e;
             }
 
             e = checkNestedGenericBoundType(boundCounter->type->val.typeClass.genericBoundValues,
                     classSymbol->value->val.typeClassD.generics,
-                    symbolTable, declaration);
+                    symbolTable, lineno);
             if (e != NULL) return e;
         }
 
@@ -2053,7 +2118,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
         e = NEW(Error);
 
         e->error = TOO_FEW_GENERICS;
-        e->val.TOO_FEW_GENERICS.lineno = declaration->lineno;
+        e->val.TOO_FEW_GENERICS.lineno = lineno;
 
         return e;
     }
@@ -2063,12 +2128,112 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
         e = NEW(Error);
 
         e->error = TOO_MANY_GENERICS;
-        e->val.TOO_MANY_GENERICS.lineno = declaration->lineno;
+        e->val.TOO_MANY_GENERICS.lineno = lineno;
 
         return e;
     }
 
     return NULL;
+}
+
+Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *classId, SymbolTable *symbolTable, int lineno) {
+        Error *e = NULL;
+
+        SYMBOL *symbol = getSymbol(symbolTable, classId);
+
+        if (symbol == NULL) {
+            e = NEW(Error);
+
+            e->error = NOT_CLASS;
+            e->val.NOT_CLASS.id = classId;
+            e->val.NOT_CLASS.lineno = 0;
+
+            return e;
+        }
+
+        if (symbol->value->kind != symTypeClassK) {
+            e = NEW(Error);
+
+            e->error = NOT_CLASS;
+            e->val.NOT_CLASS.id = classId;
+            e->val.NOT_CLASS.lineno = 0;
+
+            return e;
+        }
+
+        TypeList *classGenerics = symbol->value->val.typeClassD.generics;
+
+        //We check the count, because the next part can abruptly return
+        e = checkNestedGenericBoundType(boundVars, classGenerics, symbolTable, lineno);
+        if (e != NULL) return e;
+
+        //The real handling
+        while (boundVars != NULL && classGenerics != NULL) {
+            //Check if bound var is of allowed type
+
+            if (classGenerics->type->val.typeGeneric.subType != NULL) {
+                if (boundVars->type->kind == typeIdK) {
+                    if (strcmp(classGenerics->type->val.typeGeneric.subType, boundVars->type->val.idType.id) == 0) {
+                        return NULL;
+                    }
+                } else if (boundVars->type->kind == typeClassK) {
+                    if (strcmp(classGenerics->type->val.typeGeneric.subType, boundVars->type->val.typeClass.classId) == 0) {
+                        return NULL;
+                    }
+                } else {
+                    e = NEW(Error);
+
+                    e->error = INVALID_GENERIC_HAS_TYPE_CONSTRAINT;
+
+                    return e;
+                }
+
+                if (strcmp(classGenerics->type->val.typeGeneric.subType, boundVars->type->val.idType.id) == 0) {
+                    return NULL;
+                }
+
+                SYMBOL *symbols = getSymbol(symbolTable, boundVars->type->val.typeClass.classId);
+
+                if (symbols == NULL) {
+                    e = NEW(Error);
+
+                    e->error = SYMBOL_NOT_FOUND;
+                    e->val.SYMBOL_NOT_FOUND_S.id = boundVars->type->val.typeClass.classId;
+                    e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+
+                    return e;
+                }
+
+                if (symbols->value->kind != symTypeClassK) {
+                    e = NEW(Error);
+
+                    e->error = NOT_CLASS;
+                    e->val.NOT_CLASS.id = symbols->name;
+                    e->val.NOT_CLASS.lineno = lineno;
+
+                    return e;
+                }
+
+                if (symbols->value->val.typeClassD.extendedClasses == NULL) {
+                    e = NEW(Error);
+
+                    e->error = CLASS_NOT_EXTENDED;
+                    e->val.CLASS_NOT_EXTENDED.id = symbols->name;
+                    e->val.CLASS_NOT_EXTENDED.lineno = lineno;
+
+                    return e;
+                }
+
+                if (checkIfIsSubtype(symbols->value->val.typeClassD.extendedClasses,
+                                     classGenerics->type->val.typeGeneric.subType,
+                                     symbolTable) == true) {
+                    return NULL;
+                }
+            }
+
+            classGenerics = classGenerics->next;
+            boundVars = boundVars->next;
+        }
 }
 
 Error *checkDeclValidity(Declaration *declaration) {
@@ -2086,86 +2251,9 @@ Error *checkDeclValidity(Declaration *declaration) {
             if (declaration->val.varD.type->kind == typeClassK) {
                 TypeList *boundVars = declaration->val.varD.type->val.typeClass.genericBoundValues;
                 SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.varD.type->val.typeClass.classId);
-
-                if (symbol == NULL) {
-                    e = NEW(Error);
-
-                    e->error = NOT_CLASS;
-                    e->val.NOT_CLASS.id = declaration->val.varD.id;
-                    e->val.NOT_CLASS.lineno = declaration->lineno;
-
-                    return e;
-                }
-
-                if (symbol->value->kind != symTypeClassK) {
-                    e = NEW(Error);
-
-                    e->error = NOT_CLASS;
-                    e->val.NOT_CLASS.id = declaration->val.varD.id;
-                    e->val.NOT_CLASS.lineno = declaration->lineno;
-
-                    return e;
-                }
-
                 TypeList *classGenerics = symbol->value->val.typeClassD.generics;
-
-                //We check the count, because the next part can abruptly return
-                e = checkNestedGenericBoundType(boundVars, classGenerics, declaration->symbolTable, declaration);
+                e = checkClassTypeValidity(boundVars, classGenerics, symbol->name, declaration->symbolTable, declaration->lineno);
                 if (e != NULL) return e;
-
-                //The real handling
-                while (boundVars != NULL && classGenerics != NULL) {
-                    //Check if bound var is of allowed type
-
-                    if (classGenerics->type->val.typeGeneric.subType != NULL) {
-                        if (strcmp(classGenerics->type->val.typeGeneric.subType, boundVars->type->val.idType.id) == 0) {
-                            return NULL;
-                        }
-
-                        SYMBOL *symbols = getSymbol(declaration->symbolTable, boundVars->type->val.typeClass.classId);
-
-                        if (symbols == NULL) {
-                            e = NEW(Error);
-
-                            e->error = SYMBOL_NOT_FOUND;
-                            e->val.SYMBOL_NOT_FOUND_S.id = boundVars->type->val.typeClass.classId;
-                            e->val.SYMBOL_NOT_FOUND_S.lineno = declaration->lineno;
-
-                            return e;
-                        }
-
-                        if (symbols->value->kind != symTypeClassK) {
-                            e = NEW(Error);
-
-                            e->error = NOT_CLASS;
-                            e->val.NOT_CLASS.id = symbols->name;
-                            e->val.NOT_CLASS.lineno = declaration->lineno;
-
-                            return e;
-                        }
-
-                        if (symbols->value->val.typeClassD.extendedClasses == NULL) {
-                            e = NEW(Error);
-
-                            e->error = CLASS_NOT_EXTENDED;
-                            e->val.CLASS_NOT_EXTENDED.id = symbols->name;
-                            e->val.CLASS_NOT_EXTENDED.lineno = declaration->lineno;
-
-                            return e;
-                        }
-
-                        if (checkIfIsSubtype(symbols->value->val.typeClassD.extendedClasses,
-                                classGenerics->type->val.typeGeneric.subType,
-                                declaration->symbolTable) == true) {
-                            return NULL;
-                        }
-                    }
-
-                    classGenerics = classGenerics->next;
-                    boundVars = boundVars->next;
-                }
-
-
             }
 
             break;
@@ -2184,6 +2272,20 @@ Error *checkDeclValidity(Declaration *declaration) {
             e = checkTypeExist(declaration->val.typeD.type, declaration->symbolTable, lineno, NULL);
             if (e != NULL) return e;
             break;
+        case declClassK: {
+            //Check that extension types are valid
+            TypeList *extended = declaration->val.classD.extendedClasses;
+
+            while (extended != NULL) {
+                char *id = extended->type->val.typeClass.classId;
+                TypeList *boundVars = extended->type->val.typeClass.genericBoundValues;
+                SYMBOL *symbol = getSymbol(declaration->symbolTable, id);
+                TypeList *classGenerics = symbol->value->val.typeClassD.generics;
+                e = checkClassTypeValidity(boundVars, classGenerics, symbol->name, declaration->symbolTable, declaration->lineno);
+                if (e != NULL) return e;
+                extended = extended->next;
+            }
+        } break;
         default:
             return NULL;
             break;
@@ -2226,6 +2328,9 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             break;
         case declClassK:
             workingInClass = true;
+            e = checkDeclValidity(declaration);
+            if (e != NULL) return e;
+
             classDeclList = declaration->val.classD.declarationList;
 
             while (classDeclList != NULL) {

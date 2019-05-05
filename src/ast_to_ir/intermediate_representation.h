@@ -104,7 +104,7 @@ typedef struct Instructions {
         char* function; //INSTRUCTION_CALL
         size_t callRegister;
         struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
-        struct {size_t argNum; size_t moveReg; size_t stackNum} args; //METADATA_FUNCTION_ARGUMENT
+        struct {size_t argNum; size_t moveReg; size_t stackNum; } args; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
         size_t tempToReturn; //INSTRUCTION_RETURN
         size_t tempToConstrain; //COMPLEX_CONSTRAIN_BOOLEAN

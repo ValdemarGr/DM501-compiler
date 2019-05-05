@@ -131,10 +131,10 @@ class_extension_list : tIDENTIFIER
                 {$$ = makeExtensionList(NULL, $1, NULL);}
                 | tIDENTIFIER '[' type_list ']'
                 {$$ = makeExtensionList(NULL, $1, $3);}
-                | tIDENTIFIER class_extension_list
-                {$$ = makeExtensionList($2, $1, NULL);}
-                | tIDENTIFIER class_extension_list '[' type_list ']'
-                {$$ = makeExtensionList($2, $1, $4);}
+                | tIDENTIFIER tWITH class_extension_list
+                {$$ = makeExtensionList($3, $1, NULL);}
+                | tIDENTIFIER '[' type_list ']' tWITH class_extension_list
+                {$$ = makeExtensionList($6, $1, $3);}
 ;
 
 declaration : tVAR var_decl_list ';'
@@ -335,7 +335,7 @@ term : variable
         {$$ = makeNullTerm();}
         | lambda
         {$$ = makeLambdaTerm($1);}
-        | tIDENTIFIER ':' tIDENTIFIER
+        | variable ':' type
         {$$ = makeDowncastTerm($1, $3);}
         | variable '(' act_list ')'
         {$$ = makeShorthandLambdaCall($1, $3);}

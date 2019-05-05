@@ -141,6 +141,12 @@ int writeError(Error *e) {
         case LAMBDA_CAPTURE_INVALID: {
             fprintf(stderr, "LAMBDA_CAPTURE_INVALID\n");
         } break;
+        case INVALID_GENERIC_HAS_TYPE_CONSTRAINT: {
+            fprintf(stderr, "INVALID_GENERIC_HAS_TYPE_CONSTRAINT\n");
+        } break;
+        case INVALID_ALLOCATE_TARGET: {
+            fprintf(stderr, "INVALID_ALLOCATE_TARGET\n");
+        } break;
     }
 
     return e->error;

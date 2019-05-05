@@ -174,12 +174,12 @@ Term *makeLambdaTerm(Lambda *lambda) {
     return returning;
 }
 
-Term *makeDowncastTerm(char* varId, char *downcastId) {
+Term *makeDowncastTerm(Variable *var, Type *toCastTo) {
     Term* returning = NEW(Term);
 
     returning->kind = classDowncastk;
-    returning->val.classDowncastD.varId =varId;
-    returning->val.classDowncastD.downcastId =downcastId;
+    returning->val.classDowncastD.var = var;
+    returning->val.classDowncastD.toCastTo = toCastTo;
 
     return returning;
 }

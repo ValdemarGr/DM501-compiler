@@ -596,6 +596,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             }
 
             //Set all the sym tables
+            value->val.typeClassD.tableForClassBody = newSt;
             DeclarationList *symSetter = newHead;
 
             while (symSetter != NULL) {
