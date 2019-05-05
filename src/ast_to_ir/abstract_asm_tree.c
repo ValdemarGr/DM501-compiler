@@ -11,6 +11,7 @@ static size_t ifCounter = 0;
 static size_t whileCounter = 0;
 size_t returnReg = 0;
 bool inClassContextCurrent = false;
+int classGenericCount = 0;
 bool inLambdaContext = false;
 int lambdaDefineScope = 0;
 int lambdaArgCount = 0;
@@ -156,7 +157,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
                 Instructions *constOffset = newInstruction();
                 constOffset->kind = INSTRUCTION_CONST;
-                constOffset->val.constant.value = POINTER_SIZE * (int)symbol->uniqueIdForScope;
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope - classGenericCount);
                 constOffset->val.constant.temp = currentTemporary;
                 size_t constOffsetTemp = currentTemporary;
                 appendInstructions(constOffset);
@@ -249,8 +250,8 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                     classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
                 } else {
                     //Generic with constraint, get sym by looking for generic name in this class's generics
-                    
-
+                    char *typeConstriantClass = unwrappedType->val.typeGeneric.subType;
+                    classSym = getSymbol(symbolTable, typeConstriantClass);
                 }
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
@@ -323,7 +324,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
                 Instructions *constOffset = newInstruction();
                 constOffset->kind = INSTRUCTION_CONST;
-                constOffset->val.constant.value = POINTER_SIZE * (int)symbol->uniqueIdForScope;
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope - classGenericCount);
                 constOffset->val.constant.temp = currentTemporary;
                 size_t constOffsetTemp = currentTemporary;
                 appendInstructions(constOffset);
@@ -1266,6 +1267,13 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 inClassContextCurrent = true;
 
                 SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+
+                classGenericCount = 0;
+                TypeList *generics = classSymbol->value->val.typeClassD.generics;
+                while (generics != NULL) {
+                    classGenericCount++;
+                    generics = generics->next;
+                }
 
                 DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
 

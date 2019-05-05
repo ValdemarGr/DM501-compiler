@@ -150,11 +150,13 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
     value->val.typeFunctionD.isLambda = isLambda;
     value->val.typeFunctionD.lambdaId = lambdaId;
 
-    putSymbol(symbolTable,
-              id,
-              value,
-              stmDeclNum,
-              isConst);
+    if (id != NULL) {
+        putSymbol(symbolTable,
+                  id,
+                  value,
+                  stmDeclNum,
+                  isConst);
+    }
 
     //Put the parameters in the child scope
     while (vdl != NULL) {
@@ -238,33 +240,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                     inLambdaContextCurrently = true;
                     //Give the lambda a name for future reference
                     statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->inClassContext = inClassContext;
-                    int suffix_len = strlen(LAMBDA_SUFFIX);
 
-                    //Unwrap the whole variable
-                    Variable *var = statement->val.assignmentD.var;
-
-                    while (var->kind != varIdK) {
-                        switch (var->kind) {
-                            case arrayIndexK:
-                                var = var->val.arrayIndexD.var;
-                                break;
-                            case recordLookupK:
-                                var = var->val.recordLookupD.var;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-
-                    char *var_name = var->val.idD.id;
-                    int var_len = strlen(var_name);
-
-                    char *lambda_id = (char*)malloc(sizeof(char) * (var_len + suffix_len));
-
-                    strcat(lambda_id, var_name);
-                    strcat(lambda_id, LAMBDA_SUFFIX);
-
-                    decorateFunction(lambda_id,
+                    decorateFunction(NULL,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->returnType,
                             symbolTable,
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->declarationList,
@@ -318,7 +295,7 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
             } else if (expression->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = expression->val.termD.term->val.lambdaD.lambda;
                 lambda->inClassContext = inClassContext;
-                char intToString[16];
+                /*char intToString[16];
 
                 sprintf(intToString, "%i", lambdaCount);
                 lambdaCount++;
@@ -329,9 +306,9 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
                 char *lambda_id = (char*)malloc(sizeof(char) * (suffix_len) + 16);
 
                 strcat(lambda_id, LAMBDA_SUFFIX);
-                strcat(lambda_id, intToString);
+                strcat(lambda_id, intToString);*/
 
-                decorateFunction(lambda_id,
+                decorateFunction(NULL,
                                  lambda->returnType,
                                  symbolTable,
                                  lambda->declarationList,

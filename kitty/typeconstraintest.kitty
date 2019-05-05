@@ -4,9 +4,13 @@ class ClassB {
 
 class ClassA [A: ClassB] {
     var o : A;
+    val s = 54;
     val writer = (): void -> {
+        write s;
         write o.value;
+        write hest;
     };
+    val hest = 58;
 };
 
 var a: class ClassA[class ClassB];
