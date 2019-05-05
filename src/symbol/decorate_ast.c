@@ -9,6 +9,7 @@
 
 int lambdaCount = 0;
 bool inClassContext = false;
+bool inLambdaContextCurrently = false;
 
 void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -226,6 +227,15 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             //If the lambda is R-value assigned to a var
             if (statement->val.assignmentD.exp->kind == termK) {
                 if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
+                    if (inLambdaContextCurrently) {
+                        e = NEW(Error);
+
+                        e->error = NESTED_LAMBDA;
+
+                        return e;
+                    } else
+
+                    inLambdaContextCurrently = true;
                     //Give the lambda a name for future reference
                     statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->inClassContext = inClassContext;
                     int suffix_len = strlen(LAMBDA_SUFFIX);
@@ -267,6 +277,7 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                     //Remember to assign the id to the type
                     unwrapVariable(statement->val.assignmentD.var, symbolTable)->val.typeLambdaK.lambdaId =
                             statement->val.assignmentD.exp->val.termD.term->val.lambdaD.lambda->id;
+                    inLambdaContextCurrently = false;
                 }
             }
             //If the rhs is an expression that contains a function call we have to check if the call itself
@@ -449,6 +460,20 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
+            if (inLambdaContextCurrently) {
+                e = NEW(Error);
+
+                e->error = NESTED_LAMBDA;
+
+                return e;
+            } else if (inClassContext) {
+                e = NEW(Error);
+
+                e->error = DECLARATIONS_IN_CLASS;
+
+                return e;
+            }
+
             alterIdTypesToGenerics(declaration->val.functionD.function->head->returnType, symbolTable);
 
             decorateFunction(declaration->val.functionD.function->head->indentifier,
@@ -477,6 +502,15 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
+                if (inLambdaContextCurrently) {
+                    e = NEW(Error);
+
+                    e->error = NESTED_LAMBDA;
+
+                    return e;
+                }
+
+                inLambdaContextCurrently = true;
                 Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
                 lambda->inClassContext = inClassContext;
                 declaration->val.valD.tpe->val.typeLambdaK.lambdaId = lambda->id;
@@ -490,6 +524,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                                  true,
                                  true,
                                  lambda->id);
+                inLambdaContextCurrently = false;
             } else  {
                 value = NEW(Value);
 

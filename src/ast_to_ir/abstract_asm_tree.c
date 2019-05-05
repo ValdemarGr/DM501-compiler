@@ -243,8 +243,15 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             if (unwrappedType->kind == typeRecordK) {
                 varDelList = unwrappedType->val.recordType.types;
             } else {
-                //Must be class
-                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                //Must be class or genericly type constrianed class
+                SYMBOL *classSym;
+                if (unwrappedType->kind == typeClassK) {
+                    classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                } else {
+                    //Generic with constraint, get sym by looking for generic name in this class's generics
+                    
+
+                }
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
                 VarDelList *vdlIter = NULL;

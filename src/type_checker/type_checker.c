@@ -7,6 +7,10 @@
 #include "../error/error.h"
 #include "../symbol/symbol.h"
 
+bool workingInClass = false;
+bool workingInLambda = false;
+int lambdaLevel = 0;
+
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
 //This is a hack, it is very hacky. Do not do this at home.
@@ -616,6 +620,20 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
         case varIdK:
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
+            if (workingInLambda && symbol->distanceFromRoot != 0) {
+                if (workingInClass) {
+                    //We may look on same level as lambdaLevel since we can capture class fields
+                    if (lambdaLevel > symbol->distanceFromRoot) {
+                        return NULL;
+                    }
+                } else {
+                    //We must strictly be smaller than lambda level
+                    if ((lambdaLevel + 1) > symbol->distanceFromRoot) {
+                        return NULL;
+                    }
+                }
+            }
+
             if (symbol == NULL) {
                 return NULL;
             }
@@ -829,6 +847,28 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
         case varIdK:
 
             symbol = getSymbol(symbolTable, variable->val.idD.id);
+
+            if (workingInLambda && symbol->distanceFromRoot != 0) {
+                if (workingInClass) {
+                    //We may look on same level as lambdaLevel since we can capture class fields
+                    if (lambdaLevel > symbol->distanceFromRoot) {
+                        e = NEW(Error);
+
+                        e->error = LAMBDA_CAPTURE_INVALID;
+
+                        return e;
+                    }
+                } else {
+                    //We must strictly be smaller than lambda level
+                    if ((lambdaLevel + 1) > symbol->distanceFromRoot) {
+                        e = NEW(Error);
+
+                        e->error = LAMBDA_CAPTURE_INVALID;
+
+                        return e;
+                    }
+                }
+            }
 
             if (symbol == NULL) {
                 e = NEW(Error);
@@ -1239,11 +1279,13 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
             break;
         case lambdaK:
+            workingInLambda = true;
             typeMatch = NEW(Type);
 
             typeMatch->kind = typeLambdaK;
             typeMatch->val.typeLambdaK.returnType = term->val.lambdaD.lambda->returnType;
             typeMatch->val.typeLambdaK.typeList = NULL;
+            lambdaLevel = (int)symbolTable->distanceFromRoot;
 
             //Now for converting the "advanced" type list
             VarDelList *vdl = term->val.lambdaD.lambda->declarationList;
@@ -1284,6 +1326,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
             e = typeCheck(term->val.lambdaD.lambda->body, term->val.lambdaD.lambda->returnType);
             if (e != NULL) return e;
+            workingInLambda = false;
 
             break;
         case parenthesesK:
@@ -1456,7 +1499,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             break;*/
         case opK:
             //Check if the operator takes boolean or integer as rhs/lhs
-            expressionType = &booleanStaticType;
+            expressionType = &intStaticType;
 
             switch (expression->val.op.operator->kind) {
                 /* GIT BLAME: MADS */
@@ -1464,7 +1507,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                 case opLessK:
                 case opGeqK:
                 case opLeqK:
-                    expressionType = &intStaticType;
+                    expressionType = &booleanStaticType;
                     break;
                 default:
                     break;
@@ -1501,6 +1544,14 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             if (expressionType->kind == intStaticType.kind) {
                 Type* leftExpType = evaluateExpressionType(expression->val.op.left, symbolTable);
                 Type* rightExpType = evaluateExpressionType(expression->val.op.right, symbolTable);
+
+                if (leftExpType == NULL || rightExpType == NULL) {
+                    e = NEW(Error);
+
+                    e->error = LAMBDA_CAPTURE_INVALID;
+
+                    return e;
+                }
 
                 if (leftExpType == NULL_KITTY_VALUE_INDICATOR ||
                             rightExpType == NULL_KITTY_VALUE_INDICATOR) {
@@ -1578,6 +1629,8 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
                 return NULL;
             }
+
+           // areTypesEqual(evaluateExpressionType(expression->val.op.left, expression->val.op.right))
 
             break;
         case termK:
@@ -2160,8 +2213,10 @@ Error *typeCheckDeclaration(Declaration *declaration) {
                     //Actually, if the lambda has already been bound, no reason to type check its body.
                 } else {
                     Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
-
+                    workingInLambda = true;
+                    lambdaLevel = (int)declaration->symbolTable->distanceFromRoot;
                     e = typeCheck(lambda->body, lambda->returnType);
+                    workingInLambda = false;
                     if (e != NULL) return e;
                 }
             } else {
@@ -2170,6 +2225,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             }
             break;
         case declClassK:
+            workingInClass = true;
             classDeclList = declaration->val.classD.declarationList;
 
             while (classDeclList != NULL) {
@@ -2178,6 +2234,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
 
                 classDeclList = classDeclList->next;
             }
+            workingInClass = false;
 
             break;
             //In any other case we want to check if the types they are assigned to even exist

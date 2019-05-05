@@ -1,0 +1,16 @@
+class ClassB {
+    val value = 66;
+};
+
+class ClassA [A: ClassB] {
+    var o : A;
+    val writer = (): void -> {
+        write o.value;
+    };
+};
+
+var a: class ClassA[class ClassB];
+allocate a;
+allocate a.o;
+
+a.writer();

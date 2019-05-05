@@ -135,6 +135,12 @@ int writeError(Error *e) {
         case RETURN_IN_VOID_LAMBDA: {
             fprintf(stderr, "Error: RETURN_IN_VOID_LAMBDA\n");
         } break;
+        case NESTED_LAMBDA: {
+            fprintf(stderr, "NESTED_LAMBDA\n");
+        } break;
+        case LAMBDA_CAPTURE_INVALID: {
+            fprintf(stderr, "LAMBDA_CAPTURE_INVALID\n");
+        } break;
     }
 
     return e->error;

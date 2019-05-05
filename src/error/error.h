@@ -41,7 +41,9 @@ typedef struct Error {
         CLASS_NOT_EXTENDED,
         NOT_TYPE,
         DECLARATIONS_IN_CLASS,
-        RETURN_IN_VOID_LAMBDA
+        RETURN_IN_VOID_LAMBDA,
+        NESTED_LAMBDA,
+        LAMBDA_CAPTURE_INVALID
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
