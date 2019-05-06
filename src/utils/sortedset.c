@@ -145,3 +145,7 @@ SortedSet *iterateSortedSet(SortedSet* set) {
 int sortedSetFirst(SortedSet* set) {
     return set->_next->data;
 }
+
+SortedSet *first(SortedSet *set) {
+    return set->_next;
+}

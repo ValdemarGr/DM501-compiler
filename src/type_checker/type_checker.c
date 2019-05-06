@@ -698,6 +698,14 @@ Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, Sy
     TypeList *genericIter = generic;
 
     while (boundIter != NULL && genericIter != NULL) {
+        if (boundIter->type->kind == typeIntK || boundIter->type->kind == typeBoolK) {
+            Error *e = NEW(Error);
+
+            e->error = NO_PRIMITIVE_GENERICS;
+
+            return e;
+        }
+
         insert(constMap, makeCharKey(genericIter->type->val.typeGeneric.genericName), (void*)boundIter->type);
         boundIter = boundIter->next;
         genericIter = genericIter->next;
@@ -2177,6 +2185,13 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
     TypeList *genericCounter = generic;
 
     while (boundCounter != NULL && genericCounter != NULL) {
+        if (boundCounter->type->kind == typeIntK || boundCounter->type->kind == typeBoolK) {
+            Error *e = NEW(Error);
+
+            e->error = NO_PRIMITIVE_GENERICS;
+
+            return e;
+        }
         //If the bound type is a class check all the classes required arguments
         if (boundCounter->type->kind == typeClassK) {
             SYMBOL *symbol = getSymbol(symbolTable, boundCounter->type->val.typeClass.classId);

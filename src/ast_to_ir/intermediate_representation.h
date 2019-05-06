@@ -12,6 +12,7 @@
 #include "abstract_asm_tree.h"
 #include "intermediate_representation.h"
 #include "../ast/tree.h"
+#include "../utils/sortedset.h"
 
 typedef struct Jump {
     char* label;
@@ -100,7 +101,7 @@ typedef struct Instructions {
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
         struct { size_t timesTemp; size_t eleSize;} allocate;
-        struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
+        struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; SortedSet *pointerSet; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t callRegister;
         struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
@@ -112,7 +113,7 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
-        SymbolTable *tableForFunction;
+        struct {SymbolTable *tableForFunction; SortedSet *pointerSet;} mainHeader;
         char* label;
         char* debugInfo;
         struct { size_t offset; size_t tempToMove; } tempIntoStack;

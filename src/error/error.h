@@ -45,7 +45,8 @@ typedef struct Error {
         NESTED_LAMBDA,
         LAMBDA_CAPTURE_INVALID,
         INVALID_GENERIC_HAS_TYPE_CONSTRAINT,
-        INVALID_ALLOCATE_TARGET
+        INVALID_ALLOCATE_TARGET,
+        NO_PRIMITIVE_GENERICS
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
