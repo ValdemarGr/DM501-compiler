@@ -65,32 +65,42 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
 
     Stack *stack = initStack();
     bool couldSimplify = true;
+    int stackSize = 0;
 
     //Simplify
     while (couldSimplify == true){
         couldSimplify = false;
         for (int i = 0; i < max_size; i++){
-            if ( 0 <= graph[i].value && graph[i].value < colors && !graph[i].beenSimplified){
+            if (graph[i].value < colors && !graph[i].beenSimplified){
                 Node *iterator = graph[i].next;
                 while (iterator != NULL) {
-                    graph[iterator->value].value--;
+                    if (!graph[iterator->value].beenSimplified) {
+                        graph[iterator->value].value--;
+                    }
                     iterator = iterator->next;
                 }
                 graph[i].value = i;
                 push(stack, (void *) &graph[i]);
+                stackSize++;
                 graph[i].beenSimplified = true;
                 couldSimplify = true;
             }
         }
     }
 
+    bool colorFound;
+    Node *poppedNode;
+    bool colorsUsedByNeighbors[colors];
+    Node *iterator;
+    int test = 0;
     //Color nodes
     while (isEmpty(stack) == false) {
-        Node *poppedNode = (Node *) pop(stack);
-        bool colorsUsedByNeighbors[colors];
+        test++;
+        poppedNode = pop(stack);
         memset(colorsUsedByNeighbors, false, sizeof(bool) * colors);
+        colorFound = false;
 
-        Node *iterator = poppedNode;
+        iterator = poppedNode;
         iterator = iterator->next;
         while(iterator != NULL){
             if(color_overview[iterator->value] != -1){
@@ -102,8 +112,13 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
         for (int i = 0; i < colors; i++) {
             if (colorsUsedByNeighbors[i] == false){
                 color_overview[poppedNode->value] = i;
+                colorFound = true;
                 break;
             }
+        }
+
+        if (!colorFound) {
+            color_overview[poppedNode->value] = -1;
         }
     }
     return color_overview;
