@@ -39,6 +39,11 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
             SortedSet *pos2 = livenessResult[set];
             pos2 = iterateSortedSet(pos2);
             while (pos2 != NULL){
+                if (pos1->data == 0 || pos2->data == 0) {
+                    pos2 = iterateSortedSet(pos2);
+                    continue;
+                }
+
                 if(pos1->data != pos2->data){
                     Node *iterator = &graph[pos1->data];
                     while (iterator != NULL){
@@ -66,11 +71,14 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
     Stack *stack = initStack();
     bool couldSimplify = true;
     int stackSize = 0;
+    int nodesRemoved = 1;
+    Node *toRemove = NULL;
 
+    graph[0].beenSimplified = true;
     //Simplify
     while (couldSimplify == true){
         couldSimplify = false;
-        for (int i = 0; i < max_size; i++){
+        for (int i = 1; i < max_size; i++){
             if (graph[i].value < colors && !graph[i].beenSimplified){
                 Node *iterator = graph[i].next;
                 while (iterator != NULL) {
@@ -84,7 +92,23 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 stackSize++;
                 graph[i].beenSimplified = true;
                 couldSimplify = true;
+                nodesRemoved++;
+            } else {
+                toRemove = &graph[i];
             }
+        }
+
+        if (!couldSimplify && nodesRemoved < max_size) {
+                Node *iterator = toRemove->next;
+                while (iterator != NULL) {
+                    if (!graph[iterator->value].beenSimplified) {
+                        graph[iterator->value].value--;
+                    }
+                    iterator = iterator->next;
+                }
+                toRemove->beenSimplified = true;
+                couldSimplify = true;
+                nodesRemoved++;
         }
     }
 
@@ -92,13 +116,16 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
     Node *poppedNode;
     bool colorsUsedByNeighbors[colors];
     Node *iterator;
-    int test = 0;
+    color_overview[0] = 0;
     //Color nodes
     while (isEmpty(stack) == false) {
-        test++;
         poppedNode = pop(stack);
         memset(colorsUsedByNeighbors, false, sizeof(bool) * colors);
         colorFound = false;
+
+        if (poppedNode->value == 0) {
+            continue;
+        }
 
         iterator = poppedNode;
         iterator = iterator->next;
@@ -109,7 +136,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
             iterator = iterator->next;
         }
 
-        for (int i = 0; i < colors; i++) {
+        for (int i = 1; i < colors; i++) {
             if (colorsUsedByNeighbors[i] == false){
                 color_overview[poppedNode->value] = i;
                 colorFound = true;

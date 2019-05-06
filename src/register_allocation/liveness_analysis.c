@@ -15,6 +15,7 @@ void dataFlowEntryFromArithmetic2(DataFlowEntry *dataFlowEntry, Arithmetic2 arit
     insertSortedSet(dataFlowEntry->defines, (int) arithmetic2.dest);
     dataFlowEntry->uses = initHeadedSortedSet();
     insertSortedSet(dataFlowEntry->uses, (int) arithmetic2.source);
+    insertSortedSet(dataFlowEntry->uses, (int) arithmetic2.dest);
 }
 
 IntBox *makeIntBox(int value) {
@@ -75,15 +76,14 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case METADATA_END_BODY_BLOCK: break;
             case METADATA_BEGIN_ARITHMETIC_EVALUATION: break;
             case METADATA_END_ARITHMETIC_EVALUATION: break;
-            case METADATA_FUNCTION_ARGUMENT: break;
             case COMPLEX_ALLOCATE_END: break;
             case INSTRUCTION_FUNCTION_END: break;
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
-            case INSTRUCTION_REGISTER_CALL: break;
             case METADATA_BEGIN_GLOBAL_BLOCK:break;
             case METADATA_END_GLOBAL_BLOCK:break;
+            case METADATA_DEBUG_INFO:break;
             case INSTRUCTION_LABEL: {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(count));
             }
@@ -126,7 +126,15 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
             case INSTRUCTION_LABEL: break;
-            case METADATA_FUNCTION_ARGUMENT:break;
+            case METADATA_FUNCTION_ARGUMENT:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.args.moveReg);
+                dataFlowEntry->uses = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->uses, (int) iter->val.args.moveReg);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
             case INSTRUCTION_ADD: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
@@ -482,9 +490,20 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
-            case INSTRUCTION_REGISTER_CALL:break;
+            case INSTRUCTION_REGISTER_CALL:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = initHeadedSortedSet();
+
+                dataFlowEntry->uses = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->uses, (int) iter->val.callRegister);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
             case METADATA_BEGIN_GLOBAL_BLOCK:break;
             case METADATA_END_GLOBAL_BLOCK:break;
+            case METADATA_DEBUG_INFO:break;
+            case INSTRUCTION_PUSH_STACK:break;
+            case INSTRUCTION_POP_STACK:break;
         }
 
         iter = iter->next;
