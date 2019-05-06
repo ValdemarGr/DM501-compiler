@@ -8,13 +8,14 @@
 #include "../symbol/symbol.h"
 
 bool workingInClass = false;
+char *className;
 bool workingInLambda = false;
 int lambdaLevel = 0;
 
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
 //This is a hack, it is very hacky. Do not do this at home.
-
+Error *traverseClassExtensionsAndInsertGenerics(ConstMap *constMap, char *classId, SymbolTable *symbolTable);
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
@@ -300,6 +301,22 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
     VarDelList *firstDelList;
     VarDelList *secondDelList;
+
+    if (first->kind == typeGenericK && second->kind != typeGenericK) {
+        ConstMap *constMap = initMap(10);
+        Error *e = traverseClassExtensionsAndInsertGenerics(constMap, className, symbolTable);
+
+        if (e != NULL) return false;
+
+        first = (Type*)(get(constMap, makeCharKey(first->val.typeGeneric.genericName))->v);
+    } else if (second->kind == typeGenericK && first->kind != typeGenericK) {
+        ConstMap *constMap = initMap(10);
+        Error *e = traverseClassExtensionsAndInsertGenerics(constMap, className, symbolTable);
+
+        if (e != NULL) return false;
+
+        second = (Type*)(get(constMap, makeCharKey(second->val.typeGeneric.genericName))->v);
+    }
 
     if (first->kind == second->kind) {
         if (first->kind == typeIntK || first->kind == typeBoolK) {
@@ -659,11 +676,15 @@ Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *sy
         case typeGenericK:
             {
                 //Find the bound type by generic type index
-
                 //We are looking for the (counter - it) element
                 char *genName = typeToBindOn->val.typeGeneric.genericName;
 
                 Type *bound = (Type*)(get(genericMap, makeCharKey(genName))->v);
+/*
+                while (bound->kind == typeIdK) {
+                    bound = (Type*)(get(genericMap, makeCharKey(bound->val.idType.id))->v);
+                }*/
+
                 return bound;
             }
             break;
@@ -2420,6 +2441,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             break;
         case declClassK:
             workingInClass = true;
+            className = declaration->val.classD.id;
             e = checkDeclValidity(declaration);
             if (e != NULL) return e;
 
