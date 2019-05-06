@@ -555,20 +555,29 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 //For true'er polymorphism, overriding can be added by traversing by collisions and always
                 //preferring the current classes version
                 DeclarationList *internalDeclList = mixin->value->val.typeClassD.declarationList;
+                //Get the binds for the generic
+                ConstMap *genericToBoundMap = initMap(10);
+
+                TypeList *genericIter = mixin->value->val.typeClassD.generics;
+                TypeList *boundIter = extensions->type->val.typeClass.genericBoundValues;
+
+                while (genericIter != NULL && boundIter) {
+                    insert(genericToBoundMap, makeCharKey(genericIter->type->val.typeGeneric.genericName), (void*)boundIter);
+
+                    genericIter = genericIter->next;
+                    boundIter = boundIter->next;
+                }
 
                 while (internalDeclList != NULL) {
                     //Check if declaration collides with current classes
 
                     if (newHead == NULL) {
                         newHead = NEW(DeclarationList);
-
                         newHead->declaration = internalDeclList->declaration;
-
                         newHead->declaration = NEW(Declaration);
                         memcpy(newHead->declaration, internalDeclList->declaration, sizeof(Declaration));
 
                         newHead->next = NULL;
-
                         newTail = newHead;
                     } else {
                         newTail->next = NEW(DeclarationList);
@@ -576,6 +585,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                         newTail->next = NULL;
                         newTail->declaration = NEW(Declaration);
                         memcpy(newTail->declaration, internalDeclList->declaration, sizeof(Declaration));
+
+
                     }
 
 

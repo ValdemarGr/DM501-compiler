@@ -35,6 +35,46 @@ SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
 //when we get type start returning, apply subscripting and such as we go up
 Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable);
 
+bool canDowncastType(Type *toCastTo, SYMBOL *traverse, SymbolTable *symbolTable) {
+    TypeList *extendedList = traverse->value->val.typeClassD.extendedClasses;
+
+    while (extendedList != NULL) {
+        SYMBOL *extendedSym = getSymbol(symbolTable, extendedList->type->val.typeClass.classId);
+
+        if (extendedSym == NULL) {
+            return false;
+        }
+
+        if (strcmp(extendedSym->name, toCastTo->val.typeClass.classId) == 0) {
+            //Check generics
+            TypeList *forCast = toCastTo->val.typeClass.genericBoundValues;
+            TypeList *iter = extendedList->type->val.typeClass.genericBoundValues;
+
+            while (forCast != NULL && iter != NULL) {
+                if (areTypesEqual(forCast->type, iter->type, symbolTable) == false) {
+                    return false;
+                }
+                forCast = forCast->next;
+                iter = iter->next;
+            }
+
+            if (forCast != NULL || iter != NULL) {
+                return false;
+            }
+
+            return true;
+        }
+
+        if (canDowncastType(toCastTo, extendedSym, symbolTable)) {
+            return true;
+        }
+
+        extendedList = extendedList->next;
+    }
+
+    return false;
+}
+
 bool canDowncastVariable(Variable *variable, Type *toCastTo, SymbolTable *symbolTable) {
     if (toCastTo->kind != typeClassK) {
         return false;
@@ -50,11 +90,13 @@ bool canDowncastVariable(Variable *variable, Type *toCastTo, SymbolTable *symbol
         return true;
     }
 
-    Type *res = getClassSubtype(variableType->val.typeClass.classId, toCastTo->val.typeClass.classId, symbolTable);
+    SYMBOL *symbol = getSymbol(symbolTable, variableType->val.typeClass.classId);
 
-    if (res != NULL) return true;
+    if (symbol == NULL) {
+        return false;
+    }
 
-    return false;
+    return canDowncastType(toCastTo, symbol, symbolTable);
 }
 
 Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable) {
@@ -530,10 +572,10 @@ typedef struct BoundAndGenericPair {
     struct BoundAndGenericPair *next;
 } BoundAndGenericPair;
 
-Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTable *symbolTable) {
+Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *symbolTable) {
     switch (typeToBindOn->kind) {
         case typeIdK:
-            return bindGenericTypes(bagp, unwrapTypedef(typeToBindOn, symbolTable), symbolTable);
+            return bindGenericTypes(genericMap, unwrapTypedef(typeToBindOn, symbolTable), symbolTable);
             break;
         case typeIntK:
             return typeToBindOn;
@@ -544,7 +586,7 @@ Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTabl
         case typeArrayK:
             //Create new array type with bounded type
             {
-                Type *inner = bindGenericTypes(bagp, typeToBindOn->val.arrayType.type, symbolTable);
+                Type *inner = bindGenericTypes(genericMap, typeToBindOn->val.arrayType.type, symbolTable);
 
                 Type *bound = NEW(Type);
 
@@ -572,7 +614,7 @@ Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTabl
                         boundList = boundList->next;
                     }
 
-                    boundList->type = bindGenericTypes(bagp, varDelList->type, symbolTable);
+                    boundList->type = bindGenericTypes(genericMap, varDelList->type, symbolTable);
                     boundList->next = NULL;
 
                     varDelList = varDelList->next;
@@ -600,13 +642,13 @@ Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTabl
                     }
 
                     boundParams->next = NULL;
-                    boundParams->type = bindGenericTypes(bagp, params->type, symbolTable);
+                    boundParams->type = bindGenericTypes(genericMap, params->type, symbolTable);
 
 
                     params = params->next;
                 }
 
-                boundLambda->val.typeLambdaK.returnType = bindGenericTypes(bagp, typeToBindOn->val.typeLambdaK.returnType, symbolTable);
+                boundLambda->val.typeLambdaK.returnType = bindGenericTypes(genericMap, typeToBindOn->val.typeLambdaK.returnType, symbolTable);
 
                 return boundLambda;
             }
@@ -619,19 +661,60 @@ Type *bindGenericTypes(BoundAndGenericPair *bagp, Type *typeToBindOn, SymbolTabl
                 //Find the bound type by generic type index
 
                 //We are looking for the (counter - it) element
-                int it = typeToBindOn->val.typeGeneric.typeIndex;
-                int counter = 0;
+                char *genName = typeToBindOn->val.typeGeneric.genericName;
 
-                while (it > 0) {
-                    bagp = bagp->next;
-                    it--;
-                }
-                return bagp->bound;
+                Type *bound = (Type*)(get(genericMap, makeCharKey(genName))->v);
+                return bound;
             }
             break;
     }
 
     return NULL;
+}
+
+Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, SymbolTable *symbolTable) {
+    TypeList *boundIter = bound;
+    TypeList *genericIter = generic;
+
+    while (boundIter != NULL && genericIter != NULL) {
+        insert(constMap, makeCharKey(genericIter->type->val.typeGeneric.genericName), (void*)boundIter->type);
+        boundIter = boundIter->next;
+        genericIter = genericIter->next;
+    }
+
+    if (boundIter != NULL || genericIter != NULL) {
+        Error *e = NEW(Error);
+
+        e->error = TOO_MANY_GENERICS;
+
+        return e;
+    }
+
+    return NULL;
+}
+
+Error *traverseClassExtensionsAndInsertGenerics(ConstMap *constMap, char *classId, SymbolTable *symbolTable) {
+    SYMBOL *classSymbol = getSymbol(symbolTable, classId);
+
+    TypeList *extendedIter = classSymbol->value->val.typeClassD.extendedClasses;
+
+    while (extendedIter != NULL) {
+
+        SYMBOL *forClassDecl = getSymbol(symbolTable, extendedIter->type->val.typeClass.classId);
+        TypeList *bounds = extendedIter->type->val.typeClass.genericBoundValues;
+        TypeList *generics = forClassDecl->value->val.typeClassD.generics;
+
+        Error *e = insertGenerics(constMap, bounds, generics, symbolTable);
+
+        if (e != NULL) return e;
+
+        //Traverse to each child
+        e = traverseClassExtensionsAndInsertGenerics(constMap, forClassDecl->name, symbolTable);
+
+        if (e != NULL) return e;
+
+        extendedIter = extendedIter->next;
+    }
 }
 
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
@@ -728,10 +811,19 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
 
                 DeclarationList *classBody = symbol->value->val.typeClassD.declarationList;
 
+
                 //Find same bound index as the one of the ret
                 TypeList *boundTypes = innerType->val.typeClass.genericBoundValues;
                 TypeList *generics = symbol->value->val.typeClassD.generics;
-                BoundAndGenericPair *head = NULL;
+                //We need to grab all generic binds (also from extended classes)
+                ConstMap *genericMap = initMap(10);
+                Error *e = insertGenerics(genericMap, boundTypes, generics, symbolTable);
+                if (e != NULL) return NULL;
+                e = traverseClassExtensionsAndInsertGenerics(genericMap, symbol->name, symbolTable);
+                if (e != NULL) return NULL;
+
+
+                /*BoundAndGenericPair *head = NULL;
                 BoundAndGenericPair *current = NULL;
 
                 //Length has been checked earlier
@@ -751,7 +843,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                     boundTypes = boundTypes->next;
                     generics = generics->next;
                 }
-
+*/
 
 
                 while (classBody != NULL) {
@@ -759,7 +851,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                     Type* ret = idMatchesDecl(classBody->declaration, variable->val.recordLookupD.id);
 
                     if (ret != NULL) {
-                        return bindGenericTypes(head, ret, symbolTable);
+                        return bindGenericTypes(genericMap, ret, symbolTable);
                     }
 
                     classBody = classBody->next;
@@ -1783,7 +1875,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
         } break;
         case statAllocateLenK: {
             Type* unwrapped = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
-            if (unwrapped->kind != typeClassK && unwrapped->kind != typeRecordK) {
+            if (unwrapped->kind != typeArrayK) {
                 e = NEW(Error);
 
                 e->error = INVALID_ALLOCATE_TARGET;

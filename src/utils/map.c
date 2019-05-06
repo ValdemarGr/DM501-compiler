@@ -169,7 +169,7 @@ Pair *get(ConstMap *m, Key *k) {
     if (cur != NULL) {
         if (cur->k->keyTypes == eIK && k->keyTypes == eIK && k->key.iK == cur->k->key.iK) {
             return cur;
-        } else if (cur->k->keyTypes == eCK && k->keyTypes == eCK && strcmp(k->key.cK, cur->k->key.cK) != 0) {
+        } else if (cur->k->keyTypes == eCK && k->keyTypes == eCK && strcmp(k->key.cK, cur->k->key.cK) == 0) {
             return cur;
         }
     }

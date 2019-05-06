@@ -912,7 +912,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 identifier = toSearchFor->val.valD.id;
             } else if (toSearchFor->kind == declVarK) {
                 identifier = toSearchFor->val.varD.id;
-            } else if (toSearchFor->kind == declValK) {
+            } else if (toSearchFor->kind == declVarsK) {
                 identifier = toSearchFor->val.varsD.var->val.varD.id;
             }
 
