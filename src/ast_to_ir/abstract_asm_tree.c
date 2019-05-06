@@ -787,6 +787,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 ret->kind = COMPLEX_ALLOCATE;
                 ret->val.allocate.timesTemp = const2Temp;
                 ret->val.allocate.eleSize = POINTER_SIZE;
+                ret->val.allocate.allocationType = ALLOC_LAMBDA;
                 size_t allocPtrTemp = 0;
                 arrayTemp = allocPtrTemp;
                 appendInstructions(ret);
@@ -1286,11 +1287,19 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             size_t fieldCount = 0;
 
+            SortedSet *bodySet;
+
             if (tpe->kind == typeRecordK) {
                 //Record
                 VarDelList *iter = tpe->val.recordType.types;
 
+                bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
+                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable);
+                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+                        insertSortedSet(bodySet, (int)fieldCount);
+                    }
+
                     fieldCount++;
                     iter = iter->next;
                 }
@@ -1299,6 +1308,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
 
                 DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
+                bodySet = getPointerCountForBody(classSymbol->value->val.typeClassD.declarationList);
 
                 while (iter != NULL) {
                     fieldCount++;
@@ -1308,6 +1318,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
+            ret->val.allocate.allocationType = ALLOC_RECORD_CLASS;
+            ret->val.allocate.pointerSet = bodySet;
             ret->val.allocate.timesTemp = constNum;
             ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
             size_t allocPtrTemp = 0;
@@ -1425,8 +1437,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
-            //ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.eleSize = POINTER_SIZE;
+            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK) {
+                ret->val.allocate.allocationType = ALLOC_ARR_OF_PRIM;
+            } else {
+                ret->val.allocate.allocationType = ALLOC_ARR_OF_PTR;
+            }
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
             //currentTemporary++;

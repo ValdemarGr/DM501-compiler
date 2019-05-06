@@ -293,6 +293,35 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "syscall\n");
             printIndentation(out);
             fprintf(out, "push %%rax\n");
+
+            switch (instruction->val.allocate.allocationType) {
+                case ALLOC_RECORD_CLASS: {
+                    SortedSet *gcSet = instruction->val.allocate.pointerSet;
+                    int len = (int)length(gcSet);
+                    printIndentation(out);
+                    fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+                } break;
+                case ALLOC_ARR_OF_PTR: {
+
+                } break;
+                case ALLOC_ARR_OF_PRIM: {
+
+                } break;
+                case ALLOC_LAMBDA: {
+
+                } break;
+            }
+
+
+
+            SortedSet *iter = first(gcSet);
+            int counter = 2;
+            while (iter != NULL) {
+                printIndentation(out);
+                fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                iter = iter->_next;
+            }
+
             printIndentation(out);
             fprintf(out, "mov $%zu, %%r15\n",
                     instruction->val.allocate.eleSize);
