@@ -3,7 +3,6 @@
 #include "../ast/tree.h"
 #include "../symbol/symbol.h"
 
-
 static Instructions *instructionHead = NULL;
 static Instructions *currentInstruction = NULL;
 static bool mainCreated = false;
@@ -16,6 +15,9 @@ bool inLambdaContext = false;
 int lambdaDefineScope = 0;
 int lambdaArgCount = 0;
 int staticLinkDepth = -1;
+char *className;
+
+ConstMap *lambdaEncounterd = NULL;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -723,12 +725,12 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case lambdaK: {
-            inLambdaContext = true;
-            lambdaDefineScope = (int)symbolTable->distanceFromRoot;
             char *lamPrefix = "lambda_";
             char *buf = (char*)malloc(sizeof(char) * (strlen(lamPrefix) + 10));
             sprintf(buf, "lambda_%i", term->val.lambdaD.lambda->id);
 
+            inLambdaContext = true;
+            lambdaDefineScope = (int)symbolTable->distanceFromRoot;
             //BIND THE LAMBDA BY LOADING FROM RIP
             Instructions *lambdaLoad = newInstruction();
             lambdaLoad->kind = COMPLEX_RIP_LAMBDA_LOAD;
@@ -813,75 +815,79 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //appendInstructions(endAlloc);
             }
 
+            if (get(lambdaEncounterd, makeCharKey(buf)) == NULL) {
+                insert(lambdaEncounterd, makeCharKey(buf), NULL);
+                //CREATE THE LAMBDA IN GLOBAL SCOPE
+                Instructions *beginGlobalBLock = newInstruction();
+                beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+                appendInstructions(beginGlobalBLock);
 
-            //CREATE THE LAMBDA IN GLOBAL SCOPE
-            Instructions *beginGlobalBLock = newInstruction();
-            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-            appendInstructions(beginGlobalBLock);
+                Instructions *label = newInstruction();
+                label->val.functionHead.label = buf;
+                label->val.functionHead.distance = symbolTable->distanceFromRoot + 1;
+                label->val.functionHead.temporary = currentTemporary;
+                label->val.functionHead.pointerSet = getPointerCountForBody(
+                        term->val.lambdaD.lambda->body->declarationList);
+                label->kind = INSTRUCTION_FUNCTION_LABEL;
+                currentTemporary++;
 
-            Instructions *label = newInstruction();
-            label->val.functionHead.label = buf;
-            label->val.functionHead.distance = symbolTable->distanceFromRoot + 1;
-            label->val.functionHead.temporary = currentTemporary;
-            label->kind = INSTRUCTION_FUNCTION_LABEL;
-            currentTemporary++;
+                SymbolTable *st = NULL;
+                if (term->val.lambdaD.lambda->body->declarationList != NULL) {
+                    st = term->val.lambdaD.lambda->body->declarationList->declaration->symbolTable;
+                } else if (term->val.lambdaD.lambda->body->statementList != NULL) {
+                    st = term->val.lambdaD.lambda->body->statementList->statement->symbolTable;
+                }
+                label->val.functionHead.tableForFunction = st;
 
-            SymbolTable *st = NULL;
-            if (term->val.lambdaD.lambda->body->declarationList != NULL) {
-                st = term->val.lambdaD.lambda->body->declarationList->declaration->symbolTable;
-            } else if (term->val.lambdaD.lambda->body->statementList != NULL) {
-                st = term->val.lambdaD.lambda->body->statementList->statement->symbolTable;
-            }
-            label->val.functionHead.tableForFunction = st;
+                //Readjust arg
+                appendInstructions(label);
 
-            //Readjust arg
-            appendInstructions(label);
+                //For args we generate metadata for later (maybe this is useless, who knows?)
+                VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
+                size_t max = 1;
 
-            //For args we generate metadata for later (maybe this is useless, who knows?)
-            VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
-            size_t max = 1;
+                size_t regForMoving = currentTemporary;
+                currentTemporary++;
 
-            size_t  regForMoving = currentTemporary;
-            currentTemporary++;
+                //We need to move from opposite direction since pushing on stack goes opposite
+                while (declarationList != NULL) {
+                    max++;
+                    declarationList = declarationList->next;
+                }
 
-            //We need to move from opposite direction since pushing on stack goes opposite
-            while (declarationList != NULL) {
-                max++;
-                declarationList = declarationList->next;
-            }
+                size_t counter = 0;
 
-            size_t counter = 0;
-
-            //And the lambda context
-            Instructions *arg = newInstruction();
-            arg->kind = METADATA_FUNCTION_ARGUMENT;
-            arg->val.args.argNum = counter;
-            arg->val.args.moveReg = regForMoving;
-            arg->val.args.stackNum = max - counter - 1;
-            appendInstructions(arg);
-            counter++;
-
-            declarationList = term->val.lambdaD.lambda->declarationList;
-            while (declarationList != NULL) {
-
-                //Create arg instr for this argument
+                //And the lambda context
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
                 arg->val.args.argNum = counter;
                 arg->val.args.moveReg = regForMoving;
                 arg->val.args.stackNum = max - counter - 1;
                 appendInstructions(arg);
-
-                declarationList = declarationList->next;
                 counter++;
+
+                declarationList = term->val.lambdaD.lambda->declarationList;
+                while (declarationList != NULL) {
+
+                    //Create arg instr for this argument
+                    Instructions *arg = newInstruction();
+                    arg->kind = METADATA_FUNCTION_ARGUMENT;
+                    arg->val.args.argNum = counter;
+                    arg->val.args.moveReg = regForMoving;
+                    arg->val.args.stackNum = max - counter - 1;
+                    appendInstructions(arg);
+
+                    declarationList = declarationList->next;
+                    counter++;
+                }
+
+                lambdaArgCount = (int) counter;
+                generateInstructionTree(term->val.lambdaD.lambda->body);
+
+                Instructions *endGlobalBLock = newInstruction();
+                endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
+                appendInstructions(endGlobalBLock);
             }
-
-            lambdaArgCount = (int)counter;
-            generateInstructionTree(term->val.lambdaD.lambda->body);
-
-            Instructions *endGlobalBLock = newInstruction();
-            endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
-            appendInstructions(endGlobalBLock);
 
             inLambdaContext = false;
 
@@ -891,7 +897,6 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             cpy->val.arithmetic2.dest = currentTemporary;
             appendInstructions(cpy);
             currentTemporary++;
-
             return currentTemporary - 1;
         } break;
         case classDowncastk: {
@@ -1320,6 +1325,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             //If there are any vals in the class "construct" them
             if (tpe->kind == typeClassK) {
                 inClassContextCurrent = true;
+                className = tpe->val.typeClass.classId;
 
                 SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
 
@@ -1703,6 +1709,8 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             label->val.functionHead.label = declaration->val.functionD.function->head->indentifier;
             label->val.functionHead.distance = symbol->distanceFromRoot + 1;
             label->val.functionHead.temporary = currentTemporary;
+            label->val.functionHead.pointerSet =
+                    getPointerCountForBody(declaration->val.functionD.function->body->declarationList);
             label->kind = INSTRUCTION_FUNCTION_LABEL;
             currentTemporary++;
 
@@ -1768,6 +1776,45 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
     }
 }
 
+void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
+    if (declaration == NULL) {
+        return;
+    }
+
+    switch (declaration->kind) {
+        case declVarK: {
+            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.varD.id)->uniqueIdForScope);
+        } break;
+        case declVarsK: {
+            getPointerCountForDecl(sortedSet, declaration->val.varsD.var);
+
+            if (declaration->val.varsD.next == NULL) {
+                return;
+            } else {
+                getPointerCountForDecl(sortedSet, declaration->val.varsD.next);
+            }
+        } break;
+        case declValK: {
+            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.valD.id)->uniqueIdForScope);
+        } break;
+        default:
+            break;
+    }
+}
+
+SortedSet *getPointerCountForBody(DeclarationList *declarationList) {
+    DeclarationList *iter = declarationList;
+    SortedSet *sortedSet = initHeadedSortedSet();
+
+    while (iter != NULL) {
+        getPointerCountForDecl(sortedSet, iter->declaration);
+
+        iter = iter->next;
+    }
+
+    return sortedSet;
+}
+
 Instructions* generateInstructionTree(Body *body) {
     staticLinkDepth++;
     //Save temporary counter
@@ -1776,6 +1823,10 @@ Instructions* generateInstructionTree(Body *body) {
     if (!mainCreated) {
         createMain = true;
         mainCreated = true;
+    }
+
+    if (lambdaEncounterd == NULL) {
+        lambdaEncounterd = initMap(20);
     }
 
     size_t restoreTemporary = currentTemporary;
@@ -1811,7 +1862,8 @@ Instructions* generateInstructionTree(Body *body) {
         } else if (body->statementList != NULL) {
             st = body->statementList->statement->symbolTable;
         }
-        declsEnd->val.tableForFunction = st;
+        declsEnd->val.mainHeader.tableForFunction = st;
+        declsEnd->val.mainHeader.pointerSet = getPointerCountForBody(body->declarationList);
 
         appendInstructions(declsEnd);
     }

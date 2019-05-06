@@ -1,0 +1,14 @@
+class A[T] {
+    var value: T;
+    val l = (arg: T): void -> {
+        var v: T;
+        value = T;
+    };
+};
+
+class IntWrapper {
+    var value: int;
+};
+
+var a: class A[class IntWrapper];
+allocate a;

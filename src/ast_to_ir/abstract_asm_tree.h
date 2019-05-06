@@ -11,6 +11,10 @@
 #include "../type_checker/type_checker.h"
 #include "../asm_code_gen/sizes.h"
 #include "../ast/tree.h"
+#include "../utils/sortedset.h"
+
+void getPointerCountForDecl(SortedSet*, Declaration *declaration);
+SortedSet *getPointerCountForBody(DeclarationList *declarationList);
 
 typedef enum {
     ACCUMULATE

@@ -60,6 +60,8 @@ char *getNextRegister(size_t reg) {
     }
 }
 
+int offsetForFunction;
+
 void generateInstruction(FILE *out, Instructions* instruction) {
     switch (instruction->kind) {
         case INSTRUCTION_ADD: {
@@ -88,8 +90,25 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# INSTRUCTION_FUNCTION_LABEL\n");
             fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
             printIndentation(out);
+            offsetForFunction = (int)length(instruction->val.functionHead.pointerSet) + 1;
             fprintf(out, "subq $%i, %%rsp\n",
-                    16 + (int)instruction->val.functionHead.tableForFunction->nextSymbolId * POINTER_SIZE);
+                    16 + (
+                    (int)instruction->val.functionHead.tableForFunction->nextSymbolId +
+                            offsetForFunction) * POINTER_SIZE);
+
+            SortedSet *gcSet = instruction->val.functionHead.pointerSet;
+            int len = (int)length(gcSet);
+            printIndentation(out);
+            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+
+            SortedSet *iter = first(gcSet);
+            int counter = 2;
+            while (iter != NULL) {
+                printIndentation(out);
+                fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                iter = iter->_next;
+            }
+
             printIndentation(out);
             fprintf(out, "leaq staticLink, %%%s\n",
                     getNextRegister(instruction->val.functionHead.temporary));
@@ -124,7 +143,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
                     getNextRegister(instruction->val.args.moveReg),
-                    (instruction->val.args.stackNum + 1) * POINTER_SIZE);
+                    (instruction->val.args.stackNum + 1 + offsetForFunction) * POINTER_SIZE);
         } break;
         case INSTRUCTION_MINUS: {
             fprintf(out, "# INSTRUCTION_MINUS\n");
@@ -314,8 +333,25 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, ASM_HEADER);
             printIndentation(out);
+            offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1;
             fprintf(out, "subq $%i, %%rsp\n",
-                    16 + (int)instruction->val.tableForFunction->nextSymbolId * POINTER_SIZE);
+                            16 +
+                                    ((int)instruction->val.mainHeader.tableForFunction->nextSymbolId +
+                            offsetForFunction) * POINTER_SIZE);
+
+            SortedSet *gcSet = instruction->val.mainHeader.pointerSet;
+            int len = (int)length(gcSet);
+            printIndentation(out);
+            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+
+            SortedSet *iter = first(gcSet);
+            int counter = 2;
+            while (iter != NULL) {
+                printIndentation(out);
+                fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                iter = iter->_next;
+            }
+
             printIndentation(out);
             fprintf(out, "leaq staticLink, %%rax\n\tmovq %%rbp, (%%rax)\n");
             currentIndendation++;
@@ -549,7 +585,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
                     getNextRegister(instruction->val.tempIntoStack.tempToMove),
-                    instruction->val.tempIntoStack.offset);
+                    instruction->val.tempIntoStack.offset + offsetForFunction * POINTER_SIZE);
         } break;
         case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE: {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE\n");
@@ -564,14 +600,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%%s)\n",
                     getNextRegister(instruction->val.tempIntoStack.tempToMove),
-                    instruction->val.tempIntoStackScope.offset,
+                    instruction->val.tempIntoStackScope.offset + offsetForFunction * POINTER_SIZE,
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
         } break;
         case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_FROM_STACK\n");
             printIndentation(out);
             fprintf(out, "mov -%zu(%%rbp), %%%s\n",
-                    instruction->val.tempFromStack.offset,
+                    instruction->val.tempFromStack.offset + offsetForFunction * POINTER_SIZE,
                     getNextRegister(instruction->val.tempFromStack.inputTemp));
         } break;
         case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: {
@@ -586,7 +622,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
             fprintf(out, "mov -%zu(%%%s), %%%s\n",
-                    instruction->val.tempFromStackScope.offset,
+                    instruction->val.tempFromStackScope.offset + offsetForFunction * POINTER_SIZE,
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.inputTemp));
         } break;

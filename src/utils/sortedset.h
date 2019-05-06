@@ -34,4 +34,6 @@ SortedSet *iterateSortedSet(SortedSet* set);
 
 int sortedSetFirst(SortedSet* set);
 
+SortedSet *first(SortedSet *set);
+
 #endif //HELLO_SORTEDSET_H

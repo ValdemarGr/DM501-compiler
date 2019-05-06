@@ -147,6 +147,9 @@ int writeError(Error *e) {
         case INVALID_ALLOCATE_TARGET: {
             fprintf(stderr, "INVALID_ALLOCATE_TARGET\n");
         } break;
+        case NO_PRIMITIVE_GENERICS : {
+            fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");
+        } break;
     }
 
     return e->error;
