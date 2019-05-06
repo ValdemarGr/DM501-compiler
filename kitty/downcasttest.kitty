@@ -4,6 +4,9 @@ class A[B] {
 
 class B with A[int] {
     val b = 22;
+    val writeInner = (): void -> {
+        write inner;
+    };
 };
 
 var clsB: class B;
@@ -19,3 +22,6 @@ write clsA.inner;
 
 clsA.inner = 42;
 write clsB.inner;
+
+clsA.inner = 99;
+clsB.writeInner();
