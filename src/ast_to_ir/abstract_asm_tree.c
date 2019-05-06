@@ -11,8 +11,11 @@ static size_t ifCounter = 0;
 static size_t whileCounter = 0;
 size_t returnReg = 0;
 bool inClassContextCurrent = false;
+int classGenericCount = 0;
 bool inLambdaContext = false;
-int lambdaBodyScope = 0;
+int lambdaDefineScope = 0;
+int lambdaArgCount = 0;
+int staticLinkDepth = -1;
 
 //If the context stack contains something we need to apply the instructions in the current context
 //static Stack *contextStack = NULL;
@@ -53,6 +56,12 @@ typedef struct VDLResult {
 
 VDLResult *generateVDLForClassDecls(VarDelList *currentTail, Declaration *declaration) {
     VDLResult *r = NEW(VDLResult);
+
+    if (declaration == NULL) {
+        r->head = currentTail;
+        r->tail = currentTail;
+        return r;
+    }
 
     switch (declaration->kind) {
         case declVarK: {
@@ -130,7 +139,39 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t offset = POINTER_SIZE;
 
-            if (frameStackDistanceToVariable == 0) {
+            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CLASS LOAD";
+                appendInstructions(debug);
+
+                //We are accessing a class value from lambda (capture)
+                //Fetch the class pointer which is the last pushed argument
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+                ptrAccess->val.tempFromStack.offset = offset * lambdaArgCount;
+                ptrAccess->val.tempFromStack.inputTemp = currentTemporary;
+                appendInstructions(ptrAccess);
+                size_t classPtrTemp = currentTemporary;
+                currentTemporary++;
+
+                Instructions *constOffset = newInstruction();
+                constOffset->kind = INSTRUCTION_CONST;
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope);
+                constOffset->val.constant.temp = currentTemporary;
+                size_t constOffsetTemp = currentTemporary;
+                appendInstructions(constOffset);
+                currentTemporary++;
+
+                //Now we must find the member we are accessing
+                Instructions *memberAccess = newInstruction();
+                memberAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+                memberAccess->val.dereferenceOffset.ptrTemp = classPtrTemp;
+                memberAccess->val.dereferenceOffset.offsetTemp = constOffsetTemp;
+                appendInstructions(memberAccess);
+
+                return classPtrTemp;
+            } if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
                 ptrAccess->val.tempFromStack.offset = offset * (symbol->uniqueIdForScope + 1);
@@ -199,12 +240,32 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
 
             VarDelList *varDelList = NULL;
+            size_t sizeAccumulator = 0;
 
             if (unwrappedType->kind == typeRecordK) {
                 varDelList = unwrappedType->val.recordType.types;
+
+                //Todo classes
+
+                while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
+                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
+                    varDelList = varDelList->next;
+                }
             } else {
-                //Must be class
-                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                //Must be class or genericly type constrianed class
+                SYMBOL *classSym;
+                if (unwrappedType->kind == typeClassK) {
+                    classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                } else {
+                    //Generic with constraint, get sym by looking for generic name in this class's generics
+                    char *typeConstriantClass = unwrappedType->val.typeGeneric.subType;
+                    classSym = getSymbol(symbolTable, typeConstriantClass);
+                }
+
+                SymbolTable *bodyTable = classSym->value->val.typeClassD.tableForClassBody;
+
+                sizeAccumulator = (getSymbol(bodyTable, variable->val.recordLookupD.id)->uniqueIdForScope) * POINTER_SIZE;
+/*
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
                 VarDelList *vdlIter = NULL;
@@ -220,16 +281,9 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                     vdlIter = r->tail;
 
                     declarationList = declarationList->next;
-                }
+                }*/
             }
-            size_t sizeAccumulator = 0;
 
-            //Todo classes
-
-            while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-                varDelList = varDelList->next;
-            }
 
             Instructions *constOffset = newInstruction();
             constOffset->kind = INSTRUCTION_CONST;
@@ -258,7 +312,37 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             size_t offset = POINTER_SIZE;
 
-            if (frameStackDistanceToVariable == 0) {
+            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CLASS LOAD";
+                appendInstructions(debug);
+
+                //We are accessing a class value from lambda (capture)
+                //Fetch the class pointer which is the last pushed argument
+                Instructions *ptrAccess = newInstruction();
+                ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+                ptrAccess->val.tempFromStack.offset = offset * lambdaArgCount;
+                ptrAccess->val.tempFromStack.inputTemp = currentTemporary;
+                appendInstructions(ptrAccess);
+                size_t classPtrTemp = currentTemporary;
+                currentTemporary++;
+
+                Instructions *constOffset = newInstruction();
+                constOffset->kind = INSTRUCTION_CONST;
+                constOffset->val.constant.value = POINTER_SIZE * ((int)symbol->uniqueIdForScope);
+                constOffset->val.constant.temp = currentTemporary;
+                size_t constOffsetTemp = currentTemporary;
+                appendInstructions(constOffset);
+                currentTemporary++;
+
+                Instructions *memberSave = newInstruction();
+                memberSave->kind = INSTRUCTION_MOVE_TO_OFFSET;
+                memberSave->val.moveToOffset.ptrTemp = classPtrTemp;
+                memberSave->val.moveToOffset.offsetTemp = constOffsetTemp;
+                memberSave->val.moveToOffset.tempToMove = tempToSave;
+                appendInstructions(memberSave);
+            } else if (frameStackDistanceToVariable == 0) {
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
                 ptrAccess->val.tempIntoStack.offset = offset * (symbol->uniqueIdForScope + 1);
@@ -298,9 +382,17 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             add->val.arithmetic2.dest = exprTemp;
             appendInstructions(add);
 
+            Instructions *constPtrSize = newInstruction();
+            constPtrSize->kind = INSTRUCTION_CONST;
+            constPtrSize->val.constant.value = POINTER_SIZE;
+            constPtrSize->val.constant.temp= currentTemporary;
+            appendInstructions(constPtrSize);
+            size_t ptrReg = currentTemporary;
+            currentTemporary++;
+
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
-            mulOffset->val.arithmetic2.source = POINTER_SIZE;
+            mulOffset->val.arithmetic2.source = ptrReg;
             mulOffset->val.arithmetic2.dest = exprTemp;
             appendInstructions(mulOffset);
 
@@ -318,11 +410,32 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             VarDelList *varDelList = NULL;
 
+            size_t sizeAccumulator = 0;
+
             if (unwrappedType->kind == typeRecordK) {
                 varDelList = unwrappedType->val.recordType.types;
+
+                //Todo classes
+
+                while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
+                    sizeAccumulator = sizeAccumulator + POINTER_SIZE;
+                    varDelList = varDelList->next;
+                }
             } else {
-                //Must be class
-                SYMBOL *classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                //Must be class or genericly type constrianed class
+                SYMBOL *classSym;
+                if (unwrappedType->kind == typeClassK) {
+                    classSym = getSymbol(symbolTable, unwrappedType->val.typeClass.classId);
+                } else {
+                    //Generic with constraint, get sym by looking for generic name in this class's generics
+                    char *typeConstriantClass = unwrappedType->val.typeGeneric.subType;
+                    classSym = getSymbol(symbolTable, typeConstriantClass);
+                }
+
+                SymbolTable *bodyTable = classSym->value->val.typeClassD.tableForClassBody;
+
+                sizeAccumulator = (getSymbol(bodyTable, variable->val.recordLookupD.id)->uniqueIdForScope) * POINTER_SIZE;
+/*
                 DeclarationList *declarationList = classSym->value->val.typeClassD.declarationList;
 
                 VarDelList *vdlIter = NULL;
@@ -338,17 +451,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
                     vdlIter = r->tail;
 
                     declarationList = declarationList->next;
-                }
-            }
-
-            size_t sizeAccumulator = 0;
-
-            while (strcmp(varDelList->identifier, variable->val.recordLookupD.id) != 0) {
-                //Type *unwrapped = unwrapTypedef(varDelList->type, symbolTable);
-                //If int or bool we store them as primitives, else pointers
-                sizeAccumulator = sizeAccumulator + POINTER_SIZE;
-
-                varDelList = varDelList->next;
+                }*/
             }
 
             Instructions *constOffset = newInstruction();
@@ -434,7 +537,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
                 Instructions *captureOffset = newInstruction();
                 captureOffset->kind = INSTRUCTION_CONST;
-                captureOffset->val.constant.value = 0;
+                captureOffset->val.constant.value = POINTER_SIZE;
                 captureOffset->val.constant.temp = currentTemporary;
                 size_t captureTemp = currentTemporary;
                 appendInstructions(captureOffset);
@@ -447,10 +550,17 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
                 appendInstructions(capturePtr);
 
+                Instructions *debug = newInstruction();
+                debug->kind = METADATA_DEBUG_INFO;
+                debug->val.debugInfo = "CAPTURE PUSH";
+                appendInstructions(debug);
+
                 //Push capture pointer
                 Instructions *push = newInstruction();
                 push->kind = INSTRUCTION_PUSH;
                 push->val.tempToPush = fncPtrTemp;
+                appendInstructions(push);
+
 
                 fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
 
@@ -614,7 +724,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
         } break;
         case lambdaK: {
             inLambdaContext = true;
-            lambdaBodyScope = (int)symbolTable->distanceFromRoot;
+            lambdaDefineScope = (int)symbolTable->distanceFromRoot;
             char *lamPrefix = "lambda_";
             char *buf = (char*)malloc(sizeof(char) * (strlen(lamPrefix) + 10));
             sprintf(buf, "lambda_%i", term->val.lambdaD.lambda->id);
@@ -729,23 +839,44 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             //For args we generate metadata for later (maybe this is useless, who knows?)
             VarDelList *declarationList = term->val.lambdaD.lambda->declarationList;
-            size_t counter = 0;
+            size_t max = 1;
 
             size_t  regForMoving = currentTemporary;
             currentTemporary++;
 
+            //We need to move from opposite direction since pushing on stack goes opposite
             while (declarationList != NULL) {
+                max++;
+                declarationList = declarationList->next;
+            }
+
+            size_t counter = 0;
+
+            //And the lambda context
+            Instructions *arg = newInstruction();
+            arg->kind = METADATA_FUNCTION_ARGUMENT;
+            arg->val.args.argNum = counter;
+            arg->val.args.moveReg = regForMoving;
+            arg->val.args.stackNum = max - counter - 1;
+            appendInstructions(arg);
+            counter++;
+
+            declarationList = term->val.lambdaD.lambda->declarationList;
+            while (declarationList != NULL) {
+
                 //Create arg instr for this argument
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
                 arg->val.args.argNum = counter;
                 arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
                 appendInstructions(arg);
 
                 declarationList = declarationList->next;
                 counter++;
             }
 
+            lambdaArgCount = (int)counter;
             generateInstructionTree(term->val.lambdaD.lambda->body);
 
             Instructions *endGlobalBLock = newInstruction();
@@ -764,7 +895,135 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             return currentTemporary - 1;
         } break;
         case classDowncastk: {
-            //TODO
+            //We simply want to return the original class + an offset which is the downcasted version
+            //We find the offset by finding the first declaration in the downcast class and comapring them
+
+            SYMBOL *downcastSym = getSymbol(symbolTable, term->val.classDowncastD.toCastTo->val.typeClass.classId);
+            SYMBOL *varTypeSym = getSymbol(symbolTable,
+                    unwrapVariable(term->val.classDowncastD.var, symbolTable)->val.typeClass.classId);
+
+            //Must be class
+            SymbolTable *bodyTable = varTypeSym->value->val.typeClassD.tableForClassBody;
+            Declaration *toSearchFor = downcastSym->value->val.typeClassD.declarationList->declaration;
+
+            char *identifier = NULL;
+
+            if (toSearchFor->kind == declValK) {
+                identifier = toSearchFor->val.valD.id;
+            } else if (toSearchFor->kind == declVarK) {
+                identifier = toSearchFor->val.varD.id;
+            } else if (toSearchFor->kind == declVarsK) {
+                identifier = toSearchFor->val.varsD.var->val.varD.id;
+            }
+
+            SYMBOL *offsetSymbol = getSymbol(bodyTable, identifier);
+
+            size_t variableTemp = generateInstructionsForVariableAccess(term->val.classDowncastD.var, symbolTable);
+
+            size_t downcastOffset = offsetSymbol->uniqueIdForScope;
+
+            Instructions *constOffset = newInstruction();
+            constOffset->kind = INSTRUCTION_CONST;
+            constOffset->val.constant.value = (int)downcastOffset * POINTER_SIZE;
+            constOffset->val.constant.temp= currentTemporary;
+            size_t constOffsetTemp = currentTemporary;
+            appendInstructions(constOffset);
+            currentTemporary++;
+
+            Instructions *instruction = newInstruction();
+            instruction->kind = INSTRUCTION_ADD;
+            instruction->val.arithmetic2.source = constOffsetTemp;
+            instruction->val.arithmetic2.dest = variableTemp;
+            appendInstructions(instruction);
+
+            return variableTemp;
+        } break;
+        case shorthandCallK: {
+            //Give arguments on stack
+            //For each expression argument, evaluate it and push it to the stack
+            size_t fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
+
+            //We need to save the current static link pointer
+            Instructions *push = newInstruction();
+            push->kind = COMPLEX_SAVE_STATIC_LINK;
+            push->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
+            push->val.pushPopStaticLink.temporary = currentTemporary;
+            appendInstructions(push);
+            currentTemporary++;
+
+            ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
+
+            while (expressionList != NULL) {
+                //Evaluate
+                size_t temporaryForArgument = generateInstructionsForExpression(expressionList->expression, symbolTable);
+
+                //Then push
+                Instructions *push = newInstruction();
+                push->kind = INSTRUCTION_PUSH;
+                push->val.tempToPush = temporaryForArgument;
+                appendInstructions(push);
+
+                expressionList = expressionList->next;
+            }
+
+            Instructions *captureOffset = newInstruction();
+            captureOffset->kind = INSTRUCTION_CONST;
+            captureOffset->val.constant.value = POINTER_SIZE;
+            captureOffset->val.constant.temp = currentTemporary;
+            size_t captureTemp = currentTemporary;
+            appendInstructions(captureOffset);
+            currentTemporary++;
+
+            //Deref an extra time, lambda's are always double dereferenced
+            Instructions *capturePtr = newInstruction();
+            capturePtr->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+            capturePtr->val.dereferenceOffset.ptrTemp = fncPtrTemp;
+            capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
+            appendInstructions(capturePtr);
+
+            Instructions *debug = newInstruction();
+            debug->kind = METADATA_DEBUG_INFO;
+            debug->val.debugInfo = "CAPTURE PUSH";
+            appendInstructions(debug);
+
+            //Push capture pointer
+            Instructions *push2 = newInstruction();
+            push2->kind = INSTRUCTION_PUSH;
+            push2->val.tempToPush = fncPtrTemp;
+            appendInstructions(push2);
+
+            fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
+
+            //Off by one since we have arr of ptrs and first is len
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = 0;
+            num->val.constant.temp = currentTemporary;
+            size_t numTemp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+
+            //Deref an extra time, lambda's are always double dereferenced
+            Instructions *ptrAccess = newInstruction();
+            ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
+            ptrAccess->val.dereferenceOffset.ptrTemp = fncPtrTemp;
+            ptrAccess->val.dereferenceOffset.offsetTemp = numTemp;
+            appendInstructions(ptrAccess);
+
+            //Then call
+            Instructions *call = newInstruction();
+            call->kind = INSTRUCTION_REGISTER_CALL;
+            call->val.callRegister = fncPtrTemp;
+            appendInstructions(call);
+
+            //We need to restore the static link
+            Instructions *popLink = newInstruction();
+            popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
+            popLink->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
+            popLink->val.pushPopStaticLink.temporary = currentTemporary;
+            appendInstructions(popLink);
+            currentTemporary++;
+            return 0;
         } break;
     }
 }
@@ -1018,8 +1277,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             size_t constNum = currentTemporary;
             currentTemporary++;
 
-            //size_t accessTemp = generateInstructionsForVariableAccess(statement->val.allocateD.var, statement->symbolTable);
-            //TODO IF CLASS CONSTRUCT BY ASSIGNING VALUES
             Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
 
             size_t fieldCount = 0;
@@ -1047,7 +1304,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = constNum;
-            //ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
@@ -1066,6 +1322,13 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 inClassContextCurrent = true;
 
                 SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+
+                classGenericCount = 0;
+                TypeList *generics = classSymbol->value->val.typeClassD.generics;
+                while (generics != NULL) {
+                    classGenericCount++;
+                    generics = generics->next;
+                }
 
                 DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
 
@@ -1395,6 +1658,9 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 }
             }
         } break;
+        case emptyK: {
+            generateInstructionsForExpression(statement->val.empty.exp, statement->symbolTable);
+        } break;
     }
 }
 
@@ -1453,17 +1719,27 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 
             //For args we generate metadata for later (maybe this is useless, who knows?)
             VarDelList *declarationList = declaration->val.functionD.function->head->declarationList;
-            size_t counter = 0;
+            size_t max = 0;
 
             size_t  regForMoving = currentTemporary;
             currentTemporary++;
 
+            //We need to move from opposite direction since pushing on stack goes opposite
             while (declarationList != NULL) {
+                max++;
+                declarationList = declarationList->next;
+            }
+
+            size_t counter = 0;
+            declarationList = declaration->val.functionD.function->head->declarationList;
+            while (declarationList != NULL) {
+
                 //Create arg instr for this argument
                 Instructions *arg = newInstruction();
                 arg->kind = METADATA_FUNCTION_ARGUMENT;
                 arg->val.args.argNum = counter;
                 arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
                 appendInstructions(arg);
 
                 declarationList = declarationList->next;
@@ -1493,6 +1769,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 }
 
 Instructions* generateInstructionTree(Body *body) {
+    staticLinkDepth++;
     //Save temporary counter
     bool createMain = false;
 
@@ -1562,5 +1839,6 @@ Instructions* generateInstructionTree(Body *body) {
     }
     currentTemporary = restoreTemporary;
 
+    staticLinkDepth--;
     return instructionHead;
 }

@@ -18,7 +18,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK
 } TypeKind;
 
 typedef struct Type {
@@ -116,7 +116,7 @@ typedef struct Statement {
     int lineno;
     int internal_stmDeclNum;
 
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK } kind;
     SymbolTable *symbolTable;
     union {
         struct { Expression* exp; } returnD;
@@ -128,6 +128,7 @@ typedef struct Statement {
         struct { Expression* exp; struct Statement* statement; } whileD;
         struct { struct StatementList* statementList; } stmListD;
         struct { Variable* var; Expression* exp; } assignmentD;
+        struct { Expression* exp; } empty;
     } val;
 } Statement;
 
@@ -160,7 +161,7 @@ typedef struct Variable {
 
 typedef struct Term {
     int lineno;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk } kind;
+    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk, shorthandCallK } kind;
     union {
         struct { struct Variable *var; } variableD;
         struct { char *functionId; ExpressionList *expressionList; } functionCallD;
@@ -169,7 +170,8 @@ typedef struct Term {
         struct { Expression* expression; } absD;
         struct { int num; } numD;
         struct { Lambda *lambda; } lambdaD;
-        struct { char* varId; char* downcastId; } classDowncastD;
+        struct { Variable* var; Type *toCastTo; } classDowncastD;
+        struct { struct Variable *var; ExpressionList *expressionList; } shorthandCallD;
     } val;
 } Term;
 
@@ -210,7 +212,9 @@ Term *makeNullTerm();
 
 Term *makeLambdaTerm(Lambda *lambda);
 
-Term *makeDowncastTerm(char* varId, char *downcastId);
+Term *makeDowncastTerm(Variable *var, Type *toCastTo);
+
+Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs);
 
@@ -274,6 +278,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm);
 
 Statement *makeStatementFromList(StatementList *statementList);
 
+Statement *makeEmptyExpression(Expression *expression);
+
 Type *makeIdType(char* id);
 
 Type *makeClassType(char* id, TypeList *genericBoundTypes);
@@ -287,6 +293,8 @@ Type *makeArrayType(Type *type);
 Type *makeRecordType(VarDelList *record);
 
 Type *makeLambdaType(TypeList *typeList, Type *type);
+
+Type *makeVoidType();
 
 Expression *makeEXPfunction(char *identifier, Expression *body);
 

@@ -90,20 +90,63 @@ int writeError(Error *e) {
             break;
         default:
             break;
-        case VARIABLE_UNEXPECTED_CLASS:break;
-        case ILLEGAL_DOWNCAST:break;
-        case VALUE_IS_NULL:break;
-        case NULL_COMPARISON:break;
-        case CONST_REASSIGNMENT:break;
-        case INVALID_ASSIGMENT_TO_TYPE:break;
-        case INVALID_ASSIGMENT_TO_NULL:break;
-        case INVALID_TYPE:break;
-        case NOT_CLASS:break;
-        case TOO_MANY_GENERICS:break;
-        case TOO_FEW_GENERICS:break;
-        case CLASS_NOT_EXTENDED:break;
-        case NOT_TYPE:break;
-        case DECLARATIONS_IN_CLASS:break;
+        case VARIABLE_UNEXPECTED_CLASS: {
+            fprintf(stderr, "Error: VARIABLE_UNEXPECTED_CLASS\n");
+        } break;
+        case ILLEGAL_DOWNCAST: {
+            fprintf(stderr, "Error: ILLEGAL_DOWNCAST\n");
+        } break;
+        case VALUE_IS_NULL: {
+            fprintf(stderr, "Error: VALUE_IS_NULL\n");
+        } break;
+        case NULL_COMPARISON: {
+            fprintf(stderr, "Error: NULL_COMPARISON\n");
+        } break;
+        case CONST_REASSIGNMENT: {
+            fprintf(stderr, "Error: CONST_REASSIGNMENT\n");
+        } break;
+        case INVALID_ASSIGMENT_TO_TYPE: {
+            fprintf(stderr, "Error: INVALID_ASSIGMENT_TO_TYPE\n");
+        } break;
+        case INVALID_ASSIGMENT_TO_NULL: {
+            fprintf(stderr, "Error: INVALID_ASSIGMENT_TO_NULL\n");
+        } break;
+        case INVALID_TYPE: {
+            fprintf(stderr, "Error: INVALID_TYPE\n");
+        } break;
+        case NOT_CLASS: {
+            fprintf(stderr, "Error: NOT_CLASS\n");
+        } break;
+        case TOO_MANY_GENERICS: {
+            fprintf(stderr, "Error: TOO_MANY_GENERICS\n");
+        } break;
+        case TOO_FEW_GENERICS: {
+            fprintf(stderr, "Error: TOO_FEW_GENERICS\n");
+        } break;
+        case CLASS_NOT_EXTENDED: {
+            fprintf(stderr, "Error: CLASS_NOT_EXTENDED\n");
+        } break;
+        case NOT_TYPE: {
+            fprintf(stderr, "Error: NOT_TYPE\n");
+        } break;
+        case DECLARATIONS_IN_CLASS: {
+            fprintf(stderr, "Error: DECLARATIONS_IN_CLASS\n");
+        } break;
+        case RETURN_IN_VOID_LAMBDA: {
+            fprintf(stderr, "Error: RETURN_IN_VOID_LAMBDA\n");
+        } break;
+        case NESTED_LAMBDA: {
+            fprintf(stderr, "NESTED_LAMBDA\n");
+        } break;
+        case LAMBDA_CAPTURE_INVALID: {
+            fprintf(stderr, "LAMBDA_CAPTURE_INVALID\n");
+        } break;
+        case INVALID_GENERIC_HAS_TYPE_CONSTRAINT: {
+            fprintf(stderr, "INVALID_GENERIC_HAS_TYPE_CONSTRAINT\n");
+        } break;
+        case INVALID_ALLOCATE_TARGET: {
+            fprintf(stderr, "INVALID_ALLOCATE_TARGET\n");
+        } break;
     }
 
     return e->error;

@@ -1,0 +1,30 @@
+class ClassB {
+    val value = 66;
+};
+
+class ClassO {
+    val hellovalue = 65;
+};
+
+class ClassD {
+    val dus = 55;
+};
+
+class ClassA [A: ClassB] with ClassD{
+    var o : A;
+    val s = 54;
+    val writer = (): void -> {
+        write s;
+        write o.value;
+        write hest;
+        write dus;
+    };
+    val hest = 58;
+};
+
+
+var a: class ClassA[class ClassB];
+allocate a;
+allocate a.o;
+
+a.writer();

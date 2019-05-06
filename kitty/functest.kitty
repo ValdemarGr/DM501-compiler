@@ -1,0 +1,8 @@
+func hello(a: int, b: int): int
+    return a;
+end hello
+
+val a = 5;
+val b = 9;
+
+write hello(a, b);

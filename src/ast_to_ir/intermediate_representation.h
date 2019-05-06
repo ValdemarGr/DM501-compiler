@@ -86,7 +86,8 @@ typedef enum {
     METADATA_BEGIN_ARITHMETIC_EVALUATION,
     METADATA_END_ARITHMETIC_EVALUATION,
     METADATA_BEGIN_GLOBAL_BLOCK,
-    METADATA_END_GLOBAL_BLOCK
+    METADATA_END_GLOBAL_BLOCK,
+    METADATA_DEBUG_INFO
 } InstructionKind;
 
 typedef struct Instructions {
@@ -103,7 +104,7 @@ typedef struct Instructions {
         char* function; //INSTRUCTION_CALL
         size_t callRegister;
         struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
-        struct {size_t argNum; size_t moveReg;} args; //METADATA_FUNCTION_ARGUMENT
+        struct {size_t argNum; size_t moveReg; size_t stackNum; } args; //METADATA_FUNCTION_ARGUMENT
         size_t tempToWrite; //INSTRUCTION_WRITE
         size_t tempToReturn; //INSTRUCTION_RETURN
         size_t tempToConstrain; //COMPLEX_CONSTRAIN_BOOLEAN
@@ -113,6 +114,7 @@ typedef struct Instructions {
         size_t tempToAbs;
         SymbolTable *tableForFunction;
         char* label;
+        char* debugInfo;
         struct { size_t offset; size_t tempToMove; } tempIntoStack;
         struct { size_t offset; size_t tempToMove; size_t scopeToFindFrame; size_t intermediate; } tempIntoStackScope;
         struct { size_t offset; size_t inputTemp; } tempFromStack;

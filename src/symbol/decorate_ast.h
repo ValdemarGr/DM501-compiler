@@ -8,6 +8,7 @@
 #include "symbol.h"
 #include "../ast/tree.h"
 #include "../error/error.h"
+#include "../utils/map.h"
 #include <string.h>
 
 #define LAMBDA_SUFFIX "lambda_"

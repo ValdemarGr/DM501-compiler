@@ -81,7 +81,8 @@ extern int yydebug;
     tLAMBDA_ARROW = 288,
     tVAL = 289,
     tCLASS = 290,
-    tWITH = 291
+    tWITH = 291,
+    tVOID = 292
   };
 #endif
 
@@ -112,7 +113,7 @@ union YYSTYPE
    struct Term *term;
    struct TypeList *typeList;
 
-#line 116 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1906  */
+#line 117 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1906  */
 };
 
 typedef union YYSTYPE YYSTYPE;

@@ -77,6 +77,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case METADATA_END_BODY_BLOCK:
             fprintf(out, "# METADATA_END_BODY_BLOCK\n");
+            fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
             currentIndendation--;
             //SKIP
             break;
@@ -123,7 +124,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, -%zu(%%rbp)\n",
                     getNextRegister(instruction->val.args.moveReg),
-                    (instruction->val.args.argNum + 1) * POINTER_SIZE);
+                    (instruction->val.args.stackNum + 1) * POINTER_SIZE);
         } break;
         case INSTRUCTION_MINUS: {
             fprintf(out, "# INSTRUCTION_MINUS\n");
@@ -604,6 +605,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.lambdaLoad.lambdaGlobalName,
                     getNextRegister(instruction->val.lambdaLoad.temporary));
         } break;
+        case COMPLEX_ALLOCATE_END:break;
+        case METADATA_DEBUG_INFO: {
+            fprintf(out, "# METADATA_DEBUG_INFO\n");
+            printIndentation(out);
+            fprintf(out, "# %s\n", instruction->val.debugInfo);
+        }break;
     }
 }
 

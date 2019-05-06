@@ -107,7 +107,7 @@ void prettyVariable(Variable* variable, SymbolTable *symbolTable) {
             break;
     }
 }
-
+void prettyType(Type *type);
 void prettyTerm(Term *term, SymbolTable *symbolTable) {
     switch(term->kind) {
         case variableK:
@@ -144,8 +144,16 @@ void prettyTerm(Term *term, SymbolTable *symbolTable) {
             prettyLambda(term->val.lambdaD.lambda);
             break;
         case classDowncastk:
-            printf("%s : \033[0;36m%s\033[0m", term->val.classDowncastD.varId, term->val.classDowncastD.downcastId);
+            prettyVariable(term->val.classDowncastD.var, symbolTable);
+            printf(" : ");
+            prettyType(term->val.classDowncastD.toCastTo);
             break;
+        case shorthandCallK: {
+            prettyVariable(term->val.shorthandCallD.var, symbolTable);
+            printf("(");
+            prettyExpressionList(term->val.shorthandCallD.expressionList, symbolTable);
+            printf(")");
+        } break;
     }
 }
 
@@ -161,6 +169,9 @@ void prettyType(Type *type) {
     }
 
     switch(type->kind) {
+        case typeVoidK: {
+            printf("\033[0;36mvoid\033[0m");
+        } break;
         case typeIdK:
             printf("\033[0;36m%s\033[0m", type->val.idType.id);
             break;
@@ -345,17 +356,28 @@ void prettyDeclaration(Declaration *decl) {
                     typeList = typeList->next;
                 }
 
-                printf("\033[0m]");
+                printf("\033[0m] ");
             }
 
             if (decl->val.classD.extendedClasses != NULL) {
-                prettyKeyword("with ");
-
                 TypeList *typeList = decl->val.classD.extendedClasses;
 
                 while (typeList != NULL) {
-
+                    prettyKeyword("with ");
                     printf("\033[0;36m%s", typeList->type->val.typeClass.classId);
+                    TypeList *generics = typeList->type->val.typeClass.genericBoundValues;
+
+                    if (generics != NULL) {
+                        printf("\033[0m[");
+                    }
+
+                    while (generics != NULL) {
+                        prettyType(generics->type);
+                        generics = generics->next;
+                        if (generics == NULL) {
+                            printf("\033[0m]");
+                        }
+                    }
 
                     if (typeList->next != NULL) {
                         printf(" \033[0m");
@@ -459,6 +481,10 @@ void prettyStatement(Statement *statement) {
             printf("\b");
             prettyStatementList(statement->val.stmListD.statementList);
             break;
+        case emptyK: {
+            prettyEXP(statement->val.empty.exp, statement->symbolTable);
+            printf(";\n");
+        } break;
     }
 }
 

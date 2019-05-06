@@ -1,0 +1,21 @@
+class A[B] {
+    var inner: B;
+};
+
+class B with A[int] {
+    val b = 22;
+};
+
+var clsB: class B;
+var clsA: class A[int];
+allocate clsB;
+clsB.inner = 69;
+write clsB.inner;
+
+clsA = clsB : class A[int];
+
+clsA.inner = 55;
+write clsA.inner;
+
+clsA.inner = 42;
+write clsB.inner;

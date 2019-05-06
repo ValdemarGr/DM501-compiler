@@ -150,8 +150,27 @@ SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_st
 
     current_node->value = value;
     current_node->symbol_stmDeclNum = symbol_stmDeclNum;
-    current_node->uniqueIdForScope = t->nextSymbolId;
-    t->nextSymbolId++;
+    if (value->kind == typeK) {
+        if (value->val.typeD.tpe->kind == typeGenericK) {
+            if (strcmp(value->val.typeD.tpe->val.typeGeneric.genericName, name) != 0) {
+                current_node->uniqueIdForScope = t->nextSymbolId;
+                t->nextSymbolId++;
+            }
+        } else {
+            current_node->uniqueIdForScope = t->nextSymbolId;
+            t->nextSymbolId++;
+        }
+    } else if (value->kind == typeFunctionK) {
+        if (value->val.typeFunctionD.isLambda) {
+            current_node->uniqueIdForScope = t->nextSymbolId;
+            t->nextSymbolId++;
+        }
+    }
+    /*if (value->kind == typeK) {
+        current_node->uniqueIdForScope = t->nextSymbolId;
+        t->nextSymbolId++;
+    }*/
+
     current_node->distanceFromRoot = t->distanceFromRoot;
     current_node->isConst = isConst;
 
@@ -286,7 +305,7 @@ void dumpSymbolTable(SymbolTable *t) {
             printf("\t");
         }
 
-        printf("bucket\targuments");
+        printf("bucket\targuments\tuniqueId");
 
         printf("\n");
 
@@ -303,6 +322,7 @@ void dumpSymbolTable(SymbolTable *t) {
 
                 size_t typeLen;
                 size_t typeTabsBetween;
+                size_t uniqueId;
                 //We print the contents of this node
                 switch (current_symbol->value->kind) {
                     case typeK:
@@ -344,7 +364,9 @@ void dumpSymbolTable(SymbolTable *t) {
                             printf("\t");
                         }
 
-                        printf("\033[0;32m%i\033[0m\n", i);
+                        uniqueId = current_symbol->uniqueIdForScope;
+
+                        printf("\033[0;32m%i\033[0m\t%zu\n", i, uniqueId);
 
                         break;
                     case typeFunctionK:
@@ -391,7 +413,9 @@ void dumpSymbolTable(SymbolTable *t) {
                             printf("\033[0m)");
                         }
 
-                        printf("\033[0m\n");
+                        uniqueId = current_symbol->uniqueIdForScope;
+
+                        printf("\033[0m\t%zu\n", uniqueId);
                         break;
                     case symTypeClassK:
                         nameLen = strlen(current_symbol->name);
@@ -418,7 +442,9 @@ void dumpSymbolTable(SymbolTable *t) {
 
                         printf("\033[0;32m%i\t", i);
 
-                        printf("\033[0m\n");
+                        uniqueId = current_symbol->uniqueIdForScope;
+
+                        printf("\033[0m\t%zu\n", uniqueId);
                         break;
                     default:
                         printf("ERROR IN DUMP\n");

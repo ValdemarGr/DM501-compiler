@@ -40,7 +40,12 @@ typedef struct Error {
         TOO_FEW_GENERICS,
         CLASS_NOT_EXTENDED,
         NOT_TYPE,
-        DECLARATIONS_IN_CLASS
+        DECLARATIONS_IN_CLASS,
+        RETURN_IN_VOID_LAMBDA,
+        NESTED_LAMBDA,
+        LAMBDA_CAPTURE_INVALID,
+        INVALID_GENERIC_HAS_TYPE_CONSTRAINT,
+        INVALID_ALLOCATE_TARGET
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
@@ -71,6 +76,7 @@ typedef struct Error {
         struct { char *id; int lineno; } CLASS_NOT_EXTENDED;
         struct { char *id; int lineno; } NOT_TYPE;
         struct { char *classId; int lineno; } DECLARATIONS_IN_CLASS;
+        struct { TypeKind foundReturnType; int lineno; } RETURN_IN_VOID_LAMBDA;
     } val;
 } Error;
 

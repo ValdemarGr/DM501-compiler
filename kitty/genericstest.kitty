@@ -1,0 +1,13 @@
+class ClassB {
+    val hest = 66;
+};
+
+class ClassA [A] {
+    var o : A;
+};
+
+var a: class ClassA[class ClassB];
+allocate a;
+allocate a.o;
+
+write a.o.hest;

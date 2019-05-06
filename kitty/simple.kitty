@@ -1,16 +1,8 @@
 
-type Coordinate = record of { k: record of { x: int} , y: int, asd: int, lg: int };
-var r: Coordinate;
 val o = 69;
 var k: int;
-
-allocate r;
-allocate r.k;
-
-r.k.x = 2;
-k = 77;
+k = 42;
 
 
-write r.k.x;
 write o;
 write k;

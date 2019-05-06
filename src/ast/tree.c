@@ -174,16 +174,25 @@ Term *makeLambdaTerm(Lambda *lambda) {
     return returning;
 }
 
-Term *makeDowncastTerm(char* varId, char *downcastId) {
+Term *makeDowncastTerm(Variable *var, Type *toCastTo) {
     Term* returning = NEW(Term);
 
     returning->kind = classDowncastk;
-    returning->val.classDowncastD.varId =varId;
-    returning->val.classDowncastD.downcastId =downcastId;
+    returning->val.classDowncastD.var = var;
+    returning->val.classDowncastD.toCastTo = toCastTo;
 
     return returning;
 }
 
+Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList) {
+    Term* returning = NEW(Term);
+
+    returning->kind = shorthandCallK;
+    returning->val.shorthandCallD.var = access;
+    returning->val.shorthandCallD.expressionList = expressionList;
+
+    return returning;
+}
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     Expression *e = NEW(Expression);
@@ -492,6 +501,17 @@ Statement *makeStatementFromList(StatementList *statementList) {
     return returning;
 }
 
+Statement *makeEmptyExpression(Expression *expression) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+
+    returning->lineno = lineno;
+    returning->kind = emptyK;
+    returning->val.empty.exp = expression;
+    return returning;
+}
+
 Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
     Declaration *result;
     result = NEW(Declaration);
@@ -597,6 +617,14 @@ Type *makeLambdaType(TypeList *typeList, Type *type) {
     t->kind = typeLambdaK;
     t->val.typeLambdaK.typeList = typeList;
     t->val.typeLambdaK.returnType = type;
+
+    return t;
+}
+
+Type *makeVoidType() {
+    Type *t = NEW(Type);
+
+    t->kind = typeVoidK;
 
     return t;
 }

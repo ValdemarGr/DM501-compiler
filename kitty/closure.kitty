@@ -1,0 +1,28 @@
+
+var z: int;
+
+class ClassA {
+    var o : int;
+    val get = (): int -> {
+        return o;
+    };
+    val set = (new: int): void -> {
+        z = new;
+        o = new;
+    };
+};
+
+func f(): int
+    val y = 55;
+    val l = (x :int): int -> {
+        return x + z;
+    };
+    return 5;
+end f
+
+var a: class ClassA;
+
+allocate a;
+
+a.set(42);
+write a.get();
