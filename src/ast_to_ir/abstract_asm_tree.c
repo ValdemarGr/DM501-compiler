@@ -638,7 +638,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             if (e->kind == typeArrayK) {
                 Instructions *num = newInstruction();
                 num->kind = INSTRUCTION_CONST;
-                num->val.constant.value = 0;
+                num->val.constant.value = - POINTER_SIZE;
                 num->val.constant.temp = currentTemporary;
                 appendInstructions(num);
                 currentTemporary++;
@@ -1275,14 +1275,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
         }
             break;
         case statAllocateK: {
-            Instructions *num = newInstruction();
-            num->kind = INSTRUCTION_CONST;
-            num->val.constant.value = 1;
-            num->val.constant.temp = currentTemporary;
-            appendInstructions(num);
-            size_t constNum = currentTemporary;
-            currentTemporary++;
-
             Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
 
             size_t fieldCount = 0;
@@ -1316,12 +1308,20 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 }
             }
 
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = (int)fieldCount;
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            size_t constNum = currentTemporary;
+            currentTemporary++;
+
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.allocationType = ALLOC_RECORD_CLASS;
             ret->val.allocate.pointerSet = bodySet;
             ret->val.allocate.timesTemp = constNum;
-            ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
+            ret->val.allocate.eleSize = POINTER_SIZE;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
 
@@ -1450,6 +1450,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             //Instructions for getting getting the address we need to move the pointer to
             generateInstructionsForVariableSave(statement->val.allocateLenD.var, statement->symbolTable, allocPtrTemp, false);
 
+            /*
             //Artificial var
             Variable *artiVar = NEW(Variable);
             artiVar->kind = arrayIndexK;
@@ -1468,7 +1469,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
 
-            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);
+            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);*/
 
             //Instructions *endAlloc = newInstruction();
             //endAlloc->kind = COMPLEX_ALLOCATE_END;

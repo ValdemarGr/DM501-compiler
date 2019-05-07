@@ -16,11 +16,11 @@ intprint:
 	subq $56, %rsp
 	movq $2, -8(%rbp)
 	movq $0, -16(%rbp)
-	movq $1, -16(%rbp)
+	movq $1, -24(%rbp)
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $1, %rcx
+		mov $3, %rcx
 # COMPLEX_ALLOCATE
 		push %rdi
 		push %r15
@@ -30,13 +30,24 @@ intprint:
 		mov $12, %rax
 		syscall
 		push %rax
-		mov $24, %r15
+		mov $8, %r15
+		push %r14
 		imul %r14, %r15
+# ALLOC_RECORD_CLASS
+		addq $40, %r15
 		add %r15, %rax
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
+		pop %r14
 		pop %rax
+		movq %r14, 0(%rax)
+		addq $1, %r14
+		movq $3, (%rax, %r14, 8)
+		movq $0, 0(%rax, %r14, 8)
+		movq $1, 8(%rax, %r14, 8)
+		movq $2, 16(%rax, %r14, 8)
+		addq $8, %rax
 		pop %r14
 		pop %r15
 		pop %rdi
@@ -68,12 +79,18 @@ intprint:
 		syscall
 		push %rax
 		mov $8, %r15
+		push %r14
 		imul %r14, %r15
+# ALLOC_LAMBDA
+		addq $8, %r15
 		add %r15, %rax
 		mov %rax, %rdi
 		mov $12, %rax
 		syscall
+		pop %r14
 		pop %rax
+		movq $-1, 0(%rax)
+		addq $8, %rax
 		pop %r14
 		pop %r15
 		pop %rdi
