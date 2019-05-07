@@ -35,6 +35,9 @@ garbageCollectBFS:
     push %rbp
     movq %rsp, %rbp
 
+	movq 16(%rbp), %r15
+	movq %r15, -8(%rbp)
+
     push %rax
     push %rcx
     push %rdx
@@ -53,10 +56,16 @@ garbageCollectBFS:
     #reset heap counter for both &
     # swap in use values
     leaq gcHeapTwo, %rsi
-    negq 0(%rsi)
+    movq 0(%rsi), %r12
+    movq $1, %r13
+    subq %r12, %r13
+    movq %r13, 0(%rsi)
     movq $0, 8(%rsi)
     leaq gcHeapOne, %rsi
-    negq 0(%rsi)
+    movq 0(%rsi), %r12
+    movq $1, %r13
+    subq %r12, %r13
+    movq %r13, 0(%rsi)
     movq $0, 8(%rsi)
 
     movq 0(%rsi), %r12
@@ -65,16 +74,21 @@ garbageCollectBFS:
     leaq gcHeapTwo, %rsi
     loadHeapEnd:
 
-	mov 16(%rbp), %r15
     # we will find the amount of ptrs in -16
     mov -16(%r15), %r14
     mov %r14, %r8
     #add 1 + the size of the array list to begin the fetch phase
-    inc %r8
     #times 8 because of sizes
     imulq $8, %r8
 
-    mov $24, %r13 # offset
+    mov $-24, %r13 # offset
+
+    #add initial offset
+    movq $0, %r12
+    subq %r8, %r12
+    movq %r12, %r8
+
+    add %r13, %r8
 
     #initial pass moves all ptrs over
     gcLoopBegin:
@@ -83,10 +97,18 @@ garbageCollectBFS:
         mov (%r15, %r13, 1), %rdi #rdi has offset
         #mul by factor
         imulq $8, %rdi
+        #negate because of stack access
+        movq $0, %r12
+        subq %rdi, %r12
+        movq %r12, %rdi
         #add the constant offset
         add %r8, %rdi
         #%r12 is now our offset to our first pointer
         movq (%r15, %rdi, 1), %rcx
+
+        #if rcx is 0, then its not allocated
+        cmp $0, %rcx
+        je gcLoopEpilogue
 
         # move all fields
 
@@ -158,10 +180,10 @@ garbageCollectBFS:
         #r12 is now our offset to our first pointer
         movq %r12, (%r15, %rdi, 1)
 
-
+    gcLoopEpilogue:
         #add the moved struct to the new heap
 
-        add $8, %r13
+        subq $8, %r13
         dec %r14
         jmp gcLoopBegin
     gcLoopEnd:
@@ -174,7 +196,7 @@ garbageCollectBFS:
 
     #recurse
     pushq -8(%r15)
-    call garbageCollect
+    call garbageCollectBFS
     pop %r15
 
     gcRet:
@@ -204,6 +226,8 @@ garbageCollect:
     push %rbp
     movq %rsp, %rbp
 
+    push %r15
+
     pushq 16(%rbp)
     call garbageCollectBFS
     pop %rax
@@ -214,7 +238,7 @@ garbageCollect:
     leaq gcHeapTwo, %r15
     heapSelectorEnd:
 
-
+    pop %r15
 
     mov %rbp,%rsp
     pop %rbp
@@ -238,6 +262,10 @@ garbageCollectAllocate:
     movq 24(%rbp), %rax
     movq %rax, -8(%rbp)
 
+    #pushq -16(%rbp)
+    #call garbageCollect
+    #pop %rax
+
     leaq gcHeapOne, %r15
     cmp $1, 0(%r15)
     je heapSelectorEndAlloc
@@ -252,6 +280,28 @@ garbageCollectAllocate:
     movq %rax, 8(%r15)
 
     # old size is still in r14
+    push %r15
+    push %r14
+
+    #rax has total offset
+    sub $8, %rax
+
+    mov 24(%r15), %r15
+    mov -8(%rbp), %r14
+    zeroSetterBegin:
+    cmp $0, %r14
+    je zeroSetterEnd
+
+    movq $0, (%r15, %rax, 1)
+
+    subq $8, %r14
+    subq $8, %rax
+    jmp zeroSetterBegin
+    zeroSetterEnd:
+
+    pop %r14
+    pop %r15
+
     movq 24(%r15), %rax
     addq %r14, %rax
 
@@ -261,7 +311,6 @@ garbageCollectAllocate:
     mov %rbp,%rsp
     pop %rbp
     ret
-
 
 main:
     push %rbp

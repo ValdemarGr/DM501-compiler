@@ -111,7 +111,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
-                counter++;
+                printIndentation(out);
+                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + offsetForFunction) * POINTER_SIZE);counter++;
                 iter = iter->_next;
             }
 
@@ -439,6 +440,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             //Make header invisible
             printIndentation(out);
             fprintf(out, "addq $8, %%rax\n");
+
 /*
             printIndentation(out);
             fprintf(out, "pop %%r14\n");
@@ -486,6 +488,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                printIndentation(out);
+                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + offsetForFunction) * POINTER_SIZE);
                 counter++;
                 iter = iter->_next;
             }
