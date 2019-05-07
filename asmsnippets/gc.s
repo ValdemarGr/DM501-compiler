@@ -220,10 +220,14 @@ garbageCollect:
     pop %rbp
     ret
 
+.type garbageCollectAllocate, @function
 garbageCollectAllocate:
     push %rbp
     movq %rsp, %rbp
     subq $32, %rsp
+
+    push %r15
+    push %r14
 
     #args
     #rbp
@@ -236,8 +240,9 @@ garbageCollectAllocate:
 
     leaq gcHeapOne, %r15
     cmp $1, 0(%r15)
-    je heapSelectorEnd
+    je heapSelectorEndAlloc
     leaq gcHeapTwo, %r15
+    heapSelectorEndAlloc:
 
     # current heap position
     movq 8(%r15), %r14
@@ -247,7 +252,11 @@ garbageCollectAllocate:
     movq %rax, 8(%r15)
 
     # old size is still in r14
-    movq (%r15, %r14, 1), %rax
+    movq 24(%r15), %rax
+    addq %r14, %rax
+
+    pop %r14
+    pop %r15
 
     mov %rbp,%rsp
     pop %rbp

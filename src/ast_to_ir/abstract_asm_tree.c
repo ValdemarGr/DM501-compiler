@@ -784,6 +784,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 ret->kind = COMPLEX_ALLOCATE;
                 ret->val.allocate.timesTemp = const2Temp;
                 ret->val.allocate.eleSize = POINTER_SIZE;
+                ret->val.allocate.intermediate = currentTemporary++;
                 ret->val.allocate.allocationType = ALLOC_LAMBDA;
                 size_t allocPtrTemp = 0;
                 arrayTemp = allocPtrTemp;
@@ -1318,6 +1319,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.allocationType = ALLOC_RECORD_CLASS;
             ret->val.allocate.pointerSet = bodySet;
             ret->val.allocate.timesTemp = constNum;
+            ret->val.allocate.intermediate = currentTemporary++;
             ret->val.allocate.eleSize = POINTER_SIZE;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
@@ -1435,6 +1437,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.eleSize = POINTER_SIZE;
+            ret->val.allocate.intermediate = currentTemporary++;
             if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK) {
                 ret->val.allocate.allocationType = ALLOC_ARR_OF_PRIM;
             } else {

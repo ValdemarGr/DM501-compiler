@@ -98,7 +98,7 @@ typedef struct Instructions {
         Arithmetic3 arithmetic3;
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
-        struct { size_t timesTemp; size_t eleSize; SortedSet *pointerSet; AllocationType allocationType;} allocate;
+        struct { size_t timesTemp; size_t eleSize; SortedSet *pointerSet; AllocationType allocationType; size_t intermediate; } allocate;
         struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; SortedSet *pointerSet; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t callRegister;
