@@ -171,8 +171,18 @@ void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_
     Instructions *instructionHead = newInstruction();
     Instructions *currentInstruction = instructionHead;
 
+    if (instrHead->kind == INSTRUCTION_CONST && instrHead->next->kind == INSTRUCTION_ADD) {
+        if (instrHead->val.constant.temp == instrHead->next->val.arithmetic2.source) {
+                //apply
+        }
+
+    }
+
     switch (apply) {
         case REMOVE_CONST_REGISTER_ADD: {
+
+
+
             instructionHead->kind = INSTRUCTION_ADD_CONST;
             instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
             instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);

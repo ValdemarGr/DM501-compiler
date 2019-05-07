@@ -88,21 +88,25 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case INSTRUCTION_FUNCTION_LABEL:
             fprintf(out, "# INSTRUCTION_FUNCTION_LABEL\n");
-            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
+            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rbp, %%rax\nmov %%rsp,%%rbp\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
             printIndentation(out);
-            offsetForFunction = (int)length(instruction->val.functionHead.pointerSet) + 1;
+            offsetForFunction = (int)length(instruction->val.functionHead.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",
                     16 + (
                     (int)instruction->val.functionHead.tableForFunction->nextSymbolId +
                             offsetForFunction) * POINTER_SIZE);
 
+
+            printIndentation(out);
+            fprintf(out, "movq %%rax, -8(%%rbp)\n");
+
             SortedSet *gcSet = instruction->val.functionHead.pointerSet;
             int len = (int)length(gcSet);
             printIndentation(out);
-            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+            fprintf(out, "movq $%i, -16(%%rbp)\n", len);
 
             SortedSet *iter = first(gcSet);
-            int counter = 2;
+            int counter = 3;
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
@@ -431,19 +435,22 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, ASM_HEADER);
             printIndentation(out);
-            offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1;
+            offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",
                             16 +
                                     ((int)instruction->val.mainHeader.tableForFunction->nextSymbolId +
                             offsetForFunction) * POINTER_SIZE);
 
+            printIndentation(out);
+            fprintf(out, "movq %%rax, -8(%%rbp)\n");
+
             SortedSet *gcSet = instruction->val.mainHeader.pointerSet;
             int len = (int)length(gcSet);
             printIndentation(out);
-            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+            fprintf(out, "movq $%i, -16(%%rbp)\n", len);
 
             SortedSet *iter = first(gcSet);
-            int counter = 2;
+            int counter = 3;
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
@@ -754,9 +761,7 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, "staticLink:\n");
     fprintf(file, "\t.space %zu\n", (maxDistFromRoot + 1) * POINTER_SIZE);
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
-    fprintf(file, ".section .text\n");
-    fprintf(file, ".global main\n");
-    fprintf(file, ".extern printf\n");
+    fprintf(file, GARBAGE_COLLECTOR_CHUNK);
 }
 /*
 void generateInstructionLLForGlobals(Instructions *afterBegin) {
