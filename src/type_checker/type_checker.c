@@ -744,6 +744,7 @@ Error *traverseClassExtensionsAndInsertGenerics(ConstMap *constMap, char *classI
 
         extendedIter = extendedIter->next;
     }
+    return NULL;
 }
 
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
@@ -2362,6 +2363,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
             classGenerics = classGenerics->next;
             boundVars = boundVars->next;
         }
+        return NULL;
 }
 
 Error *checkDeclValidity(Declaration *declaration) {

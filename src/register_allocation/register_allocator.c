@@ -519,7 +519,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                         getTemporary(colors, state->current->val.args.moveReg, state);
                 break;
             case METADATA_CREATE_MAIN:
-                currentSymbolTable = state->current->val.tableForFunction;
+                currentSymbolTable = state->current->val.mainHeader.tableForFunction;
                 currentSymbolTable->nextSymbolId++;
                 break;
             case METADATA_BEGIN_ARITHMETIC_EVALUATION:break;

@@ -69,10 +69,12 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
 
 
     Stack *stack = initStack();
+    Stack *removedStack = initStack();
     bool couldSimplify = true;
     int stackSize = 0;
     int nodesRemoved = 1;
     Node *toRemove = NULL;
+    int toRemoveIndex = 0;
 
     graph[0].beenSimplified = true;
     //Simplify
@@ -95,9 +97,14 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 nodesRemoved++;
             } else {
                 toRemove = &graph[i];
+                toRemoveIndex = i;
             }
         }
 
+        /*
+         * If no nodes could be removed we just remove one node and
+         * assume that it will spill
+         */
         if (!couldSimplify && nodesRemoved < max_size) {
                 Node *iterator = toRemove->next;
                 while (iterator != NULL) {
@@ -106,6 +113,8 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                     }
                     iterator = iterator->next;
                 }
+                toRemove->value = toRemoveIndex;
+                push(removedStack, (void *) toRemove);
                 toRemove->beenSimplified = true;
                 couldSimplify = true;
                 nodesRemoved++;
@@ -115,6 +124,8 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
     bool colorFound;
     Node *poppedNode;
     bool colorsUsedByNeighbors[colors];
+    bool colorUsed[colors];
+    memset(colorUsed, false, sizeof(bool) * colors);
     Node *iterator;
     color_overview[0] = 0;
     //Color nodes
@@ -140,6 +151,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
             if (colorsUsedByNeighbors[i] == false){
                 color_overview[poppedNode->value] = i;
                 colorFound = true;
+                colorUsed[i] = true;
                 break;
             }
         }
@@ -148,5 +160,33 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
             color_overview[poppedNode->value] = -1;
         }
     }
+
+    /*
+     * Nodes that we removed assuming that they would spill can maybe be
+     * assigned a color that has not been used
+     */
+    while (!isEmpty(removedStack)) {
+        poppedNode = pop(stack);
+        colorFound = false;
+
+        for (int i = 1; i < colors; i++) {
+            if (colorUsed[i] == false){
+                color_overview[poppedNode->value] = i;
+                colorFound = true;
+                colorUsed[i] = true;
+                break;
+            }
+        }
+
+        /*
+         * If there is no unused color there is no reason to try with the next
+         * node
+         */
+        if (!colorFound) {
+            color_overview[poppedNode->value] = -1;
+            break;
+        }
+    }
+
     return color_overview;
 }
