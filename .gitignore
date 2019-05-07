@@ -303,3 +303,9 @@ dmypy.json
 
 src/**/Makefile
 src/**/*.a
+tests/**/Makefile
+tests/**/*.a
+
+build-files/compiler
+asmsnippets/out
+asmsnippets/run.s
