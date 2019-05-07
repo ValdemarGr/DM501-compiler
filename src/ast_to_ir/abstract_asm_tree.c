@@ -364,10 +364,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
 
-            int toAdd = 1;
-            if (forArrayLen) {
-                toAdd = 0;
-            }
+            int toAdd = 0;
 
             //Add one for space
             Instructions *constOne = newInstruction();
