@@ -382,9 +382,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     //move size into head of new block
                     printIndentation(out);
                     fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
-                    //move displacer by 1 block
+                    //fix register
+                    fprintf(out, "# ALLOC_RECORD_CLASS\n");
+                    //1 slot for data size, 1 for ptr count and |ptrCount|
+                    int extraSpace = len + 1;
                     printIndentation(out);
-                    fprintf(out, "addq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "subq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                     //Move the ptr index array size into new displacement
                     printIndentation(out);
                     fprintf(out, "movq $%i, (%%rax, %%%s, 1)\n", len, getNextRegister(instruction->val.allocate.intermediate));
@@ -407,7 +410,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
                     //move displacer by 1 block
                     printIndentation(out);
-                    fprintf(out, "addq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
                     //Move the ptr index array size into new displacement
                     printIndentation(out);
                     fprintf(out, "movq $-1, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));
@@ -419,7 +422,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
                     //move displacer by 1 block
                     printIndentation(out);
-                    fprintf(out, "addq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
                     //Move the ptr index array size into new displacement
                     printIndentation(out);
                     fprintf(out, "movq $0, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));

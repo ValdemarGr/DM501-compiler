@@ -96,15 +96,15 @@ garbageCollectBFS:
         movq %r12, %rdi
         #add the constant offset
         add %r8, %rdi
-        #%r12 is now our offset to our first pointer
         movq (%r15, %rdi, 1), %rcx
 
         #nullptr check
         cmp $0, %rcx
         je gcLoopEpilogue
 
+        subq $8, %rcx
         # get size
-        mov -8(%rcx), %rax
+        mov 0(%rcx), %rax
         cmp $-1, %rax
         jne forLambdaEnd
         forLambda:
@@ -115,6 +115,7 @@ garbageCollectBFS:
         #mul by 8 bc pointer size
         imulq $8, %rax
 
+        #skip head
         add $8, %rax
 
         #get ptr count
@@ -142,10 +143,9 @@ garbageCollectBFS:
         movq 24(%rsi), %r12 # r12 has new heap start
         movq 8(%rsi), %rdi # current heap position
 
-        #save old heap position
-        pushq %r12
+        # save old heap position
+        pushq %rdi
 
-        add %rdi, %r12 # r12 now has current heap pointer
         mov $0, %rbx # rbx has 0
 
         heapMover:
@@ -153,7 +153,7 @@ garbageCollectBFS:
         je heapMoverEnd
 
             # move rcx + indexer(rbx) to top of new heap
-            movq -8(%rcx, %rbx, 1), %rdx
+            movq (%rcx, %rbx, 1), %rdx
 
             movq %rdx, (%r12, %rdi, 1)
 
@@ -167,8 +167,9 @@ garbageCollectBFS:
 
         #Now we have to restore the stack pointer
         #We have old heap start in r12
-        popq %r12
-        # we hide size ptr
+        popq %rdi
+        movq 24(%rsi), %r12
+        addq %rdi, %r12
         addq $8, %r12
 
         mov (%r15, %r13, 1), %rdi #rdi has offset
@@ -256,7 +257,7 @@ garbageCollect:
     heapSelectorEnd:
 
     # traverse new heap, if ptr to old heap found, move it to new heap, we know new heap is packed
-    movq $0, %rdx # rdx is heap iterator
+    movq 8(%r15), %rdx # rdx is heap iterator
     pushq $-1
     movq 24(%r15), %rcx # rcx has actual heap ptr
     newHeapTraverseBegin:
@@ -288,12 +289,14 @@ garbageCollect:
             # copy struct position ptr
             movq %rdx, %r8
             # add 1 for header
-            add $1, %r8
+            add $8, %r8
             #mul 8 ptr size
-            imul $8, %r8
             imul $8, %rdi
             #add offset
             add %rdi, %r8
+
+            # save offset
+            movq %r8, %r11
 
             # then move the actual ptr into reg
             movq (%rcx, %r8, 1), %r8
@@ -306,16 +309,21 @@ garbageCollect:
             # add the pointer to the end offset
             addq %r9, %r10
 
-            cmp %r8, %r9
+            cmp %r9, %r8 #inverted because of gas xd
             jl selfPtrHeapMoveEpilogue
-            cmp %r10, %r8
+            cmp %r8, %r10 #inverted because of gas xd
             jl selfPtrHeapMoveEpilogue
             # if r8 < r9 || r10 < r8 skip
+
+            # save offset for when we have to save this field
+            pushq %r11
 
             # we actually have to move it
             # we can use r9 & r10 again
             # we need to find total size of the struct
             # the header can be used for this
+            # grab header size by -8
+            subq $8, %r8
             movq (%r8), %r9 # r9 has size
             #if -1 its lambda
             cmp $-1, %r9
@@ -350,6 +358,7 @@ garbageCollect:
             # we can use r9 & r10 again
 
             #copy heap iter
+            # save old heap tail
             movq $0, %r9
             newHeapMoverBegin:
                 cmp %r9, %r13
@@ -357,11 +366,21 @@ garbageCollect:
 
                 # move this heap block
                 movq (%r8, %r9, 1), %r10
-                movq %r10, (%rcx, %r11, 1)
+                movq %r10, (%rcx, %rdx, 1)
 
                 addq $8, %r9
                 addq $8, %rdx #inc heap top
             newHeapMoverEnd:
+
+            # r10 the fields offset
+            popq %r10
+
+            # hide head
+            addq $8, %r8
+
+            # then move the actual ptr into reg
+            movq %r8, (%rcx, %r10, 1)
+
 
 
 
@@ -438,6 +457,8 @@ garbageCollectAllocate:
     mov %rbp,%rsp
     pop %rbp
     ret
+
+
 
 main:
     push %rbp

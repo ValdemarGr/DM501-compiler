@@ -9,8 +9,14 @@ class A {
 };
 
 var a: class A;
+var clsB: class B;
 allocate a;
+allocate clsB;
 allocate a.internalB;
+
 
 write a.first;
 write a.internalB.b;
+write a.internalB.b;
+write clsB.b;
+
