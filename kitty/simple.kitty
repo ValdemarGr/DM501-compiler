@@ -1,8 +1,16 @@
 
-val o = 69;
-var k: int;
-k = 42;
+class A {
+    val first = 5;
+    val second = 22;
+    val third = 568;
+    val fourth = 12;
+};
+
+var a: class A;
+allocate a;
 
 
-write o;
-write k;
+write a.first;
+write a.second;
+write a.third;
+write a.fourth;

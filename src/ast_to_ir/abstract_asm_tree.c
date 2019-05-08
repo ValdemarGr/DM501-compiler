@@ -1793,6 +1793,18 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
     }
 }
 
+void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTable) {
+    if (symbol->value->kind != typeK) {
+        return;
+    }
+
+    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+
+    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+        insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
+    }
+}
+
 void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
     if (declaration == NULL) {
         return;
@@ -1800,7 +1812,7 @@ void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
 
     switch (declaration->kind) {
         case declVarK: {
-            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.varD.id)->uniqueIdForScope);
+            insertForType(sortedSet, getSymbol(declaration->symbolTable, declaration->val.varD.id), declaration->symbolTable);
         } break;
         case declVarsK: {
             getPointerCountForDecl(sortedSet, declaration->val.varsD.var);
@@ -1812,7 +1824,7 @@ void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
             }
         } break;
         case declValK: {
-            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.valD.id)->uniqueIdForScope);
+            insertForType(sortedSet, getSymbol(declaration->symbolTable, declaration->val.valD.id), declaration->symbolTable);
         } break;
         default:
             break;

@@ -392,7 +392,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
 
                     SortedSet *gcIter = first(gcSet);
 
-                    int localOffset = 0;
+                    int localOffset = 1;
                     while (gcIter != NULL) {
                         printIndentation(out);
                         fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", gcIter->data, localOffset * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
@@ -489,7 +489,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
                 printIndentation(out);
-                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + offsetForFunction) * POINTER_SIZE);
+                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + 1 + offsetForFunction) * POINTER_SIZE);
                 counter++;
                 iter = iter->_next;
             }

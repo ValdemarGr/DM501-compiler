@@ -35,9 +35,6 @@ garbageCollectBFS:
     push %rbp
     movq %rsp, %rbp
 
-	movq 16(%rbp), %r15
-	movq %r15, -8(%rbp)
-
     push %rax
     push %rcx
     push %rdx
@@ -56,16 +53,10 @@ garbageCollectBFS:
     #reset heap counter for both &
     # swap in use values
     leaq gcHeapTwo, %rsi
-    movq 0(%rsi), %r12
-    movq $1, %r13
-    subq %r12, %r13
-    movq %r13, 0(%rsi)
+    negq 0(%rsi)
     movq $0, 8(%rsi)
     leaq gcHeapOne, %rsi
-    movq 0(%rsi), %r12
-    movq $1, %r13
-    subq %r12, %r13
-    movq %r13, 0(%rsi)
+    negq 0(%rsi)
     movq $0, 8(%rsi)
 
     movq 0(%rsi), %r12
@@ -74,10 +65,12 @@ garbageCollectBFS:
     leaq gcHeapTwo, %rsi
     loadHeapEnd:
 
+	mov 16(%rbp), %r15
     # we will find the amount of ptrs in -16
     mov -16(%r15), %r14
     mov %r14, %r8
     #add 1 + the size of the array list to begin the fetch phase
+    #inc %r8
     #times 8 because of sizes
     imulq $8, %r8
 
@@ -106,20 +99,21 @@ garbageCollectBFS:
         #%r12 is now our offset to our first pointer
         movq (%r15, %rdi, 1), %rcx
 
-        #if rcx is 0, then its not allocated
+        #nullptr check
         cmp $0, %rcx
         je gcLoopEpilogue
-
-        # move all fields
 
         # get size
         mov -8(%rcx), %rax
         cmp $-1, %rax
         jne forLambdaEnd
         forLambda:
-            mov $24, %rax
+            mov $2, %rax
             jmp skipRec
         forLambdaEnd:
+
+        #mul by 8 bc pointer size
+        imulq $8, %rax
 
         add $8, %rax
 
@@ -136,7 +130,6 @@ garbageCollectBFS:
         skipRec:
 
         # subtract 8 from rcx to find where to move from
-        sub $8, %rcx
         # reserve new space on heap
 
         # new heap struct is in rsi
@@ -146,42 +139,51 @@ garbageCollectBFS:
         # we have rdi free
 
         # save new positional ptr
-        movq 24(%rsi), %r12
-        movq 8(%rsi), %rdi
-        add %rdi, %r12
-        mov $0, %rbx
+        movq 24(%rsi), %r12 # r12 has new heap start
+        movq 8(%rsi), %rdi # current heap position
+
+        #save old heap position
+        pushq %r12
+
+        add %rdi, %r12 # r12 now has current heap pointer
+        mov $0, %rbx # rbx has 0
 
         heapMover:
         cmp $0, %rax
         je heapMoverEnd
 
             # move rcx + indexer(rbx) to top of new heap
-            movq (%rcx, %rbx, 1), %rdx
+            movq -8(%rcx, %rbx, 1), %rdx
 
             movq %rdx, (%r12, %rdi, 1)
 
             add $8, %rdi
             add $8, %rbx
+            sub $8, %rax
         jmp heapMover
         heapMoverEnd:
 
         mov %rdi, 8(%rsi)
 
         #Now we have to restore the stack pointer
+        #We have old heap start in r12
+        popq %r12
         # we hide size ptr
-        subq $8, %r12
-        #move r12 to stack position working in
+        addq $8, %r12
 
         mov (%r15, %r13, 1), %rdi #rdi has offset
         #mul by factor
         imulq $8, %rdi
+        #negate because of stack access
+        movq $0, %rax
+        subq %rdi, %rax
+        movq %rax, %rdi
         #add the constant offset
         add %r8, %rdi
         #r12 is now our offset to our first pointer
         movq %r12, (%r15, %rdi, 1)
 
-    gcLoopEpilogue:
-        #add the moved struct to the new heap
+        gcLoopEpilogue:
 
         subq $8, %r13
         dec %r14
@@ -226,8 +228,6 @@ garbageCollect:
     push %rbp
     movq %rsp, %rbp
 
-    push %r15
-
     pushq 16(%rbp)
     call garbageCollectBFS
     pop %rax
@@ -238,7 +238,7 @@ garbageCollect:
     leaq gcHeapTwo, %r15
     heapSelectorEnd:
 
-    pop %r15
+
 
     mov %rbp,%rsp
     pop %rbp
@@ -262,10 +262,6 @@ garbageCollectAllocate:
     movq 24(%rbp), %rax
     movq %rax, -8(%rbp)
 
-    #pushq -16(%rbp)
-    #call garbageCollect
-    #pop %rax
-
     leaq gcHeapOne, %r15
     cmp $1, 0(%r15)
     je heapSelectorEndAlloc
@@ -280,28 +276,6 @@ garbageCollectAllocate:
     movq %rax, 8(%r15)
 
     # old size is still in r14
-    push %r15
-    push %r14
-
-    #rax has total offset
-    sub $8, %rax
-
-    mov 24(%r15), %r15
-    mov -8(%rbp), %r14
-    zeroSetterBegin:
-    cmp $0, %r14
-    je zeroSetterEnd
-
-    movq $0, (%r15, %rax, 1)
-
-    subq $8, %r14
-    subq $8, %rax
-    jmp zeroSetterBegin
-    zeroSetterEnd:
-
-    pop %r14
-    pop %r15
-
     movq 24(%r15), %rax
     addq %r14, %rax
 
