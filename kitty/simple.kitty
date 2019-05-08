@@ -1,16 +1,16 @@
 
+class B {
+    val b = 9;
+};
+
 class A {
     val first = 5;
-    val second = 22;
-    val third = 568;
-    val fourth = 12;
+    var internalB: class B;
 };
 
 var a: class A;
 allocate a;
-
+allocate a.internalB;
 
 write a.first;
-write a.second;
-write a.third;
-write a.fourth;
+write a.internalB.b;

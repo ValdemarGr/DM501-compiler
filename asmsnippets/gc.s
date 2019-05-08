@@ -257,10 +257,13 @@ garbageCollect:
 
     # traverse new heap, if ptr to old heap found, move it to new heap, we know new heap is packed
     movq $0, %rdx # rdx is heap iterator
+    pushq $-1
     movq 24(%r15), %rcx # rcx has actual heap ptr
     newHeapTraverseBegin:
-        movq 8(%r15), %rax # rax has current new heap pos
-        cmp %rdx, %rax
+        #movq 8(%r15), %rax # rax has current new heap pos
+        popq %r9
+        cmp %rdx, %r9
+        push %rdx
         je newHeapTraverseEnd
 
         # now to traversing ptrs
@@ -276,7 +279,7 @@ garbageCollect:
         # while ptrCnt != 0, move another self reference item to heap
         # use rbx + 8 has first item
         addq $8, %rbx #now is first ptr
-        slefPtrHeapMoveBegin:
+        selfPtrHeapMoveBegin:
             cmp $0, %rsi
             je selfPtrHeapMoveEnd
 
@@ -304,9 +307,9 @@ garbageCollect:
             addq %r9, %r10
 
             cmp %r8, %r9
-            jl slefPtrHeapMoveEpilogue
+            jl selfPtrHeapMoveEpilogue
             cmp %r10, %r8
-            jl slefPtrHeapMoveEpilogue
+            jl selfPtrHeapMoveEpilogue
             # if r8 < r9 || r10 < r8 skip
 
             # we actually have to move it
@@ -346,6 +349,7 @@ garbageCollect:
             # size will be in r13
             # we can use r9 & r10 again
 
+            #copy heap iter
             movq $0, %r9
             newHeapMoverBegin:
                 cmp %r9, %r13
@@ -353,21 +357,26 @@ garbageCollect:
 
                 # move this heap block
                 movq (%r8, %r9, 1), %r10
-                movq %r10, ()
+                movq %r10, (%rcx, %r11, 1)
 
+                addq $8, %r9
+                addq $8, %rdx #inc heap top
             newHeapMoverEnd:
 
 
-        slefPtrHeapMoveEpilogue:
+
+        selfPtrHeapMoveEpilogue:
 
             addq $8, %rbx
             dec %rsi
+            jmp selfPtrHeapMoveBegin
         selfPtrHeapMoveEnd:
-
 
     newHeapTraverseEpilogue:
 
+        jmp newHeapTraverseBegin
     newHeapTraverseEnd:
+    popq %r9
 
     pop %r15
     pop %r14
