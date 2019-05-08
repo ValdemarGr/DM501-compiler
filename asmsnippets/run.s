@@ -257,14 +257,11 @@ garbageCollect:
     heapSelectorEnd:
 
     # traverse new heap, if ptr to old heap found, move it to new heap, we know new heap is packed
-    movq 8(%r15), %rdx # rdx is heap iterator
-    pushq $-1
+    movq $0, %rdx # rdx is heap iterator
     movq 24(%r15), %rcx # rcx has actual heap ptr
+    movq 8(%r15), %rax # rax has current new heap pos
     newHeapTraverseBegin:
-        #movq 8(%r15), %rax # rax has current new heap pos
-        popq %r9
-        cmp %rdx, %r9
-        push %rdx
+        cmp %rdx, %rax
         je newHeapTraverseEnd
 
         # now to traversing ptrs
@@ -275,9 +272,19 @@ garbageCollect:
         # mul by 8 for block size
         imul $8, %rbx
         # add heap iter for absolute position
+        movq %rbx, %r10
+
         add %rdx, %rbx
         movq (%rcx, %rbx, 1), %rsi # rbx how has ptr count
         # while ptrCnt != 0, move another self reference item to heap
+
+        addq $8, %rbx
+        movq %rsi, %r11
+        imul $8, %r11
+        add %rbx, %r11
+        addq %r11, %rdx
+        subq $8, %rbx
+
         # use rbx + 8 has first item
         addq $8, %rbx #now is first ptr
         selfPtrHeapMoveBegin:
@@ -295,10 +302,8 @@ garbageCollect:
             #add offset
             add %rdi, %r8
 
-            # save offset
-            movq %r8, %r11
+            pushq %r8
 
-            # then move the actual ptr into reg
             movq (%rcx, %r8, 1), %r8
 
             # finally move the ptr to new heap space if it is in old
@@ -316,7 +321,6 @@ garbageCollect:
             # if r8 < r9 || r10 < r8 skip
 
             # save offset for when we have to save this field
-            pushq %r11
 
             # we actually have to move it
             # we can use r9 & r10 again
@@ -357,7 +361,10 @@ garbageCollect:
             # size will be in r13
             # we can use r9 & r10 again
 
-            #copy heap iter
+            # save old head
+            movq %rax, %r11
+
+            # copy heap iter
             # save old heap tail
             movq $0, %r9
             newHeapMoverBegin:
@@ -366,25 +373,26 @@ garbageCollect:
 
                 # move this heap block
                 movq (%r8, %r9, 1), %r10
-                movq %r10, (%rcx, %rdx, 1)
+                movq %r10, (%rcx, %rax, 1)
 
                 addq $8, %r9
-                addq $8, %rdx #inc heap top
+                addq $8, %rax #inc heap top
             newHeapMoverEnd:
 
-            # r10 the fields offset
-            popq %r10
+            # Where old ptr offset aboslute in structure we are working in
+            popq %r8
 
+            # add the heap ptr to rax
+            addq %rcx, %r11
             # hide head
-            addq $8, %r8
+            addq $8, %r11
 
-            # then move the actual ptr into reg
-            movq %r8, (%rcx, %r10, 1)
-
+            movq %r11, (%rcx, %r8, 1)
 
 
 
         selfPtrHeapMoveEpilogue:
+
 
             addq $8, %rbx
             dec %rsi
@@ -395,7 +403,10 @@ garbageCollect:
 
         jmp newHeapTraverseBegin
     newHeapTraverseEnd:
-    popq %r9
+
+    movq 8(%r15), %rax # rax has current new heap pos
+
+
 
     pop %r15
     pop %r14
