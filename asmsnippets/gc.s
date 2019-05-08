@@ -344,6 +344,18 @@ garbageCollect:
 
             structSizeEvalEnd:
             # size will be in r13
+            # we can use r9 & r10 again
+
+            movq $0, %r9
+            newHeapMoverBegin:
+                cmp %r9, %r13
+                je newHeapMoverEnd
+
+                # move this heap block
+                movq (%r8, %r9, 1), %r10
+                movq %r10, ()
+
+            newHeapMoverEnd:
 
 
         slefPtrHeapMoveEpilogue:
