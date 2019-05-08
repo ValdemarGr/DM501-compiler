@@ -230,15 +230,147 @@ garbageCollect:
 
     pushq 16(%rbp)
     call garbageCollectBFS
-    pop %rax
+    pop 16(%rbp)
+
+    push %rax
+    push %rcx
+    push %rdx
+    push %rbx
+    push %rsi
+    push %rdi
+    push %r8
+    push %r9
+    push %r10
+    push %r11
+    push %r12
+    push %r13
+    push %r14
+    push %r15
 
     leaq gcHeapOne, %r15
+    leaq gcHeapTwo, %r14
     cmp $1, 0(%r15)
     je heapSelectorEnd
     leaq gcHeapTwo, %r15
+    leaq gcHeapOne, %r14
     heapSelectorEnd:
 
+    # traverse new heap, if ptr to old heap found, move it to new heap, we know new heap is packed
+    movq $0, %rdx # rdx is heap iterator
+    movq 24(%r15), %rcx # rcx has actual heap ptr
+    newHeapTraverseBegin:
+        movq 8(%r15), %rax # rax has current new heap pos
+        cmp %rdx, %rax
+        je newHeapTraverseEnd
 
+        # now to traversing ptrs
+        # for this element get size
+        movq (%rcx, %rdx, 1), %rbx # rbx has struct size
+        # add 1 to skip size block
+        add $1, %rbx
+        # mul by 8 for block size
+        imul $8, %rbx
+        # add heap iter for absolute position
+        add %rdx, %rbx
+        movq (%rcx, %rbx, 1), %rsi # rbx how has ptr count
+        # while ptrCnt != 0, move another self reference item to heap
+        # use rbx + 8 has first item
+        addq $8, %rbx #now is first ptr
+        slefPtrHeapMoveBegin:
+            cmp $0, %rsi
+            je selfPtrHeapMoveEnd
+
+            # get the struct ptr offset
+            movq (%rcx, %rbx, 1), %rdi # rdi has offset
+            # copy struct position ptr
+            movq %rdx, %r8
+            # add 1 for header
+            add $1, %r8
+            #mul 8 ptr size
+            imul $8, %r8
+            imul $8, %rdi
+            #add offset
+            add %rdi, %r8
+
+            # then move the actual ptr into reg
+            movq (%rcx, %r8, 1), %r8
+
+            # finally move the ptr to new heap space if it is in old
+            # we can check this by seeing if the addr is between old start and old end
+            # old is in r14
+            movq 24(%r14), %r9 # begin
+            movq 16(%r14), %r10 # end
+            # add the pointer to the end offset
+            addq %r9, %r10
+
+            cmp %r8, %r9
+            jl slefPtrHeapMoveEpilogue
+            cmp %r10, %r8
+            jl slefPtrHeapMoveEpilogue
+            # if r8 < r9 || r10 < r8 skip
+
+            # we actually have to move it
+            # we can use r9 & r10 again
+            # we need to find total size of the struct
+            # the header can be used for this
+            movq (%r8), %r9 # r9 has size
+            #if -1 its lambda
+            cmp $-1, %r9
+            jne itsLambdaEnd
+                movq $24, %r13
+                jmp structSizeEvalEnd
+            itsLambdaEnd:
+            # if its not lambda we have to do the usual
+            # add 1 to size for ptr count index
+            addq $1, %r9
+            # mul 8 for ptr size
+            imul $8, %r9
+            # then move ptr count to r10
+            movq (%r8, %r9, 1), %r10
+
+            cmp $-1, %r10
+            je isArrPtrIndicator
+            # add 1 for self box
+            addq $1, %r10
+            jmp isArrPtrIndicatorEnd
+            isArrPtrIndicator:
+            movq $1, %r10
+            isArrPtrIndicatorEnd:
+            # mul 8 for size
+            imul $8, %r10
+            # add the sizes
+            addq %r9, %r10
+            movq %r10, %r13
+
+            structSizeEvalEnd:
+            # size will be in r13
+
+
+        slefPtrHeapMoveEpilogue:
+
+            addq $8, %rbx
+            dec %rsi
+        selfPtrHeapMoveEnd:
+
+
+    newHeapTraverseEpilogue:
+
+    newHeapTraverseEnd:
+
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %r11
+    pop %r10
+    pop %r9
+    pop %r8
+    pop %rdi
+    pop %rsi
+    pop %rbx
+    pop %rdx
+    pop %rcx
+    pop %rax
 
     mov %rbp,%rsp
     pop %rbp
