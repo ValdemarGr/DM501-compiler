@@ -1,0 +1,58 @@
+
+class IntBox {
+    var value: int;
+};
+
+class Sequence[A] {
+    var internal: array of A;
+    val init = (aoa: array of A): void -> {
+        internal = aoa;
+    };
+    val map = (transformer: (A) -> A): void -> {
+        var iterator: int;
+
+        iterator = |internal|;
+
+        while (iterator > 0) do {
+            internal[iterator] = transformer(internal[iterator]);
+            iterator = iterator - 1;
+        }
+    };
+};
+
+var ib1: IntBox;
+var ib2: IntBox;
+var ib3: IntBox;
+var ib4: IntBox;
+var ib5: IntBox;
+var seq: class Sequence[class IntBox];
+var aoib: array of IntBox;
+
+allocate aoib of length 5;
+
+allocate ib1;
+allocate ib2;
+allocate ib3;
+allocate ib4;
+allocate ib5;
+allocate seq;
+
+ib1.value = 1;
+ib2.value = 2;
+ib3.value = 3;
+ib4.value = 4;
+ib5.value = 5;
+
+aoib[0] = ib1;
+aoib[1] = ib2;
+aoib[2] = ib3;
+aoib[3] = ib4;
+aoib[4] = ib5;
+
+seq.init(aoib);
+
+seq.map((ib: IntBox): IntBox -> {
+    write ib.value;
+    ib.value = 2 * ib.value;
+    return ib;
+});

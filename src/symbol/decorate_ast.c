@@ -88,8 +88,6 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 
             ExpressionList *expressionList = exp->val.termD.term->val.functionCallD.expressionList;
 
-            int counter = 0;
-
             while (expressionList != NULL) {
 
                 Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
@@ -98,23 +96,7 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                 //If it is a variable,  we don't need to do any of the R-value decorating this time
                 if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
                     Lambda *lambda = expressionList->expression->val.termD.term->val.lambdaD.lambda;
-                    char intToString[16];
-
-                    sprintf(intToString, "%i", counter);
-
-                    //Give the lambda a unique id
-                    int suffix_len = strlen(LAMBDA_SUFFIX);
-
-                    char *function_name = exp->val.termD.term->val.functionCallD.functionId;
-                    int var_len = strlen(function_name);
-
-                    char *lambda_id = (char*)malloc(sizeof(char) * (var_len + suffix_len) + 16);
-
-                    strcat(lambda_id, function_name);
-                    strcat(lambda_id, LAMBDA_SUFFIX);
-                    strcat(lambda_id, intToString);
-
-                    decorateFunction(lambda_id,
+                    decorateFunction(NULL,
                                      lambda->returnType,
                                      symbolTable,
                                      lambda->declarationList,
@@ -128,11 +110,38 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                 expressionList = expressionList->next;
             }
 
+        } else if (exp->val.termD.term->kind == shorthandCallK) {
+
+            ExpressionList *expressionList = exp->val.termD.term->val.shorthandCallD.expressionList;
+
+            while (expressionList != NULL) {
+
+                Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
+
+                //Check if the lambda is a variable or an R-value
+                //If it is a variable,  we don't need to do any of the R-value decorating this time
+                if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
+                    Lambda *lambda = expressionList->expression->val.termD.term->val.lambdaD.lambda;
+                    decorateFunction(NULL,
+                                     lambda->returnType,
+                                     symbolTable,
+                                     lambda->declarationList,
+                                     lambda->body,
+                                     0,
+                                     false,
+                                     true,
+                                     lambda->id);
+                }
+
+                expressionList = expressionList->next;
+            }
         }
     } else if (exp->kind == opK) {
         decorateRValue(exp->val.op.left, symbolTable);
         decorateRValue(exp->val.op.right, symbolTable);
     }
+
+    return e;
 }
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
@@ -265,6 +274,9 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             //decorateRValue(statement->val.returnD.exp, statement->symbolTable);
             findAndDecorateFunctionCall(statement->val.returnD.exp, statement->symbolTable);
             break;
+        case emptyK:
+            findAndDecorateFunctionCall(statement->val.empty.exp, statement->symbolTable);
+            break;
         default:
             break;
     }
@@ -292,6 +304,16 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
                     expressionList = expressionList->next;
                 }
 
+            } else if (expression->val.termD.term->kind == shorthandCallK) {
+                //Go though all the items
+                ExpressionList *expressionList = expression->val.termD.term->val.shorthandCallD.expressionList;
+
+                while (expressionList != NULL) {
+
+                    findAndDecorateFunctionCall(expressionList->expression, symbolTable);
+
+                    expressionList = expressionList->next;
+                }
             } else if (expression->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = expression->val.termD.term->val.lambdaD.lambda;
                 lambda->inClassContext = inClassContext;

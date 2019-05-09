@@ -147,5 +147,6 @@ int sortedSetFirst(SortedSet* set) {
 }
 
 SortedSet *first(SortedSet *set) {
+    if (set == NULL) return NULL;
     return set->_next;
 }

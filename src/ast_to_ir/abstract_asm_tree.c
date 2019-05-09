@@ -1415,21 +1415,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case statAllocateLenK: {
             size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
 
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = 1;
-            constOne->val.constant.temp= currentTemporary;
-            size_t constOneTemp = currentTemporary;
-            appendInstructions(constOne);
-            currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = constOneTemp;
-            add->val.arithmetic2.dest = lenExp;
-            appendInstructions(add);
-
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
             Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);

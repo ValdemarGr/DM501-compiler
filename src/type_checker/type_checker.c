@@ -487,7 +487,10 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
                     Type *dummy = NEW(Type);
 
                     dummy->kind = typeClassK;
-                    //dummy->val.typeClass.
+                    dummy->val.typeClass.classId = symbol->name;
+                    dummy->val.typeClass.genericBoundValues = NULL;
+
+                    return dummy;
                 }
 
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
