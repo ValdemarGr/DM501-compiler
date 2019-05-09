@@ -310,14 +310,26 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
         if (e != NULL) return false;
 
-        first = (Type*)(get(constMap, makeCharKey(first->val.typeGeneric.genericName))->v);
+        Pair *tryGet = get(constMap, makeCharKey(first->val.typeGeneric.genericName));
+
+        if (tryGet == NULL) {
+            return false;
+        }
+
+        first = (Type*)(tryGet->v);
     } else if (second->kind == typeGenericK && first->kind != typeGenericK) {
         ConstMap *constMap = initMap(10);
         Error *e = traverseClassExtensionsAndInsertGenerics(constMap, className, symbolTable);
 
         if (e != NULL) return false;
 
-        second = (Type*)(get(constMap, makeCharKey(second->val.typeGeneric.genericName))->v);
+        Pair *tryGet = get(constMap, makeCharKey(second->val.typeGeneric.genericName));
+
+        if (tryGet == NULL) {
+            return false;
+        }
+
+        second = (Type*)(tryGet->v);
     }
 
     if (first->kind == second->kind) {
@@ -1921,12 +1933,22 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
                     ExpressionList *expressionList = statement->val.allocateD.constructorList;
 
+                    //We've gotta bind these types
                     VarDelList *varDelList = constructor->declarationList;
+                    TypeList *generics = sym->value->val.typeClassD.generics;
+                    TypeList *boundTypes = unwrapped->val.typeClass.genericBoundValues;
+                    ConstMap *genericMap = initMap(10);
+                    Error *e = insertGenerics(genericMap, boundTypes, generics, statement->symbolTable);
+                    if (e != NULL) return NULL;
+                    e = traverseClassExtensionsAndInsertGenerics(genericMap, sym->name, statement->symbolTable);
+                    if (e != NULL) return NULL;
 
                     int paramNum = 0;
 
                     while (expressionList != NULL && varDelList != NULL) {
-                        e = typeCheckExpression(expressionList->expression, varDelList->type, statement->symbolTable);
+                        Type *toExpect = bindGenericTypes(genericMap, varDelList->type, statement->symbolTable);
+
+                        e = typeCheckExpression(expressionList->expression, toExpect, statement->symbolTable);
                         if (e != NULL) return e;
 
                         expressionList = expressionList->next;
@@ -2147,7 +2169,13 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 e = checkTypeExist(symbol->value->val.typeD.tpe, symbolTable, lineno, newLL);
                 if (e != NULL) return e;
             } else if (symbol->value->kind == symTypeClassK) {
-                return NULL;
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+
+                return e;
             } else {
                 e = checkTypeExist(symbol->value->val.typeFunctionD.returnType, symbolTable, lineno, newLL);
                 if (e != NULL) return e;
@@ -2193,6 +2221,20 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
             }
 
             break;
+        case typeClassK: {
+            SYMBOL *sym = getSymbol(symbolTable, type->val.typeClass.classId);
+
+            if (sym->value->kind != symTypeClassK) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+
+                return e;
+            }
+
+        } break;
         default:
             return NULL;
             break;
@@ -2446,7 +2488,6 @@ Error *checkDeclValidity(Declaration *declaration) {
         case declVarK:
             e = checkTypeExist(declaration->val.varD.type, declaration->symbolTable, lineno, NULL);
             if (e != NULL) return e;
-            //Todo FIX THIS CODE FOR GENERIC BINDINGS
             //return NULL;
             //If its type is a class, check the generic bindings' validity
             if (declaration->val.varD.type->kind == typeClassK) {

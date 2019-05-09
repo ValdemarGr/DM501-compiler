@@ -697,6 +697,36 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 generics = generics->next;
             }
 
+            //And for the class body
+            DeclarationList *declarationList = newHead;
+
+            if (declarationList == NULL) {
+                e = NEW(Error);
+
+                e->error = EMPTY_CLASS;
+
+                return e;
+            }
+
+            while (declarationList != NULL) {
+                //No classes or funcs inside of class
+                if (declarationList->declaration->kind == declClassK ||
+                        declarationList->declaration->kind == declFuncK) {
+                    e = NEW(Error);
+
+                    e->error = DECLARATIONS_IN_CLASS;
+                    e->val.DECLARATIONS_IN_CLASS.classId = declaration->val.classD.id;
+                    e->val.DECLARATIONS_IN_CLASS.lineno = declaration->lineno;
+
+                    return e;
+                }
+
+                e = decorateDeclaration(declarationList->declaration, newSt);
+                if (e != NULL) return e;
+
+                declarationList = declarationList->next;
+            }
+
             //For the constructor
             if (declaration->val.classD.constructor != NULL) {
                 Constructor *constructor = declaration->val.classD.constructor;
@@ -707,7 +737,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 VarDelList *vdl = constructor->declarationList;
                 //Put the parameters in the child scope
                 while (vdl != NULL) {
-                    alterIdTypesToGenerics(vdl->type, symbolTable);
+                    alterIdTypesToGenerics(vdl->type, scoped);
 
                     value = NEW(Value);
 
@@ -729,26 +759,6 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 Error *er = decorateAstWithSymbols(constructor->body, scoped);
                 if (er != NULL) return er;
                 inConstructorContext = false;
-            }
-
-            //And for the class body
-            DeclarationList *declarationList = newHead;
-
-            while (declarationList != NULL) {
-                //No classes or funcs inside of class
-                if (declarationList->declaration->kind == declClassK ||
-                        declarationList->declaration->kind == declFuncK) {
-                    e = NEW(Error);
-
-                    e->error = DECLARATIONS_IN_CLASS;
-                    e->val.DECLARATIONS_IN_CLASS.classId = declaration->val.classD.id;
-                    e->val.DECLARATIONS_IN_CLASS.lineno = declaration->lineno;
-                }
-
-                e = decorateDeclaration(declarationList->declaration, newSt);
-                if (e != NULL) return e;
-
-                declarationList = declarationList->next;
             }
 
             inClassContext = false;

@@ -1,19 +1,12 @@
-
 class IntBox {
     var value: int;
 };
 
 class Sequence[A] {
-    constructor (x: int, y: int, z: int) {
-        field = x;
+    constructor (aoib: array of A) {
+        internal = aoib;
     };
-
-    val field = 56;
-
     var internal: array of A;
-    val init = (aoa: array of A): void -> {
-        internal = aoa;
-    };
     val map = (transformer: (A) -> A): void -> {
         var iterator: int;
 
@@ -37,13 +30,13 @@ class Sequence[A] {
     };
 };
 
-var ib1: IntBox;
-var ib2: IntBox;
-var ib3: IntBox;
-var ib4: IntBox;
-var ib5: IntBox;
+var ib1: class IntBox;
+var ib2: class IntBox;
+var ib3: class IntBox;
+var ib4: class IntBox;
+var ib5: class IntBox;
 var seq: class Sequence[class IntBox];
-var aoib: array of IntBox;
+var aoib: array of class IntBox;
 
 allocate aoib of length 5;
 
@@ -53,7 +46,7 @@ allocate ib3;
 allocate ib4;
 allocate ib5;
 
-allocate seq(5,3,2);
+allocate seq(aoib);
 
 ib1.value = 1;
 ib2.value = 2;
@@ -66,8 +59,6 @@ aoib[1] = ib2;
 aoib[2] = ib3;
 aoib[3] = ib4;
 aoib[4] = ib5;
-
-seq.init(aoib);
 
 seq.forEach((ib: IntBox): void -> {
     write ib.value;

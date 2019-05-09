@@ -1,3 +1,7 @@
+class clsB {
+    val field0 = 92;
+};
+
 class A {
     constructor (x: int, y: int, z: int) {
         field1 = x;
@@ -10,7 +14,8 @@ class A {
     val field3 = 3;
 };
 
-var a: A;
+var a: class A;
+
 allocate a(42,42,42);
 write a.field1;
 write a.field2;

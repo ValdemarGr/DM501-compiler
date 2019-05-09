@@ -1,0 +1,21 @@
+var global: int;
+
+class B {
+    val bfield = 22;
+};
+
+class A[T] {
+    constructor (t: T) {
+        internal = t;
+    };
+    var internal: T;
+    val l = (t: T): void -> {
+        internal = t;
+    };
+};
+
+var a: class A[class B];
+var b: class B;
+allocate b;
+a.l(b);
+allocate a(b);

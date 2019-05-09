@@ -50,7 +50,8 @@ typedef struct Error {
         NO_CLASS_IN_CONSTRUCTOR,
         NO_LAMBDA_IN_CONSTRUCTOR,
         NO_FUNC_IN_CONSTRUCTOR,
-        NO_CONSTRUCTOR
+        NO_CONSTRUCTOR,
+        EMPTY_CLASS
     } error;
     union {
         struct { char* headId; int lineno; } WEED_FUNC_HAS_NO_END_S;
