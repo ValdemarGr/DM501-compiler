@@ -1351,7 +1351,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                             valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
                             valAccess->val.recordLookupD.var = statement->val.allocateD.var;
 
-                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                            generateInstructionsForVariableSave(valAccess, statement->symbolTable, exprResult, false);
                         } else {
                             size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
 
@@ -1360,7 +1360,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                             valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
                             valAccess->val.recordLookupD.var = statement->val.allocateD.var;
 
-                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                            generateInstructionsForVariableSave(valAccess, statement->symbolTable, exprResult, false);
                         }
                     }
 

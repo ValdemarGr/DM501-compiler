@@ -438,6 +438,8 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
             return strcmp(first->val.typeGeneric.genericName, second->val.typeGeneric.genericName) == 0;
         } else if (first->kind == typeClassK) {
             return strcmp(first->val.typeClass.classId, second->val.typeClass.classId) == 0;
+        } else if (first->kind == typeVoidK) {
+            return true;
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
@@ -704,6 +706,9 @@ Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *sy
 
                 return bound;
             }
+            break;
+        case typeVoidK:
+            return typeToBindOn;
             break;
     }
 
@@ -1614,6 +1619,16 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             //Fetch lambda
             Type *lambda = unwrapVariable(term->val.shorthandCallD.var, symbolTable);
 
+            if (lambda == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = "LAMBDA_INVOKE";
+                e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+
+                return e;
+            }
+
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
 
             TypeList *varDelList = lambda->val.typeLambdaK.typeList;
@@ -2118,6 +2133,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             break;
         case emptyK: {
             e = typeCheckExpression(statement->val.empty.exp, ANY_TYPE, statement->symbolTable);
+            if (e != NULL) return e;
         } break;
     }
 

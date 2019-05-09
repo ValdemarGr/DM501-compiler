@@ -1,0 +1,46 @@
+class Optional[A] {
+    constructor (value: A) {
+        internalValue = value;
+        hasValue = true;
+    };
+
+    var internalValue: A;
+    val hasValue = false;
+
+    val forEach = (apply: (A) -> void): void -> {
+        if (hasValue == true) then {
+            apply(internalValue);
+        }
+    };
+
+    val map = (apply: (A) -> A): void -> {
+        if (hasValue == true) then {
+            internalValue = apply(internalValue);
+        }
+    };
+};
+
+class IntBox {
+    constructor (toTake: int) {
+        constValue = toTake;
+    };
+    val constValue = 0;
+};
+
+var opt: class Optional[IntBox];
+var boxedInteger: class IntBox;
+var transformedOpt: class Optional[IntBox];
+
+allocate boxedInteger(42);
+allocate opt(boxedInteger);
+opt.forEach((value: IntBox): void -> {
+    write value.constValue;
+});
+opt.map((value: IntBox): IntBox -> {
+    var new: class IntBox;
+    allocate new(value.constValue * 2);
+    return new;
+});
+opt.forEach((value: IntBox): void -> {
+    write value.constValue;
+});
