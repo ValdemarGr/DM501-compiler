@@ -6,6 +6,10 @@ class B {
 class A {
     val first = 5;
     var internalB: class B;
+    var ifield: int;
+    val printer = (): void -> {
+        write ifield;
+    };
 };
 
 var a: class A;
@@ -20,3 +24,14 @@ write a.internalB.b;
 write a.internalB.b;
 write clsB.b;
 
+
+allocate a;
+allocate a.internalB;
+
+write a.first;
+write a.internalB.b;
+write clsB.b;
+
+a.ifield = 42;
+
+a.printer();

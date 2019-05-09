@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 16
+	.space 24
 intprint:
 	.asciz "%i\n"
 gcHeapOne:
@@ -105,12 +105,6 @@ garbageCollectBFS:
         subq $8, %rcx
         # get size
         mov 0(%rcx), %rax
-        cmp $-1, %rax
-        jne forLambdaEnd
-        forLambda:
-            mov $2, %rax
-            jmp skipRec
-        forLambdaEnd:
 
         #mul by 8 bc pointer size
         imulq $8, %rax
@@ -168,6 +162,7 @@ garbageCollectBFS:
         #Now we have to restore the stack pointer
         #We have old heap start in r12
         popq %rdi
+
         movq 24(%rsi), %r12
         addq %rdi, %r12
         addq $8, %r12
@@ -182,6 +177,11 @@ garbageCollectBFS:
         #add the constant offset
         add %r8, %rdi
         #r12 is now our offset to our first pointer
+
+        # place -1 and newptr in old heap
+        movq $-1, 0(%rcx)
+        movq %r12, 8(%rcx)
+
         movq %r12, (%r15, %rdi, 1)
 
         gcLoopEpilogue:
@@ -267,23 +267,23 @@ garbageCollect:
         # now to traversing ptrs
         # for this element get size
         movq (%rcx, %rdx, 1), %rbx # rbx has struct size
+        movq %rbx, %r13
         # add 1 to skip size block
         add $1, %rbx
         # mul by 8 for block size
         imul $8, %rbx
+
+        mov %rbx, %r10
         # add heap iter for absolute position
-        movq %rbx, %r10
-
         add %rdx, %rbx
-        movq (%rcx, %rbx, 1), %rsi # rbx how has ptr count
-        # while ptrCnt != 0, move another self reference item to heap
 
-        addq $8, %rbx
+        movq (%rcx, %rbx, 1), %rsi # rbx how has ptr count
+
         movq %rsi, %r11
         imul $8, %r11
-        add %rbx, %r11
-        addq %r11, %rdx
-        subq $8, %rbx
+        add %r10, %r11
+        addq $8, %r11
+        pushq %r11
 
         # use rbx + 8 has first item
         addq $8, %rbx #now is first ptr
@@ -306,6 +306,13 @@ garbageCollect:
 
             movq (%rcx, %r8, 1), %r8
 
+            # nullptr check
+            cmp $0, %r8
+            jne skipEndNullptr
+            popq %r8
+            jmp selfPtrHeapMoveEpilogue
+            skipEndNullptr:
+
             # finally move the ptr to new heap space if it is in old
             # we can check this by seeing if the addr is between old start and old end
             # old is in r14
@@ -315,11 +322,18 @@ garbageCollect:
             addq %r9, %r10
 
             cmp %r9, %r8 #inverted because of gas xd
-            jl selfPtrHeapMoveEpilogue
+            jl beforeEpilogueBegin
             cmp %r8, %r10 #inverted because of gas xd
-            jl selfPtrHeapMoveEpilogue
+            jl beforeEpilogueBegin
             # if r8 < r9 || r10 < r8 skip
 
+            # remove from top of stack
+
+            jmp beforeEpilogueEnd
+            beforeEpilogueBegin:
+            popq %r8
+            jmp selfPtrHeapMoveEpilogue
+            beforeEpilogueEnd:
             # save offset for when we have to save this field
 
             # we actually have to move it
@@ -329,13 +343,24 @@ garbageCollect:
             # grab header size by -8
             subq $8, %r8
             movq (%r8), %r9 # r9 has size
-            #if -1 its lambda
-            cmp $-1, %r9
-            jne itsLambdaEnd
-                movq $24, %r13
-                jmp structSizeEvalEnd
-            itsLambdaEnd:
-            # if its not lambda we have to do the usual
+
+            cmp $-1, %r9 # if we have already moved it
+            jne alreadyMovedEnd
+                # now we can find the head pointer by adding 8
+                movq 8(%r8), %r11
+
+                # Where old ptr offset aboslute in structure we are working in
+                popq %r8
+
+                # hide head
+                addq $8, %r11
+
+                movq %r11, (%rcx, %r8, 1)
+
+                jmp selfPtrHeapMoveEpilogue
+
+            alreadyMovedEnd:
+
             # add 1 to size for ptr count index
             addq $1, %r9
             # mul 8 for ptr size
@@ -343,16 +368,11 @@ garbageCollect:
             # then move ptr count to r10
             movq (%r8, %r9, 1), %r10
 
-            cmp $-1, %r10
-            je isArrPtrIndicator
-            # add 1 for self box
-            addq $1, %r10
-            jmp isArrPtrIndicatorEnd
-            isArrPtrIndicator:
-            movq $1, %r10
-            isArrPtrIndicatorEnd:
             # mul 8 for size
             imul $8, %r10
+            # add 8 for ptr count box
+            addq $8, %r10
+
             # add the sizes
             addq %r9, %r10
             movq %r10, %r13
@@ -377,29 +397,36 @@ garbageCollect:
 
                 addq $8, %r9
                 addq $8, %rax #inc heap top
+                jmp newHeapMoverBegin
             newHeapMoverEnd:
 
             # Where old ptr offset aboslute in structure we are working in
-            popq %r8
+            popq %r13
 
             # add the heap ptr to rax
             addq %rcx, %r11
             # hide head
             addq $8, %r11
 
-            movq %r11, (%rcx, %r8, 1)
+            # update old heap with -1 and new ptr
+            movq $-1, 0(%r8)
+            movq %r11, 8(%r8)
 
+            # and update the new heap
+            movq %r11, (%rcx, %r13, 1)
 
 
         selfPtrHeapMoveEpilogue:
-
 
             addq $8, %rbx
             dec %rsi
             jmp selfPtrHeapMoveBegin
         selfPtrHeapMoveEnd:
 
+
     newHeapTraverseEpilogue:
+        popq %r12
+        addq %r12, %rdx
 
         jmp newHeapTraverseBegin
     newHeapTraverseEnd:
@@ -467,7 +494,8 @@ garbageCollectAllocate:
 
     mov %rbp,%rsp
     pop %rbp
-    ret# METADATA_BEGIN_BODY_BLOCK
+    ret
+# METADATA_BEGIN_BODY_BLOCK
 # VAR a
 # VAR clsB
 # METADATA_CREATE_MAIN
@@ -518,7 +546,7 @@ push %rax
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $2, %rcx
+		mov $4, %rcx
 # COMPLEX_ALLOCATE
 		movq $8, %rdx
 		imulq %rcx, %rdx
@@ -549,142 +577,371 @@ push %rax
 		mov $0, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
 		mov %rbx, (%rsi, %r8,1)
+# COMPLEX_RIP_LAMBDA_LOAD
+		leaq lambda_0(%rip), %r9
+# INSTRUCTION_CONST
+		mov $2, %r10
+# COMPLEX_ALLOCATE
+		movq $8, %r11
+		imulq %r10, %r11
+# ALLOC_LAMBDA
+		addq $24, %r11
+		pushq %r11
+		pushq %rbp
+		call garbageCollectAllocate
+		movq $2, 0(%rax)
+		subq $8, %r11
+		movq $0, (%rax, %r11, 1)
+		movq $0, 8(%rax, %r11, 1)
+		popq %r11
+		popq %r11
+		addq $8, %rax
+# INSTRUCTION_CONST
+		mov $0, %r12
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r9, (%rax, %r12,1)
+# INSTRUCTION_COPY
+		mov %rax, %r15
+# INSTRUCTION_CONST
+		mov $8, %rcx
+# INSTRUCTION_POP
+		pop %rax
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rax, (%r15, %rcx,1)
+# INSTRUCTION_PUSH
+		push %rax
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+		leaq staticLink, %rbx
+		mov 0(%rbx), %rbx
+		mov -40(%rbx), %rdx
+# INSTRUCTION_CONST
+		mov $24, %rsi
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r15, (%rdx, %rsi,1)
 # INSTRUCTION_POP
 		pop %rax
 # INSTRUCTION_CONST
-		mov $1, %r9
+		mov $1, %rdi
 # COMPLEX_ALLOCATE
-		movq $8, %r10
-		imulq %r9, %r10
+		movq $8, %r8
+		imulq %rdi, %r8
 # ALLOC_RECORD_CLASS
-		addq $16, %r10
-		pushq %r10
+		addq $16, %r8
+		pushq %r8
 		pushq %rbp
 		call garbageCollectAllocate
-		movq %r9, 0(%rax)
+		movq %rdi, 0(%rax)
 # ALLOC_RECORD_CLASS
-		subq $8, %r10
-		movq $0, (%rax, %r10, 1)
-		popq %r10
-		popq %r10
+		subq $8, %r8
+		movq $0, (%rax, %r8, 1)
+		popq %r8
+		popq %r8
 		addq $8, %rax
 # INSTRUCTION_PUSH
 		push %rax
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 		mov %rax, -48(%rbp)
 # INSTRUCTION_CONST
-		mov $9, %r11
+		mov $9, %r9
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %r13
-		mov 0(%r13), %r13
-		mov -48(%r13), %r12
+		leaq staticLink, %r11
+		mov 0(%r11), %r11
+		mov -48(%r11), %r10
 # INSTRUCTION_CONST
-		mov $0, %r14
+		mov $0, %r12
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %r11, (%r12, %r14,1)
+		mov %r9, (%r10, %r12,1)
 # INSTRUCTION_POP
 		pop %rax
 # INSTRUCTION_CONST
-		mov $1, %r15
+		mov $1, %r13
 # COMPLEX_ALLOCATE
-		movq $8, %rcx
-		imulq %r15, %rcx
+		movq $8, %r14
+		imulq %r13, %r14
 # ALLOC_RECORD_CLASS
-		addq $16, %rcx
-		pushq %rcx
+		addq $16, %r14
+		pushq %r14
 		pushq %rbp
 		call garbageCollectAllocate
-		movq %r15, 0(%rax)
+		movq %r13, 0(%rax)
 # ALLOC_RECORD_CLASS
-		subq $8, %rcx
-		movq $0, (%rax, %rcx, 1)
-		popq %rcx
-		popq %rcx
+		subq $8, %r14
+		movq $0, (%rax, %r14, 1)
+		popq %r14
+		popq %r14
 		addq $8, %rax
 # INSTRUCTION_PUSH
 		push %rax
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -40(%rbp), %rdx
+		mov -40(%rbp), %r15
 # INSTRUCTION_CONST
-		mov $8, %rbx
+		mov $8, %rcx
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%rdx, %rbx,1)
+		mov %rax, (%r15, %rcx,1)
 # INSTRUCTION_CONST
-		mov $9, %rsi
+		mov $9, %rdx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %r8
-		mov 0(%r8), %r8
-		mov -40(%r8), %rdi
+		leaq staticLink, %rsi
+		mov 0(%rsi), %rsi
+		mov -40(%rsi), %rbx
 # INSTRUCTION_CONST
-		mov $8, %r9
+		mov $8, %rdi
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %r9,1), %rdi
+		mov (%rbx, %rdi,1), %rbx
 # INSTRUCTION_CONST
-		mov $0, %r10
+		mov $0, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rdi, %r10,1)
+		mov %rdx, (%rbx, %r8,1)
 # INSTRUCTION_POP
 		pop %rax
+		push %rbp
+		call garbageCollect
+		pop %rbp
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %r9
+# INSTRUCTION_CONST
+		mov $0, %r10
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r9, %r10,1), %r9
+# INSTRUCTION_WRITE
+		movq %r9, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 		mov -40(%rbp), %r11
 # INSTRUCTION_CONST
-		mov $0, %r12
+		mov $8, %r12
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
 		mov (%r11, %r12,1), %r11
+# INSTRUCTION_CONST
+		mov $0, %r13
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r11, %r13,1), %r11
 # INSTRUCTION_WRITE
 		movq %r11, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -40(%rbp), %r13
+		mov -40(%rbp), %r14
 # INSTRUCTION_CONST
-		mov $8, %r14
+		mov $8, %r15
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r13, %r14,1), %r13
+		mov (%r14, %r15,1), %r14
 # INSTRUCTION_CONST
-		mov $0, %r15
+		mov $0, %rcx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r13, %r15,1), %r13
+		mov (%r14, %rcx,1), %r14
 # INSTRUCTION_WRITE
-		movq %r13, %rsi
+		movq %r14, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
-
-				push %rbp
-        		call garbageCollect
-        		pop %rbp
-
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -40(%rbp), %rcx
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rcx, %rdx,1), %rcx
+		mov -48(%rbp), %rdx
 # INSTRUCTION_CONST
 		mov $0, %rbx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rcx, %rbx,1), %rcx
+		mov (%rdx, %rbx,1), %rdx
 # INSTRUCTION_WRITE
-		movq %rcx, %rsi
+		movq %rdx, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
-
-
-
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rsi
 # INSTRUCTION_CONST
-		mov $0, %rdi
+		mov $4, %rsi
+# COMPLEX_ALLOCATE
+		movq $8, %rdi
+		imulq %rsi, %rdi
+# ALLOC_RECORD_CLASS
+		addq $24, %rdi
+		pushq %rdi
+		pushq %rbp
+		call garbageCollectAllocate
+		movq %rsi, 0(%rax)
+# ALLOC_RECORD_CLASS
+		subq $16, %rdi
+		movq $1, (%rax, %rdi, 1)
+		movq $1, 8(%rax, %rdi, 1)
+		popq %rdi
+		popq %rdi
+		addq $8, %rax
+# INSTRUCTION_PUSH
+		push %rax
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, -40(%rbp)
+# INSTRUCTION_CONST
+		mov $5, %r8
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+		leaq staticLink, %r10
+		mov 0(%r10), %r10
+		mov -40(%r10), %r9
+# INSTRUCTION_CONST
+		mov $0, %r11
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r8, (%r9, %r11,1)
+# COMPLEX_RIP_LAMBDA_LOAD
+		leaq lambda_0(%rip), %r12
+# INSTRUCTION_CONST
+		mov $2, %r13
+# COMPLEX_ALLOCATE
+		movq $8, %r14
+		imulq %r13, %r14
+# ALLOC_LAMBDA
+		addq $24, %r14
+		pushq %r14
+		pushq %rbp
+		call garbageCollectAllocate
+		movq $2, 0(%rax)
+		subq $8, %r14
+		movq $0, (%rax, %r14, 1)
+		movq $0, 8(%rax, %r14, 1)
+		popq %r14
+		popq %r14
+		addq $8, %rax
+# INSTRUCTION_CONST
+		mov $0, %r15
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r12, (%rax, %r15,1)
+# INSTRUCTION_COPY
+		mov %rax, %rcx
+# INSTRUCTION_CONST
+		mov $8, %rdx
+# INSTRUCTION_POP
+		pop %rax
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rax, (%rcx, %rdx,1)
+# INSTRUCTION_PUSH
+		push %rax
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+		leaq staticLink, %rsi
+		mov 0(%rsi), %rsi
+		mov -40(%rsi), %rbx
+# INSTRUCTION_CONST
+		mov $24, %rdi
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rcx, (%rbx, %rdi,1)
+# INSTRUCTION_POP
+		pop %rax
+# INSTRUCTION_CONST
+		mov $1, %r8
+# COMPLEX_ALLOCATE
+		movq $8, %r9
+		imulq %r8, %r9
+# ALLOC_RECORD_CLASS
+		addq $16, %r9
+		pushq %r9
+		pushq %rbp
+		call garbageCollectAllocate
+		movq %r8, 0(%rax)
+# ALLOC_RECORD_CLASS
+		subq $8, %r9
+		movq $0, (%rax, %r9, 1)
+		popq %r9
+		popq %r9
+		addq $8, %rax
+# INSTRUCTION_PUSH
+		push %rax
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %r10
+# INSTRUCTION_CONST
+		mov $8, %r11
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rax, (%r10, %r11,1)
+# INSTRUCTION_CONST
+		mov $9, %r12
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+		leaq staticLink, %r14
+		mov 0(%r14), %r14
+		mov -40(%r14), %r13
+# INSTRUCTION_CONST
+		mov $8, %r15
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r13, %r15,1), %r13
+# INSTRUCTION_CONST
+		mov $0, %rcx
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r12, (%r13, %rcx,1)
+# INSTRUCTION_POP
+		pop %rax
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rdx
+# INSTRUCTION_CONST
+		mov $0, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rdx, %rbx,1), %rdx
+# INSTRUCTION_WRITE
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rsi
+# INSTRUCTION_CONST
+		mov $8, %rdi
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
 		mov (%rsi, %rdi,1), %rsi
+# INSTRUCTION_CONST
+		mov $0, %r8
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rsi, %r8,1), %rsi
 # INSTRUCTION_WRITE
 		movq %rsi, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -48(%rbp), %r9
+# INSTRUCTION_CONST
+		mov $0, %r10
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r9, %r10,1), %r9
+# INSTRUCTION_WRITE
+		movq %r9, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# INSTRUCTION_CONST
+		mov $42, %r11
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %r12
+# INSTRUCTION_CONST
+		mov $16, %r13
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %r11, (%r12, %r13,1)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %r14
+# INSTRUCTION_CONST
+		mov $24, %r15
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r14, %r15,1), %r14
+# COMPLEX_SAVE_STATIC_LINK
+		leaq staticLink, %rcx
+		push 0(%rcx)
+# INSTRUCTION_CONST
+		mov $8, %rdx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%r14, %rdx,1), %r14
+# METADATA_DEBUG_INFO
+		# CAPTURE PUSH
+# INSTRUCTION_PUSH
+		push %r14
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rbx
+# INSTRUCTION_CONST
+		mov $24, %rsi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rbx, %rsi,1), %rbx
+# INSTRUCTION_CONST
+		mov $0, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rbx, %rdi,1), %rbx
+# INSTRUCTION_REGISTER_CALL
+		call *%rbx
+# COMPLEX_RESTORE_STATIC_LINK
+		leaq staticLink, %r8
+		pop 0(%r8)
 # METADATA_END_BODY_BLOCK
 mov %rbp,%rsp
 pop %rbp
@@ -692,3 +949,36 @@ ret
 mov $60, %rax
 mov $0, %rdi
 syscall
+# INSTRUCTION_FUNCTION_LABEL
+.type lambda_0, @function
+lambda_0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+push %rax
+	subq $40, %rsp
+	popq %rax
+	movq %rax, -8(%rbp)
+	movq $0, -16(%rbp)
+	leaq staticLink, %r13
+	movq %rbp, 16(%r13)
+# METADATA_FUNCTION_ARGUMENT
+	mov 16(%rbp), %r14
+	mov %r14, -24(%rbp)
+# METADATA_DEBUG_INFO
+	# CLASS LOAD
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -24(%rbp), %r15
+# INSTRUCTION_CONST
+	mov $16, %rcx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+	mov (%r15, %rcx,1), %r15
+# INSTRUCTION_WRITE
+	movq %r15, %rsi
+	movq $intprint, %rdi
+	movq $0, %rax
+	call printf
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret

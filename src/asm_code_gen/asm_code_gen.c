@@ -324,12 +324,13 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "imul %%r14, %%r15\n");*/
 
+            SortedSet *gcSet = instruction->val.allocate.pointerSet;
+            int extraSpace = 1 + 1 + (int)length(gcSet);
             switch (instruction->val.allocate.allocationType) {
                 case ALLOC_RECORD_CLASS: {
                     fprintf(out, "# ALLOC_RECORD_CLASS\n");
                     //1 slot for data size, 1 for ptr count and |ptrCount|
-                    SortedSet *gcSet = instruction->val.allocate.pointerSet;
-                    int extraSpace = 1 + 1 + (int)length(gcSet);
+
                     printIndentation(out);
                     fprintf(out, "addq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                 } break;
@@ -337,7 +338,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     fprintf(out, "# ALLOC_ARR_OF_PTR\n");
                     //1 for head 1 for tail
                     printIndentation(out);
-                    fprintf(out, "addq $%i, %%%s\n", 2 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "addq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                 } break;
                 case ALLOC_ARR_OF_PRIM: {
                     fprintf(out, "# ALLOC_ARR_OF_PRIM\n");
@@ -349,7 +350,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     fprintf(out, "# ALLOC_LAMBDA\n");
                     //1 for head -1
                     printIndentation(out);
-                    fprintf(out, "addq $%i, %%%s\n", 1 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "addq $%i, %%%s\n", 3 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                 } break;
             }
 /*
@@ -404,16 +405,32 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     }
                 } break;
                 case ALLOC_ARR_OF_PTR: {
-                    //head is size tail is -1
+                    SortedSet *gcSet = instruction->val.allocate.pointerSet;
+                    int len = (int)length(gcSet);
+
                     //move size into head of new block
                     printIndentation(out);
                     fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
-                    //move displacer by 1 block
+                    //fix register
+                    fprintf(out, "# ALLOC_ARR_OF_PTR\n");
+                    //1 slot for data size, 1 for ptr count and |ptrCount|
+                    int extraSpace = len + 1;
                     printIndentation(out);
-                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "subq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                     //Move the ptr index array size into new displacement
                     printIndentation(out);
-                    fprintf(out, "movq $-1, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "movq $%i, (%%rax, %%%s, 1)\n", len, getNextRegister(instruction->val.allocate.intermediate));
+                    //Now move the individual values into the last slots
+
+                    SortedSet *gcIter = first(gcSet);
+
+                    int localOffset = 1;
+                    while (gcIter != NULL) {
+                        printIndentation(out);
+                        fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", gcIter->data, localOffset * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                        localOffset++;
+                        gcIter = gcIter->_next;
+                    }
                 } break;
                 case ALLOC_ARR_OF_PRIM: {
                     //head is size tail is 0
@@ -430,7 +447,13 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                 case ALLOC_LAMBDA: {
                     //-1 head for indicator
                     printIndentation(out);
-                    fprintf(out, "movq $-1, 0(%%rax)\n");
+                    fprintf(out, "movq $2, 0(%%rax)\n");
+                    printIndentation(out);
+                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    printIndentation(out);
+                    fprintf(out, "movq $0, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));
+                    printIndentation(out);
+                    fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", 0, POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                 } break;
             }
 
