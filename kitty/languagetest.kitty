@@ -4,6 +4,12 @@ class IntBox {
 };
 
 class Sequence[A] {
+    constructor (x: int, y: int, z: int) {
+        field = x;
+    };
+
+    val field = 56;
+
     var internal: array of A;
     val init = (aoa: array of A): void -> {
         internal = aoa;
@@ -15,6 +21,17 @@ class Sequence[A] {
 
         while (iterator < |internal|) do {
             internal[iterator] = transformer(internal[iterator]);
+            iterator = iterator + 1;
+        }
+    };
+
+    val forEach = (apply: (A) -> void): void -> {
+        var iterator: int;
+
+        iterator = 0;
+
+        while (iterator < |internal|) do {
+            apply(internal[iterator]);
             iterator = iterator + 1;
         }
     };
@@ -35,7 +52,8 @@ allocate ib2;
 allocate ib3;
 allocate ib4;
 allocate ib5;
-allocate seq;
+
+allocate seq(5,3,2);
 
 ib1.value = 1;
 ib2.value = 2;
@@ -51,8 +69,15 @@ aoib[4] = ib5;
 
 seq.init(aoib);
 
-seq.map((ib: IntBox): IntBox -> {
+seq.forEach((ib: IntBox): void -> {
     write ib.value;
+});
+
+seq.map((ib: IntBox): IntBox -> {
     ib.value = 2 * ib.value;
     return ib;
+});
+
+seq.forEach((ib: IntBox): void -> {
+    write ib.value;
 });

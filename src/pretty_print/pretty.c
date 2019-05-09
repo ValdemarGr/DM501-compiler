@@ -391,6 +391,32 @@ void prettyDeclaration(Declaration *decl) {
             indentation++;
             DeclarationList *declarationList = decl->val.classD.declarationList;
 
+            if (decl->val.classD.constructor != NULL) {
+                printCurrentIndent();
+                prettyKeyword("constructor ");
+                printf("(");
+                VarDelList *iter = decl->val.classD.constructor->declarationList;
+
+                while (iter != NULL) {
+                    printf("%s : ", iter->identifier);
+                    prettyType(iter->type);
+
+                    if (iter->next != NULL) {
+                        printf(", ");
+                    }
+
+                    iter = iter->next;
+                }
+                printf(") {\n");
+                indentation++;
+
+                prettyBody(decl->val.classD.constructor->body);
+
+                indentation--;
+                printCurrentIndent();
+                printf("};\n");
+            }
+
             while (declarationList != NULL) {
                 prettyDeclaration(declarationList->declaration);
                 declarationList = declarationList->next;
@@ -428,6 +454,11 @@ void prettyStatement(Statement *statement) {
         case statAllocateK:
             prettyKeyword("allocate ");
             prettyVariable(statement->val.allocateD.var, statement->symbolTable);
+            if (statement->val.allocateD.constructorList != NULL) {
+                printf("(");
+                prettyExpressionList(statement->val.allocateD.constructorList, statement->symbolTable);
+                printf(")");
+            }
             printf(";\n");
             break;
         case statAllocateLenK:

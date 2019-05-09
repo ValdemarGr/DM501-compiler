@@ -12,6 +12,7 @@ size_t returnReg = 0;
 bool inClassContextCurrent = false;
 int classGenericCount = 0;
 bool inLambdaContext = false;
+bool currentlyInConstructorContext = false;
 int lambdaDefineScope = 0;
 int lambdaArgCount = 0;
 int staticLinkDepth = -1;
@@ -141,7 +142,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t offset = POINTER_SIZE;
 
-            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+            if ((inLambdaContext || currentlyInConstructorContext) && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
                 Instructions *debug = newInstruction();
                 debug->kind = METADATA_DEBUG_INFO;
                 debug->val.debugInfo = "CLASS LOAD";
@@ -297,7 +298,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             size_t offset = POINTER_SIZE;
 
-            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+            if ((inLambdaContext || currentlyInConstructorContext) && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
                 Instructions *debug = newInstruction();
                 debug->kind = METADATA_DEBUG_INFO;
                 debug->val.debugInfo = "CLASS LOAD";
@@ -1369,6 +1370,58 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 inClassContextCurrent = false;
             }
 
+            if (tpe->kind == typeClassK) {
+                //We may be able to construct
+                if (statement->val.allocateD.constructorList != NULL) {
+                    //Create constructor name
+                    SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+                    char *baseName = tpe->val.typeClass.classId;
+                    int extra = (int)strlen("_constructor") + 1;
+                    char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                    sprintf(buf, "%s_constructor", baseName);
+
+                    Instructions *pop = newInstruction();
+                    pop->kind = INSTRUCTION_POP;
+                    pop->val.tempToPopInto = allocPtrTemp;
+                    appendInstructions(pop);
+
+                    Instructions *push = newInstruction();
+                    push->kind = INSTRUCTION_PUSH;
+                    push->val.tempToPush = allocPtrTemp;
+                    appendInstructions(push);
+
+                    //push args first, then class context ptr
+                    ExpressionList *argIter = statement->val.allocateD.constructorList;
+
+                    while (argIter != NULL) {
+
+                        size_t tempForArg = generateInstructionsForExpression(argIter->expression, statement->symbolTable);
+
+                        //Push arg
+                        Instructions *push = newInstruction();
+                        push->kind = INSTRUCTION_PUSH;
+                        push->val.tempToPush = tempForArg;
+                        appendInstructions(push);
+
+                        argIter = argIter->next;
+                    }
+
+
+                    //Push class ptr
+                    Instructions *clsPush = newInstruction();
+                    clsPush->kind = INSTRUCTION_PUSH;
+                    clsPush->val.tempToPush = allocPtrTemp;
+                    appendInstructions(clsPush);
+
+                    Instructions *call = newInstruction();
+                    call->kind = INSTRUCTION_FUNCTION_CALL;
+                    call->val.function = buf;
+                    appendInstructions(call);
+
+                }
+            }
+
             Instructions *pop = newInstruction();
             pop->kind = INSTRUCTION_POP;
             pop->val.tempToPopInto = allocPtrTemp;
@@ -1740,6 +1793,91 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             generateInstructionsForVariableSave(tmpVar, declaration->symbolTable, expressionTemp, false);
         } break;
         case declClassK: {
+            inClassContextCurrent = true;
+            Constructor *constructor = declaration->val.classD.constructor;
+
+            if (constructor != NULL ) {
+                currentlyInConstructorContext = true;
+                lambdaDefineScope = (int)declaration->symbolTable->distanceFromRoot + 1;
+                char *baseName = declaration->val.classD.id;
+                int extra = (int)strlen("_constructor") + 1;
+                char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                sprintf(buf, "%s_constructor", baseName);
+
+                //Create constructor
+                Instructions *beginGlobalBLock = newInstruction();
+                beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+                appendInstructions(beginGlobalBLock);
+
+                Instructions *label = newInstruction();
+                label->val.functionHead.label = buf;
+                label->val.functionHead.distance = declaration->symbolTable->distanceFromRoot + 1;
+                label->val.functionHead.temporary = currentTemporary;
+                label->val.functionHead.pointerSet = getPointerCountForBody(
+                        constructor->body->declarationList);
+                label->kind = INSTRUCTION_FUNCTION_LABEL;
+                currentTemporary++;
+
+                SymbolTable *st = NULL;
+                if (constructor->body->declarationList != NULL) {
+                    st = constructor->body->declarationList->declaration->symbolTable;
+                } else if (constructor->body->statementList != NULL) {
+                    st = constructor->body->statementList->statement->symbolTable;
+                }
+                label->val.functionHead.tableForFunction = st;
+
+                //Readjust arg
+                appendInstructions(label);
+
+                //For args we generate metadata for later (maybe this is useless, who knows?)
+                VarDelList *declarationList = constructor->declarationList;
+                size_t max = 1;
+
+                size_t regForMoving = currentTemporary;
+                currentTemporary++;
+
+                //We need to move from opposite direction since pushing on stack goes opposite
+                while (declarationList != NULL) {
+                    max++;
+                    declarationList = declarationList->next;
+                }
+
+                size_t counter = 0;
+
+                //And the lambda context
+                Instructions *arg = newInstruction();
+                arg->kind = METADATA_FUNCTION_ARGUMENT;
+                arg->val.args.argNum = counter;
+                arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
+                appendInstructions(arg);
+                counter++;
+
+                declarationList = constructor->declarationList;
+                while (declarationList != NULL) {
+
+                    //Create arg instr for this argument
+                    Instructions *arg = newInstruction();
+                    arg->kind = METADATA_FUNCTION_ARGUMENT;
+                    arg->val.args.argNum = counter;
+                    arg->val.args.moveReg = regForMoving;
+                    arg->val.args.stackNum = max - counter - 1;
+                    appendInstructions(arg);
+
+                    declarationList = declarationList->next;
+                    counter++;
+                }
+
+                lambdaArgCount = (int) counter;
+                generateInstructionTree(constructor->body);
+
+                Instructions *endGlobalBLock = newInstruction();
+                endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
+                appendInstructions(endGlobalBLock);
+                currentlyInConstructorContext = false;
+            }
+            inClassContextCurrent = false;
         } break;
     }
 }

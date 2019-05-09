@@ -10,6 +10,7 @@
 int lambdaCount = 0;
 bool inClassContext = false;
 bool inLambdaContextCurrently = false;
+bool inConstructorContext = false;
 
 void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -238,6 +239,13 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             //If the lambda is R-value assigned to a var
             if (statement->val.assignmentD.exp->kind == termK) {
                 if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
+                    if (inConstructorContext) {
+                        e = NEW(Error);
+
+                        e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+
+                        return e;
+                    }
                     if (inLambdaContextCurrently) {
                         e = NEW(Error);
 
@@ -459,6 +467,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
+            if (inConstructorContext) {
+                e = NEW(Error);
+
+                e->error = NO_FUNC_IN_CONSTRUCTOR;
+
+                return e;
+            }
             if (inLambdaContextCurrently) {
                 e = NEW(Error);
 
@@ -501,6 +516,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
+                if (inConstructorContext) {
+                    e = NEW(Error);
+
+                    e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+
+                    return e;
+                }
                 if (inLambdaContextCurrently) {
                     e = NEW(Error);
 
@@ -540,6 +562,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             break;
         case declClassK:
+            if (inConstructorContext) {
+                e = NEW(Error);
+
+                e->error = NO_CLASS_IN_CONSTRUCTOR;
+
+                return e;
+            }
             inClassContext = true;
             value = NEW(Value);
             SymbolTable *newSt = scopeSymbolTable(symbolTable);
@@ -640,6 +669,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             value->kind = symTypeClassK;
             value->val.typeClassD.extendedClasses = declaration->val.classD.extendedClasses;
             value->val.typeClassD.generics = declaration->val.classD.genericTypeParameters;
+            value->val.typeClassD.constructor = declaration->val.classD.constructor;
 
             putSymbol(symbolTable,
                       declaration->val.classD.id,
@@ -665,6 +695,40 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                           false);
 
                 generics = generics->next;
+            }
+
+            //For the constructor
+            if (declaration->val.classD.constructor != NULL) {
+                Constructor *constructor = declaration->val.classD.constructor;
+                //Create new sym table for constructor body
+                SymbolTable *scoped = scopeSymbolTable(newSt);
+
+                //Put params in body
+                VarDelList *vdl = constructor->declarationList;
+                //Put the parameters in the child scope
+                while (vdl != NULL) {
+                    alterIdTypesToGenerics(vdl->type, symbolTable);
+
+                    value = NEW(Value);
+
+                    value->kind = typeK;
+                    value->val.typeD.tpe = vdl->type;
+                    value->val.typeD.isTypedef = false;
+
+                    putSymbol(scoped,
+                              vdl->identifier,
+                              value, 0,
+                              true);
+
+                    vdl = vdl->next;
+                }
+
+                inConstructorContext = true;
+                //Generate as function
+                //Fix up body
+                Error *er = decorateAstWithSymbols(constructor->body, scoped);
+                if (er != NULL) return er;
+                inConstructorContext = false;
             }
 
             //And for the class body

@@ -75,6 +75,7 @@ extern int fileno();
 "class"         return tCLASS;
 "with"          return tWITH;
 "void"          return tVOID;
+"constructor"   return tCONSTRUCTOR;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

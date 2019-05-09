@@ -11,6 +11,8 @@ bool workingInClass = false;
 char *className;
 bool workingInLambda = false;
 int lambdaLevel = 0;
+bool workingInConstructor = false;
+int constructorReachLevel = 0;
 
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
@@ -760,7 +762,11 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
         case varIdK:
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
-            if (workingInLambda && symbol->distanceFromRoot != 0) {
+            if (symbol == NULL) {
+                return NULL;
+            }
+
+            if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
                 if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
@@ -772,10 +778,6 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                         return NULL;
                     }
                 }
-            }
-
-            if (symbol == NULL) {
-                return NULL;
             }
 
             return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
@@ -997,7 +999,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
-            if (workingInLambda && symbol->distanceFromRoot != 0) {
+            if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
                 if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
@@ -1904,6 +1906,62 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
                 return e;
             }
+            if (unwrapped->kind == typeClassK) {
+                SYMBOL *sym = getSymbol(statement->symbolTable, unwrapped->val.typeClass.classId);
+                if (sym->value->kind == symTypeClassK && statement->val.allocateD.constructorList != NULL) {
+                    Constructor *constructor = sym->value->val.typeClassD.constructor;
+
+                    if (constructor == NULL) {
+                        e = NEW(Error);
+
+                        e->error = NO_CONSTRUCTOR;
+
+                        return e;
+                    }
+
+                    ExpressionList *expressionList = statement->val.allocateD.constructorList;
+
+                    VarDelList *varDelList = constructor->declarationList;
+
+                    int paramNum = 0;
+
+                    while (expressionList != NULL && varDelList != NULL) {
+                        e = typeCheckExpression(expressionList->expression, varDelList->type, statement->symbolTable);
+                        if (e != NULL) return e;
+
+                        expressionList = expressionList->next;
+                        varDelList = varDelList->next;
+                        paramNum++;
+                    }
+
+                    if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
+                        //Error
+                        e = NEW(Error);
+
+                        int expectedCount = paramNum;
+
+                        if (varDelList == NULL) {
+                            while (expressionList != NULL) {
+                                paramNum++;
+                                expressionList = expressionList->next;
+                            }
+                        } else {
+                            while (varDelList != NULL) {
+                                expectedCount++;
+                                varDelList = varDelList->next;
+                            }
+                        }
+
+                        e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = statement->lineno;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = unwrapped->val.typeClass.classId;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+
+                        return e;
+                    }
+                }
+            }
         } break;
         case statAllocateLenK: {
             Type* unwrapped = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
@@ -1972,13 +2030,25 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             //We have to find out what the LHS is first
             //We also cannot re assign a const
             if (isConst(statement->val.assignmentD.var, statement->symbolTable)) {
-                e = NEW(Error);
+                //If we are working in constructor and the variable exists in reach level or above
+                //We may construct
+                if (!workingInConstructor) {
+                    e = NEW(Error);
 
-                e->error = CONST_REASSIGNMENT;
-                e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
-                e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+                    e->error = CONST_REASSIGNMENT;
+                    e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
+                    e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
 
-                return e;
+                    return e;
+                } else if (getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable)->distanceFromRoot != constructorReachLevel) {
+                    e = NEW(Error);
+
+                    e->error = CONST_REASSIGNMENT;
+                    e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
+                    e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+
+                    return e;
+                }
             }
 
             if (statement->val.assignmentD.var->kind == varIdK &&
@@ -2462,6 +2532,16 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             className = declaration->val.classD.id;
             e = checkDeclValidity(declaration);
             if (e != NULL) return e;
+
+            //Type check constructor
+            Constructor *constructor = declaration->val.classD.constructor;
+            if (constructor != NULL) {
+                workingInConstructor = true;
+                constructorReachLevel = (int)declaration->symbolTable->distanceFromRoot + 1;
+                e = typeCheck(constructor->body, ANY_TYPE);
+                if (e != NULL) return e;
+                workingInConstructor = false;
+            }
 
             classDeclList = declaration->val.classD.declarationList;
 

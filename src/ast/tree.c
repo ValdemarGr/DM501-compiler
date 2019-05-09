@@ -649,7 +649,7 @@ Declaration *makeValDeclaration(char *id, Expression *rhs) {
     return declaration;
 }
 
-Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList) {
+Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList, Constructor* constructor) {
     Declaration *declaration = NEW(Declaration);
     stmDeclNum++;
     declaration->internal_stmDeclNum = stmDeclNum;
@@ -659,6 +659,7 @@ Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, Ty
     declaration->val.classD.declarationList = declarationList;
     declaration->val.classD.genericTypeParameters = typeList;
     declaration->val.classD.extendedClasses = extensionList;
+    declaration->val.classD.constructor = constructor;
     typeIndex = 0;
 
     return declaration;
@@ -691,4 +692,26 @@ TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
     tpeLst->type = type;
 
     return tpeLst;
+}
+
+Constructor *makeClassConstructor(VarDelList *vdl, Body *body) {
+    Constructor *constructor;
+    constructor = NEW(Constructor);
+
+    constructor->body = body;
+    constructor->declarationList = vdl;
+
+    return constructor;
+}
+
+Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *expressionList) {
+    Statement *statement = NEW(Statement);
+    stmDeclNum++;
+    statement->internal_stmDeclNum = stmDeclNum;
+
+    statement->lineno = lineno;
+    statement->kind = statAllocateK;
+    statement->val.allocateD.var = var;
+    statement->val.allocateD.constructorList = expressionList;
+    return statement;
 }
