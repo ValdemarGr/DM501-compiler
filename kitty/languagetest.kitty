@@ -11,11 +11,11 @@ class Sequence[A] {
     val map = (transformer: (A) -> A): void -> {
         var iterator: int;
 
-        iterator = |internal|;
+        iterator = 0;
 
-        while (iterator > 0) do {
+        while (iterator < |internal|) do {
             internal[iterator] = transformer(internal[iterator]);
-            iterator = iterator - 1;
+            iterator = iterator + 1;
         }
     };
 };

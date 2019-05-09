@@ -198,30 +198,13 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
 
-            size_t sizeAccumulator = POINTER_SIZE;
-
             Instructions *tpeConst = newInstruction();
             tpeConst->kind = INSTRUCTION_CONST;
             tpeConst->val.constant.temp = currentTemporary;
-            tpeConst->val.constant.value = (int)sizeAccumulator;
+            tpeConst->val.constant.value = POINTER_SIZE;
             size_t typeSizeTemp = currentTemporary;
-            currentTemporary++;
             appendInstructions(tpeConst);
-
-            //Add one for space
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = 1;
-            constOne->val.constant.temp= currentTemporary;
-            appendInstructions(constOne);
             currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = currentTemporary - 1;
-            add->val.arithmetic2.dest = exprTemp;
-            appendInstructions(add);
 
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
@@ -363,23 +346,6 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
-
-            int toAdd = 0;
-
-            //Add one for space
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = toAdd;
-            constOne->val.constant.temp= currentTemporary;
-            appendInstructions(constOne);
-            currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = currentTemporary - 1;
-            add->val.arithmetic2.dest = exprTemp;
-            appendInstructions(add);
 
             Instructions *constPtrSize = newInstruction();
             constPtrSize->kind = INSTRUCTION_CONST;

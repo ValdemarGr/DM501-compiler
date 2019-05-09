@@ -762,7 +762,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
             printIndentation(out);
             fprintf(out, "mov %zu(%%%s), %%%s\n",
-                    instruction->val.tempIntoStackScope.scopeToFindFrame,
+                    instruction->val.tempIntoStackScope.scopeToFindFrame * POINTER_SIZE,
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate),
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
             printIndentation(out);
@@ -785,7 +785,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
             fprintf(out, "mov %zu(%%%s), %%%s\n",
-                    instruction->val.tempFromStackScope.scopeToFindFrame,
+                    instruction->val.tempFromStackScope.scopeToFindFrame * POINTER_SIZE,
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
