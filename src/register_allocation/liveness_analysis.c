@@ -352,27 +352,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.loadPtrToStaticLink.intermediateTemp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int) iter->val.loadPtrToStaticLink.ptrTemp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.loadPtrToStaticLink.intermediateTemp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->uses, (int) iter->val.loadPtrToStaticLink.ptrTemp);
-                insertSortedSet(dataFlowEntry->uses, (int) iter->val.loadPtrToStaticLink.intermediateTemp);
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            }
-                break;
             case INSTRUCTION_ADD_CONST: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();

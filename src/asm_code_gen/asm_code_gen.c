@@ -167,7 +167,28 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_DIV: {
+            fprintf(out, "# INSTRUCTION_DIV\n");
+            printIndentation(out);
+            fprintf(out, "movq %%%s, %%rax\n",
+                    getNextRegister(instruction->val.arithmetic2.source));
 
+            printIndentation(out);
+            fprintf(out, "pushq %%r10\n");
+
+            printIndentation(out);
+            fprintf(out, "movq %%%s, %%r10\n",
+                    getNextRegister(instruction->val.arithmetic2.dest));
+            printIndentation(out);
+            fprintf(out, "cqto\n");
+            printIndentation(out);
+            fprintf(out, "idiv %%r10\n");
+
+            printIndentation(out);
+            fprintf(out, "popq %%r10\n");
+            printIndentation(out);
+
+            fprintf(out, "movq %%rax, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.dest));
         } break;
         case INSTRUCTION_CONST: {
             fprintf(out, "# INSTRUCTION_CONST\n");
@@ -569,23 +590,6 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.saveTempToParentScope.inputTemp),
                     getNextRegister(instruction->val.saveTempToParentScope.intermediateTemp));
         } break;*/
-        case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-            fprintf(out, "# COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME\n");
-            //Fetch static link ptr
-            printIndentation(out);
-            fprintf(out, "leaq staticLink, %%%s\n",
-                    getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp));
-            printIndentation(out);
-            fprintf(out, "movq %zu(%%%s), %%%s\n",
-                    instruction->val.loadPtrToStaticLink.scopeToFindFrame * POINTER_SIZE,
-                    getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp),
-                    getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp));
-            printIndentation(out);
-            fprintf(out, "movq %%%s, -%zu(%%%s)\n",
-                    getNextRegister(instruction->val.loadPtrToStaticLink.ptrTemp),
-                    (instruction->val.loadPtrToStaticLink.linkBaseOffset + 1) * POINTER_SIZE,
-                    getNextRegister(instruction->val.loadPtrToStaticLink.intermediateTemp));
-        } break;
         /*case COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK: {
             fprintf(out, "# COMPLEX_LOAD_VARIABLE_VALUE_FROM_STACK\n");
             SYMBOL *var = instruction->val.currentScopeLoad.var;
@@ -769,11 +773,28 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.tempIntoStackScope.scopeToFindFrame * POINTER_SIZE,
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate),
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
+
             printIndentation(out);
-            fprintf(out, "mov %%%s, -%zu(%%%s)\n",
+            //Grab offset
+            fprintf(out, "movq -16(%%%s), %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate),
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            //Skip header
+            printIndentation(out);
+            fprintf(out, "addq $1, %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            printIndentation(out);
+            fprintf(out, "imul $-1, %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            printIndentation(out);
+            fprintf(out, "mov %%%s, -%zu(%%%s, %%%s, 8)\n",
                     getNextRegister(instruction->val.tempIntoStack.tempToMove),
-                    instruction->val.tempIntoStackScope.offset + offsetForFunction * POINTER_SIZE,
-                    getNextRegister(instruction->val.tempIntoStackScope.intermediate));
+                    instruction->val.tempIntoStackScope.offset + POINTER_SIZE,
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate),
+                    getNextRegister(instruction->val.tempIntoStackScope.intermediate2));
         } break;
         case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
             fprintf(out, "# COMPLEX_MOVE_TEMPORARY_FROM_STACK\n");
@@ -793,9 +814,25 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
-            fprintf(out, "mov -%zu(%%%s), %%%s\n",
-                    instruction->val.tempFromStackScope.offset + offsetForFunction * POINTER_SIZE,
+            //Grab offset
+            fprintf(out, "movq -16(%%%s), %%%s\n",
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            //Skip header
+            printIndentation(out);
+            fprintf(out, "addq $1, %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            printIndentation(out);
+            fprintf(out, "imul $-1, %%%s\n",
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2));
+
+            printIndentation(out);
+            fprintf(out, "mov -%zu(%%%s, %%%s, 8), %%%s\n",
+                    instruction->val.tempFromStackScope.offset + POINTER_SIZE,
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate),
+                    getNextRegister(instruction->val.tempFromStackScope.intermediate2),
                     getNextRegister(instruction->val.tempFromStackScope.inputTemp));
         } break;
         case INSTRUCTION_REGISTER_CALL:{

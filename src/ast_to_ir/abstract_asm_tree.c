@@ -186,12 +186,12 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE;
                 ptrAccess->val.tempFromStackScope.offset = offset * (symbol->uniqueIdForScope + 1);
-                ptrAccess->val.tempFromStackScope.inputTemp = currentTemporary;
+                ptrAccess->val.tempFromStackScope.inputTemp = currentTemporary++;
                 ptrAccess->val.tempFromStackScope.scopeToFindFrame = symbol->distanceFromRoot;
-                ptrAccess->val.tempFromStackScope.intermediate = currentTemporary + 1;
+                ptrAccess->val.tempFromStackScope.intermediate = currentTemporary++;
+                ptrAccess->val.tempFromStackScope.intermediate2 = currentTemporary++;
                 appendInstructions(ptrAccess);
-                currentTemporary = currentTemporary + 2;
-                return currentTemporary - 2;
+                return currentTemporary - 3;
             }
         } break;
         case arrayIndexK: {
@@ -340,6 +340,8 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
                 ptrAccess->val.tempIntoStackScope.offset = offset * (symbol->uniqueIdForScope + 1);
                 ptrAccess->val.tempIntoStackScope.tempToMove = tempToSave;
                 ptrAccess->val.tempIntoStackScope.scopeToFindFrame = symbol->distanceFromRoot;
+                ptrAccess->val.tempFromStackScope.intermediate = currentTemporary++;
+                ptrAccess->val.tempFromStackScope.intermediate2 = currentTemporary++;
                 appendInstructions(ptrAccess);
             }
         } break;
@@ -569,15 +571,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(pop);
             currentTemporary++;*/
 
-            if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
-                //We need to restore the static link
-                Instructions *popLink = newInstruction();
-                popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
-                popLink->val.pushPopStaticLink.staticLinkDepth = symbol->distanceFromRoot;
-                popLink->val.pushPopStaticLink.temporary = currentTemporary;
-                appendInstructions(popLink);
-                currentTemporary++;
-            }
+            //We need to restore the static link
+            Instructions *popLink = newInstruction();
+            popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
+            popLink->val.pushPopStaticLink.staticLinkDepth = symbolTable->distanceFromRoot;
+            popLink->val.pushPopStaticLink.temporary = currentTemporary;
+            appendInstructions(popLink);
+            currentTemporary++;
             return 0;
         } break;
         case parenthesesK: {
@@ -991,7 +991,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //We need to restore the static link
             Instructions *popLink = newInstruction();
             popLink->kind = COMPLEX_RESTORE_STATIC_LINK;
-            popLink->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
+            popLink->val.pushPopStaticLink.staticLinkDepth = symbolTable->distanceFromRoot;
             popLink->val.pushPopStaticLink.temporary = currentTemporary;
             appendInstructions(popLink);
             currentTemporary++;
@@ -1122,7 +1122,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     Instructions *constant = newInstruction();
                     constant->kind = INSTRUCTION_CONST;
-                    constant->val.constant.value = 1;
+                    constant->val.constant.value = -1;
                     constant->val.constant.temp = currentTemporary;
                     appendInstructions(constant);
                     currentTemporary++;
@@ -1151,7 +1151,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     Instructions *constant = newInstruction();
                     constant->kind = INSTRUCTION_CONST;
-                    constant->val.constant.value = 1;
+                    constant->val.constant.value = -1;
                     constant->val.constant.temp = currentTemporary;
                     appendInstructions(constant);
                     currentTemporary++;

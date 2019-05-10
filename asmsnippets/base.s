@@ -2,27 +2,17 @@
 
 .global main
 main:
-	mov $1, %rax
-	mov $0, %r8
+    movq $20, %r8
+    movq $4, %r9
 
-	and %r8, %rax
-	push %rax
-	call print_number	
-
-	mov $0, %r10
-	add %rax, %r10
-	sub %r8, %r10
-	cmp $0, %r10	
-	jge printstuff
-
-	jmp exit
+    movq %r8, %rax
+    cqto
+    idiv %r9
 
 
-	printstuff:
-	push %r10
-	call print_number
+    push %rax
+    call print_number
 
-	exit:
 	mov $60, %rax
 	mov $0, %rdi
  	syscall
