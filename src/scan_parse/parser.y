@@ -31,6 +31,7 @@ void yyerror(char const *s) {
    struct ExpressionList *expressionList;
    struct Term *term;
    struct TypeList *typeList;
+   struct Constructor *constructor;
 }
 
 %token <intconst> tINTCONST
@@ -68,6 +69,8 @@ void yyerror(char const *s) {
 %token tCLASS
 %token tWITH
 %token tVOID
+%token tCONSTRUCTOR
+%token tGC
 
 %type <expression> expression
 %type <lambda> lambda
@@ -86,6 +89,7 @@ void yyerror(char const *s) {
 %type <expressionList> act_list exp_list
 %type <term> term
 %type <typeList> type_list generic_type_list class_extension_list
+%type <constructor> constructor
 
 %start program
 
@@ -137,6 +141,10 @@ class_extension_list : tIDENTIFIER
                 {$$ = makeExtensionList($6, $1, $3);}
 ;
 
+constructor : tCONSTRUCTOR '(' par_decl_list ')' '{' body '}' ';'
+              {$$ = makeClassConstructor($3, $6); }
+;
+
 declaration : tVAR var_decl_list ';'
               {$$ = makeVarDeclarations($2); }
               | function
@@ -146,13 +154,22 @@ declaration : tVAR var_decl_list ';'
               | tVAL tIDENTIFIER '=' expression ';'
               {$$ = makeValDeclaration($2, $4);}
               | tCLASS tIDENTIFIER '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $4, NULL, NULL);}
+              {$$ = makeClassDeclaration($2, $4, NULL, NULL, NULL);}
               | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $7, $4, NULL);}
+              {$$ = makeClassDeclaration($2, $7, $4, NULL, NULL);}
               | tCLASS tIDENTIFIER '[' generic_type_list ']' tWITH class_extension_list '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $9, $4, $7);}
+              {$$ = makeClassDeclaration($2, $9, $4, $7, NULL);}
               | tCLASS tIDENTIFIER tWITH class_extension_list '{' decl_list '}' ';'
-              {$$ = makeClassDeclaration($2, $6, NULL, $4);}
+              {$$ = makeClassDeclaration($2, $6, NULL, $4, NULL);}
+
+              | tCLASS tIDENTIFIER '{' constructor decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $5, NULL, NULL, $4);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' constructor decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $8, $4, NULL, $7);}
+              | tCLASS tIDENTIFIER '[' generic_type_list ']' tWITH class_extension_list '{' constructor decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $10, $4, $7, $9);}
+              | tCLASS tIDENTIFIER tWITH class_extension_list '{' constructor decl_list '}' ';'
+              {$$ = makeClassDeclaration($2, $7, NULL, $4, $6);}
 ;
 
 statement : tRETURN expression ';'
@@ -163,6 +180,8 @@ statement : tRETURN expression ';'
         {$$ = makeIfStatement($2, $4);}
         | tALLOCATE variable ';'
         {$$ = makeAllocateStatement($2);}
+        | tALLOCATE variable '(' act_list ')' ';'
+        {$$ = makeAllocateWithConstructorStatement($2, $4);}
         | tALLOCATE variable tOF_LEN expression ';'
         {$$ = makeAllocateOfLenStatement($2, $4);}
         | variable '=' expression ';'
@@ -175,6 +194,8 @@ statement : tRETURN expression ';'
         {$$ = makeStatementFromList($2);}
         | expression ';'
         {$$ = makeEmptyExpression($1);}
+        | tGC ';'
+        {$$ = makeGCStatement();}
 ;
 
 type_list : type ',' type_list
@@ -200,6 +221,8 @@ type :  tIDENTIFIER
         | tRECORD_OF '{' var_decl_list '}'
         {$$ = makeRecordType($3); }
         | '(' type_list ')' tLAMBDA_ARROW type
+        {$$ = makeLambdaType($2, $5);}
+        | '(' type_list ')' tLAMBDA_ARROW voidType
         {$$ = makeLambdaType($2, $5);}
 ;
 

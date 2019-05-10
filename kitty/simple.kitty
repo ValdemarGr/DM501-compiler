@@ -1,8 +1,43 @@
 
-val o = 69;
-var k: int;
-k = 42;
+class B {
+    val b = 9;
+};
+
+class A {
+    val first = 5;
+    var internalB: class B;
+    var ifield: int;
+    val printer = (): void -> {
+        write ifield;
+    };
+};
+
+var a: class A;
+var clsB: class B;
+allocate a;
+allocate clsB;
+allocate a.internalB;
 
 
-write o;
-write k;
+write a.first;
+write a.internalB.b;
+write a.internalB.b;
+gc;
+write clsB.b;
+gc;
+write clsB.b;
+
+
+allocate a;
+allocate a.internalB;
+gc;
+
+write a.first;
+write a.internalB.b;
+write clsB.b;
+gc;
+
+a.ifield = 42;
+gc;
+
+a.printer();

@@ -1,0 +1,72 @@
+class Optional[A] {
+    constructor (value: A) {
+        internalValue = value;
+        hasValue = true;
+    };
+
+    var internalValue: A;
+    val hasValue = false;
+
+    val forEach = (apply: (A) -> void): void -> {
+        if (hasValue == true) then {
+            apply(internalValue);
+        }
+    };
+
+    val map = (apply: (A) -> A): void -> {
+        if (hasValue == true) then {
+            internalValue = apply(internalValue);
+        }
+    };
+};
+
+class IntBox {
+    constructor (toTake: int) {
+        constValue = toTake;
+    };
+    val constValue = 0;
+};
+
+func c(): ((IntBox) -> void) -> void
+    var internalOpt: class Optional[IntBox];
+    var internalIntBox: class IntBox;
+    allocate internalIntBox(13);
+    allocate internalOpt(internalIntBox);
+
+    return internalOpt.forEach;
+end c
+
+func b(): ((IntBox) -> void) -> void
+    return c();
+end b
+
+func a(): ((IntBox) -> void) -> void
+    return b();
+end a
+
+val showwer = a();
+
+var opt: class Optional[IntBox];
+var boxedInteger: class IntBox;
+
+allocate boxedInteger(42);
+allocate opt(boxedInteger);
+opt.forEach((value: IntBox): void -> {
+    write value.constValue;
+});
+gc;
+opt.forEach((value: IntBox): void -> {
+    write value.constValue;
+});
+opt.map((value: IntBox): IntBox -> {
+    var new: class IntBox;
+    allocate new(value.constValue * 2);
+    return new;
+});
+opt.forEach((value: IntBox): void -> {
+    write value.constValue;
+});
+
+showwer((ib: IntBox): void -> {
+    write ib.constValue;
+});

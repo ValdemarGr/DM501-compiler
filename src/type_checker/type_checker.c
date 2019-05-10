@@ -11,6 +11,8 @@ bool workingInClass = false;
 char *className;
 bool workingInLambda = false;
 int lambdaLevel = 0;
+bool workingInConstructor = false;
+int constructorReachLevel = 0;
 
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
@@ -308,14 +310,26 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
 
         if (e != NULL) return false;
 
-        first = (Type*)(get(constMap, makeCharKey(first->val.typeGeneric.genericName))->v);
+        Pair *tryGet = get(constMap, makeCharKey(first->val.typeGeneric.genericName));
+
+        if (tryGet == NULL) {
+            return false;
+        }
+
+        first = (Type*)(tryGet->v);
     } else if (second->kind == typeGenericK && first->kind != typeGenericK) {
         ConstMap *constMap = initMap(10);
         Error *e = traverseClassExtensionsAndInsertGenerics(constMap, className, symbolTable);
 
         if (e != NULL) return false;
 
-        second = (Type*)(get(constMap, makeCharKey(second->val.typeGeneric.genericName))->v);
+        Pair *tryGet = get(constMap, makeCharKey(second->val.typeGeneric.genericName));
+
+        if (tryGet == NULL) {
+            return false;
+        }
+
+        second = (Type*)(tryGet->v);
     }
 
     if (first->kind == second->kind) {
@@ -424,6 +438,8 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
             return strcmp(first->val.typeGeneric.genericName, second->val.typeGeneric.genericName) == 0;
         } else if (first->kind == typeClassK) {
             return strcmp(first->val.typeClass.classId, second->val.typeClass.classId) == 0;
+        } else if (first->kind == typeVoidK) {
+            return true;
         } else {
             //TypeIdK
             //return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
@@ -487,7 +503,10 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
                     Type *dummy = NEW(Type);
 
                     dummy->kind = typeClassK;
-                    //dummy->val.typeClass.
+                    dummy->val.typeClass.classId = symbol->name;
+                    dummy->val.typeClass.genericBoundValues = NULL;
+
+                    return dummy;
                 }
 
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
@@ -688,6 +707,9 @@ Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *sy
                 return bound;
             }
             break;
+        case typeVoidK:
+            return typeToBindOn;
+            break;
     }
 
     return NULL;
@@ -758,7 +780,11 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
         case varIdK:
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
-            if (workingInLambda && symbol->distanceFromRoot != 0) {
+            if (symbol == NULL) {
+                return NULL;
+            }
+
+            if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
                 if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
@@ -770,10 +796,6 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                         return NULL;
                     }
                 }
-            }
-
-            if (symbol == NULL) {
-                return NULL;
             }
 
             return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
@@ -995,7 +1017,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
-            if (workingInLambda && symbol->distanceFromRoot != 0) {
+            if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
                 if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
@@ -1598,6 +1620,16 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             //Fetch lambda
             Type *lambda = unwrapVariable(term->val.shorthandCallD.var, symbolTable);
 
+            if (lambda == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = "LAMBDA_INVOKE";
+                e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+
+                return e;
+            }
+
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
 
             TypeList *varDelList = lambda->val.typeLambdaK.typeList;
@@ -1902,6 +1934,72 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
                 return e;
             }
+            if (unwrapped->kind == typeClassK) {
+                SYMBOL *sym = getSymbol(statement->symbolTable, unwrapped->val.typeClass.classId);
+                if (sym->value->kind == symTypeClassK && statement->val.allocateD.constructorList != NULL) {
+                    Constructor *constructor = sym->value->val.typeClassD.constructor;
+
+                    if (constructor == NULL) {
+                        e = NEW(Error);
+
+                        e->error = NO_CONSTRUCTOR;
+
+                        return e;
+                    }
+
+                    ExpressionList *expressionList = statement->val.allocateD.constructorList;
+
+                    //We've gotta bind these types
+                    VarDelList *varDelList = constructor->declarationList;
+                    TypeList *generics = sym->value->val.typeClassD.generics;
+                    TypeList *boundTypes = unwrapped->val.typeClass.genericBoundValues;
+                    ConstMap *genericMap = initMap(10);
+                    Error *e = insertGenerics(genericMap, boundTypes, generics, statement->symbolTable);
+                    if (e != NULL) return NULL;
+                    e = traverseClassExtensionsAndInsertGenerics(genericMap, sym->name, statement->symbolTable);
+                    if (e != NULL) return NULL;
+
+                    int paramNum = 0;
+
+                    while (expressionList != NULL && varDelList != NULL) {
+                        Type *toExpect = bindGenericTypes(genericMap, varDelList->type, statement->symbolTable);
+
+                        e = typeCheckExpression(expressionList->expression, toExpect, statement->symbolTable);
+                        if (e != NULL) return e;
+
+                        expressionList = expressionList->next;
+                        varDelList = varDelList->next;
+                        paramNum++;
+                    }
+
+                    if ((varDelList == NULL && expressionList != NULL) || (varDelList != NULL && expressionList == NULL)) {
+                        //Error
+                        e = NEW(Error);
+
+                        int expectedCount = paramNum;
+
+                        if (varDelList == NULL) {
+                            while (expressionList != NULL) {
+                                paramNum++;
+                                expressionList = expressionList->next;
+                            }
+                        } else {
+                            while (varDelList != NULL) {
+                                expectedCount++;
+                                varDelList = varDelList->next;
+                            }
+                        }
+
+                        e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = statement->lineno;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = unwrapped->val.typeClass.classId;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+
+                        return e;
+                    }
+                }
+            }
         } break;
         case statAllocateLenK: {
             Type* unwrapped = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
@@ -1970,13 +2068,25 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             //We have to find out what the LHS is first
             //We also cannot re assign a const
             if (isConst(statement->val.assignmentD.var, statement->symbolTable)) {
-                e = NEW(Error);
+                //If we are working in constructor and the variable exists in reach level or above
+                //We may construct
+                if (!workingInConstructor) {
+                    e = NEW(Error);
 
-                e->error = CONST_REASSIGNMENT;
-                e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
-                e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+                    e->error = CONST_REASSIGNMENT;
+                    e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
+                    e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
 
-                return e;
+                    return e;
+                } else if (getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable)->distanceFromRoot != constructorReachLevel) {
+                    e = NEW(Error);
+
+                    e->error = CONST_REASSIGNMENT;
+                    e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
+                    e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+
+                    return e;
+                }
             }
 
             if (statement->val.assignmentD.var->kind == varIdK &&
@@ -2024,6 +2134,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             break;
         case emptyK: {
             e = typeCheckExpression(statement->val.empty.exp, ANY_TYPE, statement->symbolTable);
+            if (e != NULL) return e;
         } break;
     }
 
@@ -2075,7 +2186,13 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 e = checkTypeExist(symbol->value->val.typeD.tpe, symbolTable, lineno, newLL);
                 if (e != NULL) return e;
             } else if (symbol->value->kind == symTypeClassK) {
-                return NULL;
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+
+                return e;
             } else {
                 e = checkTypeExist(symbol->value->val.typeFunctionD.returnType, symbolTable, lineno, newLL);
                 if (e != NULL) return e;
@@ -2121,6 +2238,20 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
             }
 
             break;
+        case typeClassK: {
+            SYMBOL *sym = getSymbol(symbolTable, type->val.typeClass.classId);
+
+            if (sym->value->kind != symTypeClassK) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+
+                return e;
+            }
+
+        } break;
         default:
             return NULL;
             break;
@@ -2375,7 +2506,6 @@ Error *checkDeclValidity(Declaration *declaration) {
         case declVarK:
             e = checkTypeExist(declaration->val.varD.type, declaration->symbolTable, lineno, NULL);
             if (e != NULL) return e;
-            //Todo FIX THIS CODE FOR GENERIC BINDINGS
             //return NULL;
             //If its type is a class, check the generic bindings' validity
             if (declaration->val.varD.type->kind == typeClassK) {
@@ -2461,6 +2591,16 @@ Error *typeCheckDeclaration(Declaration *declaration) {
             className = declaration->val.classD.id;
             e = checkDeclValidity(declaration);
             if (e != NULL) return e;
+
+            //Type check constructor
+            Constructor *constructor = declaration->val.classD.constructor;
+            if (constructor != NULL) {
+                workingInConstructor = true;
+                constructorReachLevel = (int)declaration->symbolTable->distanceFromRoot + 1;
+                e = typeCheck(constructor->body, ANY_TYPE);
+                if (e != NULL) return e;
+                workingInConstructor = false;
+            }
 
             classDeclList = declaration->val.classD.declarationList;
 

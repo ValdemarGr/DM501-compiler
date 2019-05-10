@@ -12,6 +12,7 @@ size_t returnReg = 0;
 bool inClassContextCurrent = false;
 int classGenericCount = 0;
 bool inLambdaContext = false;
+bool currentlyInConstructorContext = false;
 int lambdaDefineScope = 0;
 int lambdaArgCount = 0;
 int staticLinkDepth = -1;
@@ -141,7 +142,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t offset = POINTER_SIZE;
 
-            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+            if ((inLambdaContext || currentlyInConstructorContext) && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
                 Instructions *debug = newInstruction();
                 debug->kind = METADATA_DEBUG_INFO;
                 debug->val.debugInfo = "CLASS LOAD";
@@ -198,30 +199,13 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
 
-            size_t sizeAccumulator = POINTER_SIZE;
-
             Instructions *tpeConst = newInstruction();
             tpeConst->kind = INSTRUCTION_CONST;
             tpeConst->val.constant.temp = currentTemporary;
-            tpeConst->val.constant.value = (int)sizeAccumulator;
+            tpeConst->val.constant.value = POINTER_SIZE;
             size_t typeSizeTemp = currentTemporary;
-            currentTemporary++;
             appendInstructions(tpeConst);
-
-            //Add one for space
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = 1;
-            constOne->val.constant.temp= currentTemporary;
-            appendInstructions(constOne);
             currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = currentTemporary - 1;
-            add->val.arithmetic2.dest = exprTemp;
-            appendInstructions(add);
 
             Instructions *mulOffset = newInstruction();
             mulOffset->kind = INSTRUCTION_MUL;
@@ -314,7 +298,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 
             size_t offset = POINTER_SIZE;
 
-            if (inLambdaContext && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
+            if ((inLambdaContext || currentlyInConstructorContext) && inClassContextCurrent && symbol->distanceFromRoot == lambdaDefineScope) {
                 Instructions *debug = newInstruction();
                 debug->kind = METADATA_DEBUG_INFO;
                 debug->val.debugInfo = "CLASS LOAD";
@@ -363,26 +347,6 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
 
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
-
-            int toAdd = 1;
-            if (forArrayLen) {
-                toAdd = 0;
-            }
-
-            //Add one for space
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = toAdd;
-            constOne->val.constant.temp= currentTemporary;
-            appendInstructions(constOne);
-            currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = currentTemporary - 1;
-            add->val.arithmetic2.dest = exprTemp;
-            appendInstructions(add);
 
             Instructions *constPtrSize = newInstruction();
             constPtrSize->kind = INSTRUCTION_CONST;
@@ -484,6 +448,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //For each expression argument, evaluate it and push it to the stack
             SYMBOL *symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
 
+            /*
             if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
                 //We need to save the current static link pointer
                 Instructions *push = newInstruction();
@@ -492,7 +457,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 push->val.pushPopStaticLink.temporary = currentTemporary;
                 appendInstructions(push);
                 currentTemporary++;
-            }
+            }*/
 
             //First we prepare if we are lambda
             size_t functionToCall = 0;
@@ -638,7 +603,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             if (e->kind == typeArrayK) {
                 Instructions *num = newInstruction();
                 num->kind = INSTRUCTION_CONST;
-                num->val.constant.value = 0;
+                num->val.constant.value = - POINTER_SIZE;
                 num->val.constant.temp = currentTemporary;
                 appendInstructions(num);
                 currentTemporary++;
@@ -775,18 +740,20 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 add->val.arithmetic2.dest = argcInsTemp;
                 appendInstructions(add);*/
 
-                Instructions *const2 = newInstruction();
-                const2->kind = INSTRUCTION_CONST;
-                const2->val.constant.value = 2;
-                const2->val.constant.temp= currentTemporary;
-                size_t const2Temp = currentTemporary;
-                appendInstructions(const2);
+                Instructions *const1 = newInstruction();
+                const1->kind = INSTRUCTION_CONST;
+                const1->val.constant.value = 1;
+                const1->val.constant.temp= currentTemporary;
+                size_t const1Temp = currentTemporary;
+                appendInstructions(const1);
                 currentTemporary++;
 
                 Instructions *ret = newInstruction();
                 ret->kind = COMPLEX_ALLOCATE;
-                ret->val.allocate.timesTemp = const2Temp;
+                ret->val.allocate.timesTemp = const1Temp;
                 ret->val.allocate.eleSize = POINTER_SIZE;
+                ret->val.allocate.intermediate = currentTemporary++;
+                ret->val.allocate.allocationType = ALLOC_LAMBDA;
                 size_t allocPtrTemp = 0;
                 arrayTemp = allocPtrTemp;
                 appendInstructions(ret);
@@ -947,14 +914,14 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //Give arguments on stack
             //For each expression argument, evaluate it and push it to the stack
             size_t fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
-
+/*
             //We need to save the current static link pointer
             Instructions *push = newInstruction();
             push->kind = COMPLEX_SAVE_STATIC_LINK;
             push->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
             push->val.pushPopStaticLink.temporary = currentTemporary;
             appendInstructions(push);
-            currentTemporary++;
+            currentTemporary++;*/
 
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
 
@@ -1274,23 +1241,23 @@ void generateInstructionTreeForStatement(Statement *statement) {
         }
             break;
         case statAllocateK: {
-            Instructions *num = newInstruction();
-            num->kind = INSTRUCTION_CONST;
-            num->val.constant.value = 1;
-            num->val.constant.temp = currentTemporary;
-            appendInstructions(num);
-            size_t constNum = currentTemporary;
-            currentTemporary++;
-
             Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
 
             size_t fieldCount = 0;
+
+            SortedSet *bodySet;
 
             if (tpe->kind == typeRecordK) {
                 //Record
                 VarDelList *iter = tpe->val.recordType.types;
 
+                bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
+                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable);
+                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+                        insertSortedSet(bodySet, (int)fieldCount);
+                    }
+
                     fieldCount++;
                     iter = iter->next;
                 }
@@ -1299,6 +1266,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
 
                 DeclarationList *iter = classSymbol->value->val.typeClassD.declarationList;
+                bodySet = getPointerCountForBody(classSymbol->value->val.typeClassD.declarationList);
 
                 while (iter != NULL) {
                     fieldCount++;
@@ -1306,10 +1274,21 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 }
             }
 
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = (int)fieldCount;
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            size_t constNum = currentTemporary;
+            currentTemporary++;
+
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
+            ret->val.allocate.allocationType = ALLOC_RECORD_CLASS;
+            ret->val.allocate.pointerSet = bodySet;
             ret->val.allocate.timesTemp = constNum;
-            ret->val.allocate.eleSize = POINTER_SIZE * fieldCount;
+            ret->val.allocate.intermediate = currentTemporary++;
+            ret->val.allocate.eleSize = POINTER_SIZE;
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
 
@@ -1373,7 +1352,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                             valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
                             valAccess->val.recordLookupD.var = statement->val.allocateD.var;
 
-                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                            generateInstructionsForVariableSave(valAccess, statement->symbolTable, exprResult, false);
                         } else {
                             size_t exprResult = generateInstructionsForExpression(iter->declaration->val.valD.rhs, iter->declaration->symbolTable);
 
@@ -1382,7 +1361,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                             valAccess->val.recordLookupD.id = iter->declaration->val.valD.id;
                             valAccess->val.recordLookupD.var = statement->val.allocateD.var;
 
-                            generateInstructionsForVariableSave(valAccess, iter->declaration->symbolTable, exprResult, false);
+                            generateInstructionsForVariableSave(valAccess, statement->symbolTable, exprResult, false);
                         }
                     }
 
@@ -1390,6 +1369,58 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 }
 
                 inClassContextCurrent = false;
+            }
+
+            if (tpe->kind == typeClassK) {
+                //We may be able to construct
+                if (statement->val.allocateD.constructorList != NULL) {
+                    //Create constructor name
+                    SYMBOL *classSymbol = getSymbol(statement->symbolTable, tpe->val.typeClass.classId);
+                    char *baseName = tpe->val.typeClass.classId;
+                    int extra = (int)strlen("_constructor") + 1;
+                    char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                    sprintf(buf, "%s_constructor", baseName);
+
+                    Instructions *pop = newInstruction();
+                    pop->kind = INSTRUCTION_POP;
+                    pop->val.tempToPopInto = allocPtrTemp;
+                    appendInstructions(pop);
+
+                    Instructions *push = newInstruction();
+                    push->kind = INSTRUCTION_PUSH;
+                    push->val.tempToPush = allocPtrTemp;
+                    appendInstructions(push);
+
+                    //push args first, then class context ptr
+                    ExpressionList *argIter = statement->val.allocateD.constructorList;
+
+                    while (argIter != NULL) {
+
+                        size_t tempForArg = generateInstructionsForExpression(argIter->expression, statement->symbolTable);
+
+                        //Push arg
+                        Instructions *push = newInstruction();
+                        push->kind = INSTRUCTION_PUSH;
+                        push->val.tempToPush = tempForArg;
+                        appendInstructions(push);
+
+                        argIter = argIter->next;
+                    }
+
+
+                    //Push class ptr
+                    Instructions *clsPush = newInstruction();
+                    clsPush->kind = INSTRUCTION_PUSH;
+                    clsPush->val.tempToPush = allocPtrTemp;
+                    appendInstructions(clsPush);
+
+                    Instructions *call = newInstruction();
+                    call->kind = INSTRUCTION_FUNCTION_CALL;
+                    call->val.function = buf;
+                    appendInstructions(call);
+
+                }
             }
 
             Instructions *pop = newInstruction();
@@ -1404,29 +1435,19 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case statAllocateLenK: {
             size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
 
-            Instructions *constOne = newInstruction();
-            constOne->kind = INSTRUCTION_CONST;
-            constOne->val.constant.value = 1;
-            constOne->val.constant.temp= currentTemporary;
-            size_t constOneTemp = currentTemporary;
-            appendInstructions(constOne);
-            currentTemporary++;
-
-            //Reserve space for size
-            Instructions *add = newInstruction();
-            add->kind = INSTRUCTION_ADD;
-            add->val.arithmetic2.source = constOneTemp;
-            add->val.arithmetic2.dest = lenExp;
-            appendInstructions(add);
-
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
             Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
-            //ret->val.allocate.ptrTemp = currentTemporary;
             ret->val.allocate.eleSize = POINTER_SIZE;
+            ret->val.allocate.intermediate = currentTemporary++;
+            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK) {
+                ret->val.allocate.allocationType = ALLOC_ARR_OF_PRIM;
+            } else {
+                ret->val.allocate.allocationType = ALLOC_ARR_OF_PTR;
+            }
             size_t allocPtrTemp = 0;
             appendInstructions(ret);
             //currentTemporary++;
@@ -1434,6 +1455,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             //Instructions for getting getting the address we need to move the pointer to
             generateInstructionsForVariableSave(statement->val.allocateLenD.var, statement->symbolTable, allocPtrTemp, false);
 
+            /*
             //Artificial var
             Variable *artiVar = NEW(Variable);
             artiVar->kind = arrayIndexK;
@@ -1452,7 +1474,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
 
-            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);
+            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);*/
 
             //Instructions *endAlloc = newInstruction();
             //endAlloc->kind = COMPLEX_ALLOCATE_END;
@@ -1667,6 +1689,11 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case emptyK: {
             generateInstructionsForExpression(statement->val.empty.exp, statement->symbolTable);
         } break;
+        case gcK: {
+            Instructions *gc = newInstruction();
+            gc->kind = COMPLEX_GARBAGE_COLLECT;
+            appendInstructions(gc);
+        } break ;
     }
 }
 
@@ -1772,7 +1799,104 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             generateInstructionsForVariableSave(tmpVar, declaration->symbolTable, expressionTemp, false);
         } break;
         case declClassK: {
+            inClassContextCurrent = true;
+            Constructor *constructor = declaration->val.classD.constructor;
+
+            if (constructor != NULL ) {
+                currentlyInConstructorContext = true;
+                lambdaDefineScope = (int)declaration->symbolTable->distanceFromRoot + 1;
+                char *baseName = declaration->val.classD.id;
+                int extra = (int)strlen("_constructor") + 1;
+                char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                sprintf(buf, "%s_constructor", baseName);
+
+                //Create constructor
+                Instructions *beginGlobalBLock = newInstruction();
+                beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+                appendInstructions(beginGlobalBLock);
+
+                Instructions *label = newInstruction();
+                label->val.functionHead.label = buf;
+                label->val.functionHead.distance = declaration->symbolTable->distanceFromRoot + 1;
+                label->val.functionHead.temporary = currentTemporary;
+                label->val.functionHead.pointerSet = getPointerCountForBody(
+                        constructor->body->declarationList);
+                label->kind = INSTRUCTION_FUNCTION_LABEL;
+                currentTemporary++;
+
+                SymbolTable *st = NULL;
+                if (constructor->body->declarationList != NULL) {
+                    st = constructor->body->declarationList->declaration->symbolTable;
+                } else if (constructor->body->statementList != NULL) {
+                    st = constructor->body->statementList->statement->symbolTable;
+                }
+                label->val.functionHead.tableForFunction = st;
+
+                //Readjust arg
+                appendInstructions(label);
+
+                //For args we generate metadata for later (maybe this is useless, who knows?)
+                VarDelList *declarationList = constructor->declarationList;
+                size_t max = 1;
+
+                size_t regForMoving = currentTemporary;
+                currentTemporary++;
+
+                //We need to move from opposite direction since pushing on stack goes opposite
+                while (declarationList != NULL) {
+                    max++;
+                    declarationList = declarationList->next;
+                }
+
+                size_t counter = 0;
+
+                //And the lambda context
+                Instructions *arg = newInstruction();
+                arg->kind = METADATA_FUNCTION_ARGUMENT;
+                arg->val.args.argNum = counter;
+                arg->val.args.moveReg = regForMoving;
+                arg->val.args.stackNum = max - counter - 1;
+                appendInstructions(arg);
+                counter++;
+
+                declarationList = constructor->declarationList;
+                while (declarationList != NULL) {
+
+                    //Create arg instr for this argument
+                    Instructions *arg = newInstruction();
+                    arg->kind = METADATA_FUNCTION_ARGUMENT;
+                    arg->val.args.argNum = counter;
+                    arg->val.args.moveReg = regForMoving;
+                    arg->val.args.stackNum = max - counter - 1;
+                    appendInstructions(arg);
+
+                    declarationList = declarationList->next;
+                    counter++;
+                }
+
+                lambdaArgCount = (int) counter;
+                generateInstructionTree(constructor->body);
+
+                Instructions *endGlobalBLock = newInstruction();
+                endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
+                appendInstructions(endGlobalBLock);
+                currentlyInConstructorContext = false;
+            }
+            inClassContextCurrent = false;
         } break;
+    }
+}
+
+void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTable) {
+    if (symbol->value->kind != typeK) {
+        return;
+    }
+
+    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+
+    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+        insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
     }
 }
 
@@ -1783,7 +1907,7 @@ void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
 
     switch (declaration->kind) {
         case declVarK: {
-            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.varD.id)->uniqueIdForScope);
+            insertForType(sortedSet, getSymbol(declaration->symbolTable, declaration->val.varD.id), declaration->symbolTable);
         } break;
         case declVarsK: {
             getPointerCountForDecl(sortedSet, declaration->val.varsD.var);
@@ -1795,7 +1919,7 @@ void getPointerCountForDecl(SortedSet *sortedSet, Declaration *declaration) {
             }
         } break;
         case declValK: {
-            insertSortedSet(sortedSet, (int)getSymbol(declaration->symbolTable, declaration->val.valD.id)->uniqueIdForScope);
+            insertForType(sortedSet, getSymbol(declaration->symbolTable, declaration->val.valD.id), declaration->symbolTable);
         } break;
         default:
             break;

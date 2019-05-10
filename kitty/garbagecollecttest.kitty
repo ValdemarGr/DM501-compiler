@@ -1,0 +1,48 @@
+class A {
+    var afield: int;
+    val v = 10;
+    val writer = (): void -> {
+        write afield;
+    };
+};
+
+class B {
+    var refToA: class A;
+    val v = 20;
+};
+
+class C {
+    var refToB: class B;
+    val v = 30;
+};
+
+class D {
+    var refToB: class B;
+    val v = 40;
+};
+
+var d: class D;
+var c: class C;
+
+allocate d;
+allocate c;
+
+allocate c.refToB;
+allocate c.refToB.refToA;
+c.refToB.refToA.afield = 42;
+write c.refToB.refToA.afield;
+
+d.refToB = c.refToB;
+write d.refToB.refToA.afield;
+
+
+gc;
+
+write c.refToB.refToA.afield;
+
+d.refToB.refToA.writer();
+
+
+gc;
+
+write d.refToB.refToA.afield;

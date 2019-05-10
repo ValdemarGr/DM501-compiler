@@ -1,0 +1,74 @@
+class IntBox {
+    var value: int;
+};
+
+class Sequence[A] {
+    constructor (aoib: array of A) {
+        internal = aoib;
+    };
+    var internal: array of A;
+    val map = (transformer: (A) -> A): void -> {
+        var iterator: int;
+
+        iterator = 0;
+
+        while (iterator < |internal|) do {
+            internal[iterator] = transformer(internal[iterator]);
+            iterator = iterator + 1;
+        }
+    };
+
+    val forEach = (apply: (A) -> void): void -> {
+        var iterator: int;
+
+        iterator = 0;
+
+        while (iterator < |internal|) do {
+            apply(internal[iterator]);
+            iterator = iterator + 1;
+        }
+    };
+};
+
+var ib1: class IntBox;
+var ib2: class IntBox;
+var ib3: class IntBox;
+var ib4: class IntBox;
+var ib5: class IntBox;
+var seq: class Sequence[class IntBox];
+var aoib: array of class IntBox;
+
+allocate aoib of length 5;
+
+allocate ib1;
+allocate ib2;
+allocate ib3;
+allocate ib4;
+allocate ib5;
+
+allocate seq(aoib);
+
+ib1.value = 1;
+ib2.value = 2;
+ib3.value = 3;
+ib4.value = 4;
+ib5.value = 5;
+
+aoib[0] = ib1;
+aoib[1] = ib2;
+aoib[2] = ib3;
+aoib[3] = ib4;
+aoib[4] = ib5;
+
+seq.forEach((ib: IntBox): void -> {
+    write ib.value;
+});
+
+seq.map((ib: IntBox): IntBox -> {
+    ib.value = 2 * ib.value;
+    return ib;
+});
+
+seq.forEach((ib: IntBox): void -> {
+    write ib.value;
+});

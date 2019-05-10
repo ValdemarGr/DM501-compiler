@@ -10,6 +10,7 @@
 int lambdaCount = 0;
 bool inClassContext = false;
 bool inLambdaContextCurrently = false;
+bool inConstructorContext = false;
 
 void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
 Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
@@ -88,8 +89,6 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
 
             ExpressionList *expressionList = exp->val.termD.term->val.functionCallD.expressionList;
 
-            int counter = 0;
-
             while (expressionList != NULL) {
 
                 Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
@@ -98,23 +97,7 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                 //If it is a variable,  we don't need to do any of the R-value decorating this time
                 if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
                     Lambda *lambda = expressionList->expression->val.termD.term->val.lambdaD.lambda;
-                    char intToString[16];
-
-                    sprintf(intToString, "%i", counter);
-
-                    //Give the lambda a unique id
-                    int suffix_len = strlen(LAMBDA_SUFFIX);
-
-                    char *function_name = exp->val.termD.term->val.functionCallD.functionId;
-                    int var_len = strlen(function_name);
-
-                    char *lambda_id = (char*)malloc(sizeof(char) * (var_len + suffix_len) + 16);
-
-                    strcat(lambda_id, function_name);
-                    strcat(lambda_id, LAMBDA_SUFFIX);
-                    strcat(lambda_id, intToString);
-
-                    decorateFunction(lambda_id,
+                    decorateFunction(NULL,
                                      lambda->returnType,
                                      symbolTable,
                                      lambda->declarationList,
@@ -128,11 +111,38 @@ Error *decorateRValue(Expression *exp, SymbolTable *symbolTable) {
                 expressionList = expressionList->next;
             }
 
+        } else if (exp->val.termD.term->kind == shorthandCallK) {
+
+            ExpressionList *expressionList = exp->val.termD.term->val.shorthandCallD.expressionList;
+
+            while (expressionList != NULL) {
+
+                Type* valType = evaluateExpressionType(expressionList->expression, symbolTable);
+
+                //Check if the lambda is a variable or an R-value
+                //If it is a variable,  we don't need to do any of the R-value decorating this time
+                if (valType->kind == typeLambdaK && expressionList->expression->val.termD.term->kind != variableK) {
+                    Lambda *lambda = expressionList->expression->val.termD.term->val.lambdaD.lambda;
+                    decorateFunction(NULL,
+                                     lambda->returnType,
+                                     symbolTable,
+                                     lambda->declarationList,
+                                     lambda->body,
+                                     0,
+                                     false,
+                                     true,
+                                     lambda->id);
+                }
+
+                expressionList = expressionList->next;
+            }
         }
     } else if (exp->kind == opK) {
         decorateRValue(exp->val.op.left, symbolTable);
         decorateRValue(exp->val.op.right, symbolTable);
     }
+
+    return e;
 }
 
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
@@ -229,6 +239,13 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             //If the lambda is R-value assigned to a var
             if (statement->val.assignmentD.exp->kind == termK) {
                 if (statement->val.assignmentD.exp->val.termD.term->kind == lambdaK) {
+                    if (inConstructorContext) {
+                        e = NEW(Error);
+
+                        e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+
+                        return e;
+                    }
                     if (inLambdaContextCurrently) {
                         e = NEW(Error);
 
@@ -265,6 +282,9 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             //decorateRValue(statement->val.returnD.exp, statement->symbolTable);
             findAndDecorateFunctionCall(statement->val.returnD.exp, statement->symbolTable);
             break;
+        case emptyK:
+            findAndDecorateFunctionCall(statement->val.empty.exp, statement->symbolTable);
+            break;
         default:
             break;
     }
@@ -292,6 +312,16 @@ void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTabl
                     expressionList = expressionList->next;
                 }
 
+            } else if (expression->val.termD.term->kind == shorthandCallK) {
+                //Go though all the items
+                ExpressionList *expressionList = expression->val.termD.term->val.shorthandCallD.expressionList;
+
+                while (expressionList != NULL) {
+
+                    findAndDecorateFunctionCall(expressionList->expression, symbolTable);
+
+                    expressionList = expressionList->next;
+                }
             } else if (expression->val.termD.term->kind == lambdaK) {
                 Lambda *lambda = expression->val.termD.term->val.lambdaD.lambda;
                 lambda->inClassContext = inClassContext;
@@ -437,6 +467,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
+            if (inConstructorContext) {
+                e = NEW(Error);
+
+                e->error = NO_FUNC_IN_CONSTRUCTOR;
+
+                return e;
+            }
             if (inLambdaContextCurrently) {
                 e = NEW(Error);
 
@@ -479,6 +516,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             //If its a lambda, we want to decorate it
             if (valType->kind == typeLambdaK && declaration->val.valD.rhs->val.termD.term->kind == lambdaK) {
+                if (inConstructorContext) {
+                    e = NEW(Error);
+
+                    e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+
+                    return e;
+                }
                 if (inLambdaContextCurrently) {
                     e = NEW(Error);
 
@@ -518,6 +562,13 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
 
             break;
         case declClassK:
+            if (inConstructorContext) {
+                e = NEW(Error);
+
+                e->error = NO_CLASS_IN_CONSTRUCTOR;
+
+                return e;
+            }
             inClassContext = true;
             value = NEW(Value);
             SymbolTable *newSt = scopeSymbolTable(symbolTable);
@@ -618,6 +669,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             value->kind = symTypeClassK;
             value->val.typeClassD.extendedClasses = declaration->val.classD.extendedClasses;
             value->val.typeClassD.generics = declaration->val.classD.genericTypeParameters;
+            value->val.typeClassD.constructor = declaration->val.classD.constructor;
 
             putSymbol(symbolTable,
                       declaration->val.classD.id,
@@ -648,6 +700,14 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             //And for the class body
             DeclarationList *declarationList = newHead;
 
+            if (declarationList == NULL) {
+                e = NEW(Error);
+
+                e->error = EMPTY_CLASS;
+
+                return e;
+            }
+
             while (declarationList != NULL) {
                 //No classes or funcs inside of class
                 if (declarationList->declaration->kind == declClassK ||
@@ -657,12 +717,48 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e->error = DECLARATIONS_IN_CLASS;
                     e->val.DECLARATIONS_IN_CLASS.classId = declaration->val.classD.id;
                     e->val.DECLARATIONS_IN_CLASS.lineno = declaration->lineno;
+
+                    return e;
                 }
 
                 e = decorateDeclaration(declarationList->declaration, newSt);
                 if (e != NULL) return e;
 
                 declarationList = declarationList->next;
+            }
+
+            //For the constructor
+            if (declaration->val.classD.constructor != NULL) {
+                Constructor *constructor = declaration->val.classD.constructor;
+                //Create new sym table for constructor body
+                SymbolTable *scoped = scopeSymbolTable(newSt);
+
+                //Put params in body
+                VarDelList *vdl = constructor->declarationList;
+                //Put the parameters in the child scope
+                while (vdl != NULL) {
+                    alterIdTypesToGenerics(vdl->type, scoped);
+
+                    value = NEW(Value);
+
+                    value->kind = typeK;
+                    value->val.typeD.tpe = vdl->type;
+                    value->val.typeD.isTypedef = false;
+
+                    putSymbol(scoped,
+                              vdl->identifier,
+                              value, 0,
+                              true);
+
+                    vdl = vdl->next;
+                }
+
+                inConstructorContext = true;
+                //Generate as function
+                //Fix up body
+                Error *er = decorateAstWithSymbols(constructor->body, scoped);
+                if (er != NULL) return er;
+                inConstructorContext = false;
             }
 
             inClassContext = false;

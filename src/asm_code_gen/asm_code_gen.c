@@ -93,24 +93,31 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case INSTRUCTION_FUNCTION_LABEL:
             fprintf(out, "# INSTRUCTION_FUNCTION_LABEL\n");
-            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rsp,%%rbp\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
+            fprintf(out, ".type %s, @function\n%s:\npush %%rbp\nmov %%rbp, %%rax\nmov %%rsp,%%rbp\npush %%rax\n", instruction->val.functionHead.label, instruction->val.functionHead.label);
             printIndentation(out);
-            offsetForFunction = (int)length(instruction->val.functionHead.pointerSet) + 1;
+            offsetForFunction = (int)length(instruction->val.functionHead.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",
                     16 + (
                     (int)instruction->val.functionHead.tableForFunction->nextSymbolId +
                             offsetForFunction) * POINTER_SIZE);
 
+            printIndentation(out);
+            fprintf(out, "popq %%rax\n");
+            printIndentation(out);
+            fprintf(out, "movq %%rax, -8(%%rbp)\n");
+
             SortedSet *gcSet = instruction->val.functionHead.pointerSet;
             int len = (int)length(gcSet);
             printIndentation(out);
-            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+            fprintf(out, "movq $%i, -16(%%rbp)\n", len);
 
             SortedSet *iter = first(gcSet);
-            int counter = 2;
+            int counter = 3;
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                printIndentation(out);
+                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + offsetForFunction) * POINTER_SIZE);counter++;
                 iter = iter->_next;
             }
 
@@ -293,6 +300,21 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_ALLOCATE: {
             fprintf(out, "# COMPLEX_ALLOCATE\n");
             printIndentation(out);
+            fprintf(out, "movq $%zu, %%%s\n",
+                    instruction->val.allocate.eleSize,
+                    getNextRegister(instruction->val.allocate.intermediate));
+            printIndentation(out);
+            fprintf(out, "imulq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.allocate.timesTemp),
+                    getNextRegister(instruction->val.allocate.intermediate));
+            /*
+
+            printIndentation(out);
+            printIndentation(out);
+            fprintf(out, "mov $%zu, %%r15\n",
+                    instruction->val.allocate.eleSize);
+
+            printIndentation(out);
             fprintf(out, "push %%rdi\n");
             printIndentation(out);
             fprintf(out, "push %%r15\n");
@@ -313,8 +335,42 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov $%zu, %%r15\n",
                     instruction->val.allocate.eleSize);
+            //We save the the amount of allocations for later
             printIndentation(out);
-            fprintf(out, "imul %%r14, %%r15\n");
+            fprintf(out, "push %%r14\n");
+            printIndentation(out);
+            fprintf(out, "imul %%r14, %%r15\n");*/
+
+            SortedSet *gcSet = instruction->val.allocate.pointerSet;
+            int extraSpace = 1 + 1 + (int)length(gcSet);
+            switch (instruction->val.allocate.allocationType) {
+                case ALLOC_RECORD_CLASS: {
+                    fprintf(out, "# ALLOC_RECORD_CLASS\n");
+                    //1 slot for data size, 1 for ptr count and |ptrCount|
+
+                    printIndentation(out);
+                    fprintf(out, "addq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                } break;
+                case ALLOC_ARR_OF_PTR: {
+                    fprintf(out, "# ALLOC_ARR_OF_PTR\n");
+                    //1 for head 1 for tail
+                    printIndentation(out);
+                    fprintf(out, "addq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                } break;
+                case ALLOC_ARR_OF_PRIM: {
+                    fprintf(out, "# ALLOC_ARR_OF_PRIM\n");
+                    //1 for head 1 for tail
+                    printIndentation(out);
+                    fprintf(out, "addq $%i, %%%s\n", 2 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                } break;
+                case ALLOC_LAMBDA: {
+                    fprintf(out, "# ALLOC_LAMBDA\n");
+                    //1 for head 1 for class ptr 1 for self indexer and 1 for index position
+                    printIndentation(out);
+                    fprintf(out, "addq $%i, %%%s\n", 4 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                } break;
+            }
+/*
             printIndentation(out);
             fprintf(out, "add %%r15, %%rax\n");
             printIndentation(out);
@@ -323,16 +379,116 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "mov $12, %%rax\n");
             printIndentation(out);
             fprintf(out, "syscall\n");
-            printIndentation(out);
-            fprintf(out, "pop %%rax\n");//,
-                    //getNextRegister(instruction->val.allocate.ptrTemp));
 
+            printIndentation(out);
+            fprintf(out, "pop %%r14\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rax\n");*/
+            printIndentation(out);
+            fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+            printIndentation(out);
+            fprintf(out, "pushq %%rbp\n");
+            printIndentation(out);
+            fprintf(out, "call garbageCollectAllocate\n");
+
+            //Insert metadata into rax
+            switch (instruction->val.allocate.allocationType) {
+                case ALLOC_RECORD_CLASS: {
+                    SortedSet *gcSet = instruction->val.allocate.pointerSet;
+                    int len = (int)length(gcSet);
+
+                    //move size into head of new block
+                    printIndentation(out);
+                    fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
+                    //fix register
+                    fprintf(out, "# ALLOC_RECORD_CLASS\n");
+                    //1 slot for data size, 1 for ptr count and |ptrCount|
+                    int extraSpace = len + 1;
+                    printIndentation(out);
+                    fprintf(out, "subq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    //Move the ptr index array size into new displacement
+                    printIndentation(out);
+                    fprintf(out, "movq $%i, (%%rax, %%%s, 1)\n", len, getNextRegister(instruction->val.allocate.intermediate));
+                    //Now move the individual values into the last slots
+
+                    SortedSet *gcIter = first(gcSet);
+
+                    int localOffset = 1;
+                    while (gcIter != NULL) {
+                        printIndentation(out);
+                        fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", gcIter->data, localOffset * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                        localOffset++;
+                        gcIter = gcIter->_next;
+                    }
+                } break;
+                case ALLOC_ARR_OF_PTR: {
+                    SortedSet *gcSet = instruction->val.allocate.pointerSet;
+                    int len = (int)length(gcSet);
+
+                    //move size into head of new block
+                    printIndentation(out);
+                    fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
+                    //fix register
+                    fprintf(out, "# ALLOC_ARR_OF_PTR\n");
+                    //1 slot for data size, 1 for ptr count and |ptrCount|
+                    int extraSpace = len + 1;
+                    printIndentation(out);
+                    fprintf(out, "subq $%i, %%%s\n", extraSpace * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    //Move the ptr index array size into new displacement
+                    printIndentation(out);
+                    fprintf(out, "movq $%i, (%%rax, %%%s, 1)\n", len, getNextRegister(instruction->val.allocate.intermediate));
+                    //Now move the individual values into the last slots
+
+                    SortedSet *gcIter = first(gcSet);
+
+                    int localOffset = 1;
+                    while (gcIter != NULL) {
+                        printIndentation(out);
+                        fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", gcIter->data, localOffset * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                        localOffset++;
+                        gcIter = gcIter->_next;
+                    }
+                } break;
+                case ALLOC_ARR_OF_PRIM: {
+                    //head is size tail is 0
+                    //move size into head of new block
+                    printIndentation(out);
+                    fprintf(out, "movq %%%s, 0(%%rax)\n", getNextRegister(instruction->val.allocate.timesTemp));
+                    //move displacer by 1 block
+                    printIndentation(out);
+                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    //Move the ptr index array size into new displacement
+                    printIndentation(out);
+                    fprintf(out, "movq $0, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));
+                } break;
+                case ALLOC_LAMBDA: {
+                    //-1 head for indicator
+                    printIndentation(out);
+                    fprintf(out, "movq $2, 0(%%rax)\n");
+                    printIndentation(out);
+                    fprintf(out, "movq $1, 24(%%rax)\n");
+                    printIndentation(out);
+                    fprintf(out, "movq $1, 32(%%rax)\n");
+                } break;
+            }
+
+            //Clear stack
+            printIndentation(out);
+            fprintf(out, "popq %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+            printIndentation(out);
+            fprintf(out, "popq %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+
+            //Make header invisible
+            printIndentation(out);
+            fprintf(out, "addq $8, %%rax\n");
+
+/*
             printIndentation(out);
             fprintf(out, "pop %%r14\n");
             printIndentation(out);
             fprintf(out, "pop %%r15\n");
             printIndentation(out);
-            fprintf(out, "pop %%rdi\n");
+            fprintf(out, "pop %%rdi\n");*/
         } break;
         /*case COMPLEX_ALLOCATE_END : {
             fprintf(out, "# COMPLEX_ALLOCATE_END\n");
@@ -350,22 +506,32 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, ASM_HEADER);
             printIndentation(out);
-            offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1;
+            fprintf(out, MAIN_HEADER);
+            printIndentation(out);
+            offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",
                             16 +
                                     ((int)instruction->val.mainHeader.tableForFunction->nextSymbolId +
                             offsetForFunction) * POINTER_SIZE);
 
+            printIndentation(out);
+            fprintf(out, "popq %%rax\n");
+            printIndentation(out);
+            fprintf(out, "movq %%rax, -8(%%rbp)\n");
+
             SortedSet *gcSet = instruction->val.mainHeader.pointerSet;
             int len = (int)length(gcSet);
             printIndentation(out);
-            fprintf(out, "movq $%i, -8(%%rbp)\n", len);
+            fprintf(out, "movq $%i, -16(%%rbp)\n", len);
 
             SortedSet *iter = first(gcSet);
-            int counter = 2;
+            int counter = 3;
             while (iter != NULL) {
                 printIndentation(out);
                 fprintf(out, "movq $%i, -%i(%%rbp)\n", iter->data, counter * POINTER_SIZE);
+                printIndentation(out);
+                fprintf(out, "movq $0, -%i(%%rbp)\n", (iter->data + 1 + offsetForFunction) * POINTER_SIZE);
+                counter++;
                 iter = iter->_next;
             }
 
@@ -521,11 +687,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_RESTORE_STATIC_LINK: {
             fprintf(out, "# COMPLEX_RESTORE_STATIC_LINK\n");
-            printIndentation(out);
+            /*printIndentation(out);
             fprintf(out, "leaq staticLink, %%%s\n",
                     getNextRegister(instruction->val.pushPopStaticLink.temporary));
             printIndentation(out);
             fprintf(out, "pop %zu(%%%s)\n",
+                    instruction->val.pushPopStaticLink.staticLinkDepth * POINTER_SIZE,
+                    getNextRegister(instruction->val.pushPopStaticLink.temporary));*/
+            printIndentation(out);
+            fprintf(out, "leaq staticLink, %%%s\n",
+                    getNextRegister(instruction->val.pushPopStaticLink.temporary));
+            fprintf(out, "movq %%rbp, %zu(%%%s)\n",
                     instruction->val.pushPopStaticLink.staticLinkDepth * POINTER_SIZE,
                     getNextRegister(instruction->val.pushPopStaticLink.temporary));
         } break;
@@ -611,7 +783,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
             printIndentation(out);
             fprintf(out, "mov %zu(%%%s), %%%s\n",
-                    instruction->val.tempIntoStackScope.scopeToFindFrame,
+                    instruction->val.tempIntoStackScope.scopeToFindFrame * POINTER_SIZE,
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate),
                     getNextRegister(instruction->val.tempIntoStackScope.intermediate));
             printIndentation(out);
@@ -634,7 +806,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
             fprintf(out, "mov %zu(%%%s), %%%s\n",
-                    instruction->val.tempFromStackScope.scopeToFindFrame,
+                    instruction->val.tempFromStackScope.scopeToFindFrame * POINTER_SIZE,
                     getNextRegister(instruction->val.tempFromStackScope.intermediate),
                     getNextRegister(instruction->val.tempFromStackScope.intermediate));
             printIndentation(out);
@@ -664,6 +836,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "# %s\n", instruction->val.debugInfo);
         }break;
+        case COMPLEX_GARBAGE_COLLECT: {
+            fprintf(out, "# COMPLEX_GARBAGE_COLLECT\n");
+            printIndentation(out);
+            fprintf(out, "pushq %rbp\n");
+
+            printIndentation(out);
+            fprintf(out, "call garbageCollect\n");
+
+            printIndentation(out);
+            fprintf(out, "popq %rbp\n");
+        } break;
     }
 }
 
@@ -672,9 +855,7 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, "staticLink:\n");
     fprintf(file, "\t.space %zu\n", (maxDistFromRoot + 1) * POINTER_SIZE);
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
-    fprintf(file, ".section .text\n");
-    fprintf(file, ".global main\n");
-    fprintf(file, ".extern printf\n");
+    fprintf(file, GARBAGE_COLLECTOR_CHUNK);
 }
 /*
 void generateInstructionLLForGlobals(Instructions *afterBegin) {

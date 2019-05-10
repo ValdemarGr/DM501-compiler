@@ -25,7 +25,8 @@ typedef struct Value {
             struct DeclarationList *declarationList;
             struct TypeList *extendedClasses;
             struct TypeList *generics;
-            struct SymbolTable *tableForClassBody; } typeClassD;
+            struct SymbolTable *tableForClassBody;
+            struct Constructor *constructor; } typeClassD;
     } val;
 } Value;
 

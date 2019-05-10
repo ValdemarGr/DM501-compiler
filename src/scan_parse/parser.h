@@ -1,8 +1,9 @@
-/* A Bison parser, made by GNU Bison 3.2.  */
+/* A Bison parser, made by GNU Bison 3.3.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018 Free Software Foundation, Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2019 Free Software Foundation,
+   Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -82,7 +83,9 @@ extern int yydebug;
     tVAL = 289,
     tCLASS = 290,
     tWITH = 291,
-    tVOID = 292
+    tVOID = 292,
+    tCONSTRUCTOR = 293,
+    tGC = 294
   };
 #endif
 
@@ -91,7 +94,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 14 "parser.y" /* yacc.c:1906  */
+#line 14 "parser.y" /* yacc.c:1921  */
 
    int intconst;
    char *stringconst;
@@ -112,8 +115,9 @@ union YYSTYPE
    struct ExpressionList *expressionList;
    struct Term *term;
    struct TypeList *typeList;
+   struct Constructor *constructor;
 
-#line 117 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1906  */
+#line 121 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1921  */
 };
 
 typedef union YYSTYPE YYSTYPE;

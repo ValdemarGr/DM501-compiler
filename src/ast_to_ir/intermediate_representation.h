@@ -14,15 +14,6 @@
 #include "../ast/tree.h"
 #include "../utils/sortedset.h"
 
-typedef struct Jump {
-    char* label;
-} Jump;
-
-typedef struct JumpIfZero {
-    char* label_true;
-    char* label_false;
-} JumpIfZero;
-
 typedef struct Arithmetic2 {
     size_t source;
     size_t dest;
@@ -81,6 +72,7 @@ typedef enum {
     COMPLEX_RESTORE_STATIC_LINK,
     COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME,
     COMPLEX_RIP_LAMBDA_LOAD,
+    COMPLEX_GARBAGE_COLLECT,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -93,6 +85,13 @@ typedef enum {
     METADATA_DEBUG_INFO
 } InstructionKind;
 
+typedef enum {
+    ALLOC_RECORD_CLASS,
+    ALLOC_ARR_OF_PTR,
+    ALLOC_ARR_OF_PRIM,
+    ALLOC_LAMBDA
+} AllocationType;
+
 typedef struct Instructions {
     struct Instructions* next;
     struct Instructions* previous;
@@ -102,7 +101,7 @@ typedef struct Instructions {
         Arithmetic3 arithmetic3;
         struct { int value; size_t temp; } constant; //INSTRUCTION_CONST
         SYMBOL *var; //INSTRUCTION_VAR
-        struct { size_t timesTemp; size_t eleSize;} allocate;
+        struct { size_t timesTemp; size_t eleSize; SortedSet *pointerSet; AllocationType allocationType; size_t intermediate; } allocate;
         struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; SortedSet *pointerSet; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
         char* function; //INSTRUCTION_CALL
         size_t callRegister;

@@ -65,6 +65,11 @@ typedef struct Function {
     FunctionTail *tail;
 } Function;
 
+typedef struct Constructor {
+    VarDelList *declarationList;
+    struct Body *body;
+} Constructor;
+
 typedef struct Declaration {
     SymbolTable *symbolTable;
     int internal_stmDeclNum;
@@ -81,6 +86,7 @@ typedef struct Declaration {
             struct DeclarationList *declarationList;
             struct TypeList *genericTypeParameters;
             struct TypeList *extendedClasses;
+            struct Constructor *constructor;
         } classD;
     } val;
 } Declaration;
@@ -116,12 +122,12 @@ typedef struct Statement {
     int lineno;
     int internal_stmDeclNum;
 
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK, gcK } kind;
     SymbolTable *symbolTable;
     union {
         struct { Expression* exp; } returnD;
         struct { Expression* exp; } writeD;
-        struct { Variable* var; } allocateD;
+        struct { Variable* var; struct ExpressionList *constructorList; } allocateD;
         struct { Variable* var; Expression* len; } allocateLenD;
         struct { Expression* exp; struct Statement *statement; } ifD;
         struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
@@ -196,6 +202,8 @@ Term *makeTermFromVariable(Variable *variable);
 
 Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList);
 
+Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *expressionList);
+
 Term *makeParentheses(Expression *expression);
 
 Term *makeNegatedTerm(Term *term);
@@ -246,6 +254,8 @@ Operator *makeOrOp();
 
 ExpressionList *makeExpList(Expression *exp, ExpressionList *next);
 
+Constructor *makeClassConstructor(VarDelList *vdl, Body *body);
+
 DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next);
 
 Declaration *makeDeclaration(char* id, Type* type);
@@ -256,7 +266,7 @@ Declaration *makeVarDeclarations(VarDelList* vars);
 
 Declaration *makeValDeclaration(char* id, Expression *rhs);
 
-Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList);
+Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList, Constructor* constructor);
 
 StatementList *makeStatementList(Statement *statement, StatementList *next);
 
@@ -279,6 +289,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm);
 Statement *makeStatementFromList(StatementList *statementList);
 
 Statement *makeEmptyExpression(Expression *expression);
+
+Statement *makeGCStatement();
 
 Type *makeIdType(char* id);
 
