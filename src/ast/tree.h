@@ -122,7 +122,7 @@ typedef struct Statement {
     int lineno;
     int internal_stmDeclNum;
 
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK } kind;
+    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK, gcK } kind;
     SymbolTable *symbolTable;
     union {
         struct { Expression* exp; } returnD;
@@ -289,6 +289,8 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm);
 Statement *makeStatementFromList(StatementList *statementList);
 
 Statement *makeEmptyExpression(Expression *expression);
+
+Statement *makeGCStatement();
 
 Type *makeIdType(char* id);
 

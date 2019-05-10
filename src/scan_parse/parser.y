@@ -70,6 +70,7 @@ void yyerror(char const *s) {
 %token tWITH
 %token tVOID
 %token tCONSTRUCTOR
+%token tGC
 
 %type <expression> expression
 %type <lambda> lambda
@@ -193,6 +194,8 @@ statement : tRETURN expression ';'
         {$$ = makeStatementFromList($2);}
         | expression ';'
         {$$ = makeEmptyExpression($1);}
+        | tGC ';'
+        {$$ = makeGCStatement();}
 ;
 
 type_list : type ',' type_list

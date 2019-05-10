@@ -448,6 +448,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //For each expression argument, evaluate it and push it to the stack
             SYMBOL *symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
 
+            /*
             if (symbol->distanceFromRoot == symbolTable->distanceFromRoot + 1) {
                 //We need to save the current static link pointer
                 Instructions *push = newInstruction();
@@ -456,7 +457,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 push->val.pushPopStaticLink.temporary = currentTemporary;
                 appendInstructions(push);
                 currentTemporary++;
-            }
+            }*/
 
             //First we prepare if we are lambda
             size_t functionToCall = 0;
@@ -739,17 +740,17 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 add->val.arithmetic2.dest = argcInsTemp;
                 appendInstructions(add);*/
 
-                Instructions *const2 = newInstruction();
-                const2->kind = INSTRUCTION_CONST;
-                const2->val.constant.value = 2;
-                const2->val.constant.temp= currentTemporary;
-                size_t const2Temp = currentTemporary;
-                appendInstructions(const2);
+                Instructions *const1 = newInstruction();
+                const1->kind = INSTRUCTION_CONST;
+                const1->val.constant.value = 1;
+                const1->val.constant.temp= currentTemporary;
+                size_t const1Temp = currentTemporary;
+                appendInstructions(const1);
                 currentTemporary++;
 
                 Instructions *ret = newInstruction();
                 ret->kind = COMPLEX_ALLOCATE;
-                ret->val.allocate.timesTemp = const2Temp;
+                ret->val.allocate.timesTemp = const1Temp;
                 ret->val.allocate.eleSize = POINTER_SIZE;
                 ret->val.allocate.intermediate = currentTemporary++;
                 ret->val.allocate.allocationType = ALLOC_LAMBDA;
@@ -913,14 +914,14 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //Give arguments on stack
             //For each expression argument, evaluate it and push it to the stack
             size_t fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
-
+/*
             //We need to save the current static link pointer
             Instructions *push = newInstruction();
             push->kind = COMPLEX_SAVE_STATIC_LINK;
             push->val.pushPopStaticLink.staticLinkDepth = (size_t)staticLinkDepth;
             push->val.pushPopStaticLink.temporary = currentTemporary;
             appendInstructions(push);
-            currentTemporary++;
+            currentTemporary++;*/
 
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
 
@@ -1688,6 +1689,11 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case emptyK: {
             generateInstructionsForExpression(statement->val.empty.exp, statement->symbolTable);
         } break;
+        case gcK: {
+            Instructions *gc = newInstruction();
+            gc->kind = COMPLEX_GARBAGE_COLLECT;
+            appendInstructions(gc);
+        } break ;
     }
 }
 

@@ -348,9 +348,9 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                 } break;
                 case ALLOC_LAMBDA: {
                     fprintf(out, "# ALLOC_LAMBDA\n");
-                    //1 for head -1
+                    //1 for head 1 for class ptr 1 for self indexer and 1 for index position
                     printIndentation(out);
-                    fprintf(out, "addq $%i, %%%s\n", 3 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "addq $%i, %%%s\n", 4 * POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
                 } break;
             }
 /*
@@ -449,11 +449,9 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     printIndentation(out);
                     fprintf(out, "movq $2, 0(%%rax)\n");
                     printIndentation(out);
-                    fprintf(out, "subq $8, %%%s\n", getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "movq $1, 24(%%rax)\n");
                     printIndentation(out);
-                    fprintf(out, "movq $0, (%%rax, %%%s, 1)\n", getNextRegister(instruction->val.allocate.intermediate));
-                    printIndentation(out);
-                    fprintf(out, "movq $%i, %i(%%rax, %%%s, 1)\n", 0, POINTER_SIZE, getNextRegister(instruction->val.allocate.intermediate));
+                    fprintf(out, "movq $1, 32(%%rax)\n");
                 } break;
             }
 
@@ -672,11 +670,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_RESTORE_STATIC_LINK: {
             fprintf(out, "# COMPLEX_RESTORE_STATIC_LINK\n");
-            printIndentation(out);
+            /*printIndentation(out);
             fprintf(out, "leaq staticLink, %%%s\n",
                     getNextRegister(instruction->val.pushPopStaticLink.temporary));
             printIndentation(out);
             fprintf(out, "pop %zu(%%%s)\n",
+                    instruction->val.pushPopStaticLink.staticLinkDepth * POINTER_SIZE,
+                    getNextRegister(instruction->val.pushPopStaticLink.temporary));*/
+            printIndentation(out);
+            fprintf(out, "leaq staticLink, %%%s\n",
+                    getNextRegister(instruction->val.pushPopStaticLink.temporary));
+            fprintf(out, "movq %%rbp, %zu(%%%s)\n",
                     instruction->val.pushPopStaticLink.staticLinkDepth * POINTER_SIZE,
                     getNextRegister(instruction->val.pushPopStaticLink.temporary));
         } break;
@@ -815,6 +819,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "# %s\n", instruction->val.debugInfo);
         }break;
+        case COMPLEX_GARBAGE_COLLECT: {
+            fprintf(out, "# COMPLEX_GARBAGE_COLLECT\n");
+            printIndentation(out);
+            fprintf(out, "pushq %rbp\n");
+
+            printIndentation(out);
+            fprintf(out, "call garbageCollect\n");
+
+            printIndentation(out);
+            fprintf(out, "popq %rbp\n");
+        } break;
     }
 }
 

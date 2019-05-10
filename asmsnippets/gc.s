@@ -18,6 +18,7 @@ metaLambdaList:
 # VAR clsB
 # VAR clsA
 # METADATA_CREATE_MAIN
+
 .type garbageCollectBFS, @function
 garbageCollectBFS:
     push %rbp
@@ -93,6 +94,29 @@ garbageCollectBFS:
         subq $8, %rcx
         # get size
         mov 0(%rcx), %rax
+
+        #check for already moved
+        cmp $-1, %rax
+        jne continueTheBFSMove
+            # we actually just have to move pointer +8 then we have the ptr
+            addq $8, %rcx
+            movq (%rcx), %rcx
+
+            mov (%r15, %r13, 1), %rdi #rdi has offset
+            #mul by factor
+            imulq $8, %rdi
+            #negate because of stack access
+            movq $0, %r12
+            subq %rdi, %r12
+            movq %r12, %rdi
+            #add the constant offset
+            add %r8, %rdi
+
+            #move the value back to stack
+            movq %rcx, (%r15, %rdi, 1)
+
+        jmp gcLoopEpilogue
+        continueTheBFSMove:
 
         #mul by 8 bc pointer size
         imulq $8, %rax
@@ -341,7 +365,6 @@ garbageCollect:
                 popq %r8
 
                 # hide head
-                addq $8, %r11
 
                 movq %r11, (%rcx, %r8, 1)
 

@@ -715,3 +715,12 @@ Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *e
     statement->val.allocateD.constructorList = expressionList;
     return statement;
 }
+
+Statement *makeGCStatement() {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+    returning->lineno = lineno;
+    returning->kind = gcK;
+    return returning;
+}

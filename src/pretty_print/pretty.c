@@ -516,6 +516,9 @@ void prettyStatement(Statement *statement) {
             prettyEXP(statement->val.empty.exp, statement->symbolTable);
             printf(";\n");
         } break;
+        case gcK: {
+            prettyKeyword("gc;\n");
+        } break;
     }
 }
 

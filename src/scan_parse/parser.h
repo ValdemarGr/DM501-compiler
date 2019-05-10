@@ -84,7 +84,8 @@ extern int yydebug;
     tCLASS = 290,
     tWITH = 291,
     tVOID = 292,
-    tCONSTRUCTOR = 293
+    tCONSTRUCTOR = 293,
+    tGC = 294
   };
 #endif
 
@@ -116,7 +117,7 @@ union YYSTYPE
    struct TypeList *typeList;
    struct Constructor *constructor;
 
-#line 120 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1921  */
+#line 121 "/home/valde/Git/DM501-compiler/src/scan_parse/parser.h" /* yacc.c:1921  */
 };
 
 typedef union YYSTYPE YYSTYPE;
