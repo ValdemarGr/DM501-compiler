@@ -29,20 +29,62 @@ allocate c;
 
 allocate c.refToB;
 allocate c.refToB.refToA;
+
 c.refToB.refToA.afield = 42;
-write c.refToB.refToA.afield;
-
 d.refToB = c.refToB;
-write d.refToB.refToA.afield;
 
-
-gc;
-
-write c.refToB.refToA.afield;
-
+write d.v;
+write c.v;
+write c.refToB.v;
+write d.refToB.refToA.v;
 d.refToB.refToA.writer();
-
+write 0;
+write 0;
 
 gc;
 
-write d.refToB.refToA.afield;
+write d.v;
+write c.v;
+write c.refToB.v;
+write d.refToB.refToA.v;
+d.refToB.refToA.writer();
+write 0;
+write 0;
+
+gc;
+
+allocate d.refToB;
+allocate d.refToB.refToA;
+c.refToB = d.refToB;
+
+write d.v;
+write c.v;
+write c.refToB.v;
+write d.refToB.refToA.v;
+d.refToB.refToA.writer();
+write 0;
+write 0;
+
+gc;
+
+write d.v;
+write c.v;
+write c.refToB.v;
+write d.refToB.refToA.v;
+d.refToB.refToA.writer();
+write 0;
+write 0;
+
+gc;
+
+allocate c.refToB;
+allocate c.refToB.refToA;
+d.refToB = c.refToB;
+
+write d.v;
+write c.v;
+write c.refToB.v;
+write d.refToB.refToA.v;
+d.refToB.refToA.writer();
+write 0;
+write 0;

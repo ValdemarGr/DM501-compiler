@@ -1,0 +1,37 @@
+var global: array of int;
+
+func f(arg: int): int
+    var i: int;
+
+    write arg;
+    write global[2];
+    write global[3];
+
+    i = 0;
+
+    while (50 + 1 >= i) do {
+        write i;
+        i = i + 1;
+    }
+
+
+    {
+        write global[3];
+    }
+    return arg;
+end f
+
+allocate global of length 10;
+global[2] = 42;
+global[3] = 66;
+
+write 0;
+
+if (8*33 >= 6*11) then
+{
+  write 1;
+}
+
+write 0;
+
+f(99);

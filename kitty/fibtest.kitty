@@ -1,0 +1,14 @@
+
+
+val f0 = 0;
+val f1 = 1;
+
+func fib(nm1: int, nm2: int, n: int): int
+    if (n == 0) then {
+        return nm1 + nm2;
+    } else {
+        return fib(nm1 + nm2, nm1, n - 1);
+    }
+end fib
+
+write fib(f0, f1, 33);

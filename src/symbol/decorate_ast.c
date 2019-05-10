@@ -205,21 +205,17 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
     switch (statement->kind) {
         //Catch all non-garbage statements
         case statIfK:
-            child = scopeSymbolTable(symbolTable);
-            e = decorateNestedStatementBody(statement->val.ifD.statement, child);
+            e = decorateNestedStatementBody(statement->val.ifD.statement, symbolTable);
             if (e != NULL) return e;
             break;
         case statIfElK:
-            child = scopeSymbolTable(symbolTable);
-            e = decorateNestedStatementBody(statement->val.ifElD.statement, child);
+            e = decorateNestedStatementBody(statement->val.ifElD.statement, symbolTable);
             if (e != NULL) return e;
-            child = scopeSymbolTable(symbolTable);
-            e = decorateNestedStatementBody(statement->val.ifElD.elseStatement, child);
+            e = decorateNestedStatementBody(statement->val.ifElD.elseStatement, symbolTable);
             if (e != NULL) return e;
             break;
         case statWhileK:
-            child = scopeSymbolTable(symbolTable);
-            e = decorateNestedStatementBody(statement->val.whileD.statement, child);
+            e = decorateNestedStatementBody(statement->val.whileD.statement, symbolTable);
             if (e != NULL) return e;
             break;
         //Maybe we're in a multi statement body?
@@ -227,8 +223,8 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
             statementList = statement->val.stmListD.statementList;
 
             while (statementList != NULL) {
-                child = scopeSymbolTable(symbolTable);
-                e = decorateNestedStatementBody(statementList->statement, child);
+                //child = scopeSymbolTable(symbolTable);
+                e = decorateNestedStatementBody(statementList->statement, symbolTable);
                 if (e != NULL) return e;
                 statementList = statementList->next;
             }
@@ -774,9 +770,11 @@ Error *decorateAstWithSymbols(Body *body, SymbolTable *symbolTable) {
     DeclarationList *declarationList = body->declarationList;
     StatementList *statementList = body->statementList;
     Declaration *varList = NULL;
-    SymbolTable *child = NULL;
     Error *e = NULL;
 
+    if (symbolTable == NULL) {
+        symbolTable = initSymbolTable();
+    }
     while (declarationList != NULL) {
         //Set the decls scope
         declarationList->declaration->symbolTable = symbolTable;

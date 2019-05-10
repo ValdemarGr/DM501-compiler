@@ -119,16 +119,15 @@ typedef struct Instructions {
         char* debugInfo;
         struct { size_t offset; } popPushStack;
         struct { size_t offset; size_t tempToMove; } tempIntoStack;
-        struct { size_t offset; size_t tempToMove; size_t scopeToFindFrame; size_t intermediate; } tempIntoStackScope;
+        struct { size_t offset; size_t tempToMove; size_t scopeToFindFrame; size_t intermediate; size_t intermediate2; } tempIntoStackScope;
         struct { size_t offset; size_t inputTemp; } tempFromStack;
-        struct { size_t offset; size_t inputTemp; size_t scopeToFindFrame; size_t intermediate; } tempFromStackScope;
+        struct { size_t offset; size_t inputTemp; size_t scopeToFindFrame; size_t intermediate; size_t intermediate2; } tempFromStackScope;
         struct { size_t constant; size_t temp; } rightShift;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToMove; } moveToOffset;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
         struct { size_t offsetTemp; size_t ptrTemp;  } dereferenceOffset;
         struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
-        struct { size_t ptrTemp; size_t scopeToFindFrame; size_t linkBaseOffset; size_t  intermediateTemp;} loadPtrToStaticLink;
     } val;
 } Instructions;
 
