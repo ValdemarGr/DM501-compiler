@@ -495,6 +495,14 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case METADATA_DEBUG_INFO:break;
             case INSTRUCTION_PUSH_STACK:break;
             case INSTRUCTION_POP_STACK:break;
+            case COMPLEX_GARBAGE_COLLECT:{
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->defines = initHeadedSortedSet();
+
+                dataFlowEntry->uses = initHeadedSortedSet();
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+            }break;
         }
 
         iter = iter->next;
