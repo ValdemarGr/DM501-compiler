@@ -561,21 +561,21 @@ push %rax
 	imul $-1, %r13
 	mov -72(%r12, %r13, 8), %r11
 # INSTRUCTION_MINUS
-	sub %r11, %rsi
+	sub %rsi, %r11
 # INSTRUCTION_CONST
-	mov $-1, %r14
+	mov $1, %r14
 # INSTRUCTION_ADD
-	add %r14, %rsi
+	add %r14, %r11
 # COMPLEX_CONSTRAIN_BOOLEAN
 	push %rdx
-	cmp $0, %rsi
-	seta %dl
-	movsx %dl, %rsi
+	cmp $0, %r11
+	setg %dl
+	movsx %dl, %r11
 	pop %rdx
 # INSTRUCTION_CONST
 	mov $1, %r15
 # INSTRUCTION_CMP
-	cmp %rsi, %r15
+	cmp %r11, %r15
 # INSTRUCTION_JE
 	je if_0_begin
 # INSTRUCTION_JMP
@@ -613,17 +613,17 @@ push %rax
 # INSTRUCTION_MINUS
 	sub %r13, %r10
 # INSTRUCTION_MINUS
-	sub %r10, %r9
+	sub %r9, %r10
 # COMPLEX_CONSTRAIN_BOOLEAN
 	push %rdx
-	cmp $0, %r9
-	seta %dl
-	movsx %dl, %r9
+	cmp $0, %r10
+	setg %dl
+	movsx %dl, %r10
 	pop %rdx
 # INSTRUCTION_CONST
 	mov $1, %r14
 # INSTRUCTION_CMP
-	cmp %r9, %r14
+	cmp %r10, %r14
 # INSTRUCTION_JE
 	je if_1_begin
 # INSTRUCTION_JMP
@@ -716,12 +716,12 @@ movq %rbp, 8(%rcx)
 	imul $-1, %r12
 	mov -88(%r11, %r12, 8), %r10
 # INSTRUCTION_MINUS
-	sub %rbx, %r10
+	sub %r10, %rbx
 # COMPLEX_CONSTRAIN_BOOLEAN
 	push %rdx
-	cmp $0, %r10
-	seta %dl
-	movsx %dl, %r10
+	cmp $0, %rbx
+	setg %dl
+	movsx %dl, %rbx
 	pop %rdx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 	mov -24(%rbp), %r13
@@ -738,16 +738,27 @@ movq %rbp, 8(%rcx)
 	sub %rdx, %r14
 # INSTRUCTION_MINUS
 	sub %r13, %r14
-# INSTRUCTION_CONST
-	mov $1, %rbx
-# INSTRUCTION_MINUS
-	sub %r14, %rbx
-# INSTRUCTION_AND
-	and %r10, %rbx
+# COMPLEX_ABS_VALUE
+	movq %r14, %rbx
+	sar $63, %rbx
+	addq %rbx, %r14
+	xor %r14, %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+	push %rdx
+	cmp $0, %rbx
+	setg %dl
+	movsx %dl, %rbx
+	pop %rdx
 # INSTRUCTION_CONST
 	mov $1, %rsi
+# INSTRUCTION_MINUS
+	sub %rbx, %rsi
+# INSTRUCTION_AND
+	and %rbx, %rsi
+# INSTRUCTION_CONST
+	mov $1, %rdi
 # INSTRUCTION_CMP
-	cmp %rbx, %rsi
+	cmp %rsi, %rdi
 # INSTRUCTION_JE
 	je if_2_begin
 # INSTRUCTION_JMP
@@ -755,83 +766,83 @@ movq %rbp, 8(%rcx)
 # INSTRUCTION_LABEL
 	if_2_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -32(%rbp), %rdi
+	mov -32(%rbp), %r8
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+	leaq staticLink, %r10
+	mov 0(%r10), %r10
+	movq -16(%r10), %r11
+	addq $1, %r11
+	imul $-1, %r11
+	mov -32(%r10, %r11, 8), %r9
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -24(%rbp), %r12
+# INSTRUCTION_CONST
+	mov $8, %r13
+# INSTRUCTION_MUL
+	imul %r13, %r12
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+	mov (%r9, %r12,1), %r9
+# INSTRUCTION_ADD
+	add %r8, %r9
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
+	leaq staticLink, %r14
+	mov 0(%r14), %r14
+	movq -16(%r14), %r15
+	addq $1, %r15
+	imul $-1, %r15
+	mov %r9, -88(%r14, %r15, 8)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -40(%rbp), %rcx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+	leaq staticLink, %rbx
+	mov 0(%rbx), %rbx
+	movq -16(%rbx), %rsi
+	addq $1, %rsi
+	imul $-1, %rsi
+	mov -24(%rbx, %rsi, 8), %rdx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -24(%rbp), %rdi
+# INSTRUCTION_CONST
+	mov $8, %r8
+# INSTRUCTION_MUL
+	imul %r8, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+	mov (%rdx, %rdi,1), %rdx
+# INSTRUCTION_ADD
+	add %rcx, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
 	leaq staticLink, %r9
 	mov 0(%r9), %r9
 	movq -16(%r9), %r10
 	addq $1, %r10
 	imul $-1, %r10
-	mov -32(%r9, %r10, 8), %r8
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %r11
+	mov %rdx, -96(%r9, %r10, 8)
 # INSTRUCTION_CONST
-	mov $8, %r12
-# INSTRUCTION_MUL
-	imul %r12, %r11
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-	mov (%r8, %r11,1), %r8
-# INSTRUCTION_ADD
-	add %rdi, %r8
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-	leaq staticLink, %r13
-	mov 0(%r13), %r13
-	movq -16(%r13), %r14
-	addq $1, %r14
-	imul $-1, %r14
-	mov %r8, -88(%r13, %r14, 8)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -40(%rbp), %r15
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rdx
-	mov 0(%rdx), %rdx
-	movq -16(%rdx), %rbx
-	addq $1, %rbx
-	imul $-1, %rbx
-	mov -24(%rdx, %rbx, 8), %rcx
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %rsi
-# INSTRUCTION_CONST
-	mov $8, %rdi
-# INSTRUCTION_MUL
-	imul %rdi, %rsi
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-	mov (%rcx, %rsi,1), %rcx
-# INSTRUCTION_ADD
-	add %r15, %rcx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-	leaq staticLink, %r8
-	mov 0(%r8), %r8
-	movq -16(%r8), %r9
-	addq $1, %r9
-	imul $-1, %r9
-	mov %rcx, -96(%r8, %r9, 8)
-# INSTRUCTION_CONST
-	mov $0, %r10
+	mov $0, %r11
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-	mov %r10, -56(%rbp)
+	mov %r11, -56(%rbp)
 # INSTRUCTION_LABEL
 	while_cnd_0:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %r11
+	mov -56(%rbp), %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %r12
+	mov -24(%rbp), %r13
 # INSTRUCTION_MINUS
-	sub %r12, %r11
-# INSTRUCTION_CONST
-	mov $-1, %r13
-# INSTRUCTION_ADD
-	add %r13, %r11
-# COMPLEX_CONSTRAIN_BOOLEAN
-	push %rdx
-	cmp $0, %r11
-	seta %dl
-	movsx %dl, %r11
-	pop %rdx
+	sub %r12, %r13
 # INSTRUCTION_CONST
 	mov $1, %r14
+# INSTRUCTION_ADD
+	add %r14, %r13
+# COMPLEX_CONSTRAIN_BOOLEAN
+	push %rdx
+	cmp $0, %r13
+	setg %dl
+	movsx %dl, %r13
+	pop %rdx
+# INSTRUCTION_CONST
+	mov $1, %r15
 # INSTRUCTION_CMP
-	cmp %r11, %r14
+	cmp %r13, %r15
 # INSTRUCTION_JE
 	je while_0_begin
 # INSTRUCTION_JMP
@@ -839,43 +850,43 @@ movq %rbp, 8(%rcx)
 # INSTRUCTION_LABEL
 	while_0_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rcx
-	mov 0(%rcx), %rcx
-	movq -16(%rcx), %rdx
-	addq $1, %rdx
-	imul $-1, %rdx
-	mov -48(%rcx, %rdx, 8), %r15
+	leaq staticLink, %rdx
+	mov 0(%rdx), %rdx
+	movq -16(%rdx), %rbx
+	addq $1, %rbx
+	imul $-1, %rbx
+	mov -48(%rdx, %rbx, 8), %rcx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %rbx
+	mov -56(%rbp), %rsi
 # INSTRUCTION_CONST
-	mov $8, %rsi
+	mov $8, %rdi
 # INSTRUCTION_MUL
-	imul %rsi, %rbx
+	imul %rdi, %rsi
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-	mov (%r15, %rbx,1), %r15
+	mov (%rcx, %rsi,1), %rcx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %r8
-	mov 0(%r8), %r8
-	movq -16(%r8), %r9
-	addq $1, %r9
-	imul $-1, %r9
-	mov -40(%r8, %r9, 8), %rdi
+	leaq staticLink, %r9
+	mov 0(%r9), %r9
+	movq -16(%r9), %r10
+	addq $1, %r10
+	imul $-1, %r10
+	mov -40(%r9, %r10, 8), %r8
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %r10
+	mov -56(%rbp), %r11
 # INSTRUCTION_CONST
-	mov $8, %r11
+	mov $8, %r12
 # INSTRUCTION_MUL
-	imul %r11, %r10
+	imul %r12, %r11
 # INSTRUCTION_MOVE_TO_OFFSET
-	mov %r15, (%rdi, %r10,1)
+	mov %rcx, (%r8, %r11,1)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %r12
+	mov -56(%rbp), %r13
 # INSTRUCTION_CONST
-	mov $1, %r13
+	mov $1, %r14
 # INSTRUCTION_ADD
-	add %r12, %r13
+	add %r13, %r14
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-	mov %r13, -56(%rbp)
+	mov %r14, -56(%rbp)
 # INSTRUCTION_JMP
 	jmp while_cnd_0
 # INSTRUCTION_LABEL
@@ -885,45 +896,45 @@ movq %rbp, 8(%rcx)
 # INSTRUCTION_LABEL
 	if_0_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -32(%rbp), %r14
-# INSTRUCTION_PUSH
-	push %r14
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -40(%rbp), %r15
+	mov -32(%rbp), %r15
 # INSTRUCTION_PUSH
 	push %r15
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %rcx
+	mov -40(%rbp), %rcx
 # INSTRUCTION_PUSH
 	push %rcx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -24(%rbp), %rdx
+# INSTRUCTION_PUSH
+	push %rdx
 # INSTRUCTION_FUNCTION_CALL
 	call Bound
 # COMPLEX_RESTORE_STATIC_LINK
-	leaq staticLink, %rdx
-movq %rbp, 8(%rdx)
+	leaq staticLink, %rbx
+movq %rbp, 8(%rbx)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rsi
-	mov 0(%rsi), %rsi
-	movq -16(%rsi), %rdi
-	addq $1, %rdi
-	imul $-1, %rdi
-	mov -88(%rsi, %rdi, 8), %rbx
+	leaq staticLink, %rdi
+	mov 0(%rdi), %rdi
+	movq -16(%rdi), %r8
+	addq $1, %r8
+	imul $-1, %r8
+	mov -88(%rdi, %r8, 8), %rsi
 # INSTRUCTION_MINUS
-	sub %rax, %rbx
-# INSTRUCTION_CONST
-	mov $-1, %r8
-# INSTRUCTION_ADD
-	add %r8, %rbx
-# COMPLEX_CONSTRAIN_BOOLEAN
-	push %rdx
-	cmp $0, %rbx
-	seta %dl
-	movsx %dl, %rbx
-	pop %rdx
+	sub %rsi, %rax
 # INSTRUCTION_CONST
 	mov $1, %r9
+# INSTRUCTION_ADD
+	add %r9, %rax
+# COMPLEX_CONSTRAIN_BOOLEAN
+	push %rdx
+	cmp $0, %rax
+	setg %dl
+	movsx %dl, %rax
+	pop %rdx
+# INSTRUCTION_CONST
+	mov $1, %r10
 # INSTRUCTION_CMP
-	cmp %rbx, %r9
+	cmp %rax, %r10
 # INSTRUCTION_JE
 	je if_3_begin
 # INSTRUCTION_JMP
@@ -931,47 +942,47 @@ movq %rbp, 8(%rdx)
 # INSTRUCTION_LABEL
 	if_3_begin:
 # INSTRUCTION_CONST
-	mov $0, %r10
+	mov $0, %r11
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %r12
-	mov 0(%r12), %r12
-	movq -16(%r12), %r13
-	addq $1, %r13
-	imul $-1, %r13
-	mov -48(%r12, %r13, 8), %r11
+	leaq staticLink, %r13
+	mov 0(%r13), %r13
+	movq -16(%r13), %r14
+	addq $1, %r14
+	imul $-1, %r14
+	mov -48(%r13, %r14, 8), %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %r14
+	mov -24(%rbp), %r15
 # INSTRUCTION_CONST
-	mov $8, %r15
+	mov $8, %rcx
 # INSTRUCTION_MUL
-	imul %r15, %r14
+	imul %rcx, %r15
 # INSTRUCTION_MOVE_TO_OFFSET
-	mov %r10, (%r11, %r14,1)
+	mov %r11, (%r12, %r15,1)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %rcx
+	mov -24(%rbp), %rdx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rbx
-	mov 0(%rbx), %rbx
-	movq -16(%rbx), %rsi
-	addq $1, %rsi
-	imul $-1, %rsi
-	mov -80(%rbx, %rsi, 8), %rdx
-# INSTRUCTION_CONST
-	mov $1, %rdi
-# INSTRUCTION_MINUS
-	sub %rdi, %rdx
-# INSTRUCTION_MINUS
-	sub %rdx, %rcx
-# COMPLEX_CONSTRAIN_BOOLEAN
-	push %rdx
-	cmp $0, %rcx
-	seta %dl
-	movsx %dl, %rcx
-	pop %rdx
+	leaq staticLink, %rsi
+	mov 0(%rsi), %rsi
+	movq -16(%rsi), %rdi
+	addq $1, %rdi
+	imul $-1, %rdi
+	mov -80(%rsi, %rdi, 8), %rbx
 # INSTRUCTION_CONST
 	mov $1, %r8
+# INSTRUCTION_MINUS
+	sub %r8, %rbx
+# INSTRUCTION_MINUS
+	sub %rdx, %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+	push %rdx
+	cmp $0, %rbx
+	setg %dl
+	movsx %dl, %rbx
+	pop %rdx
+# INSTRUCTION_CONST
+	mov $1, %r9
 # INSTRUCTION_CMP
-	cmp %rcx, %r8
+	cmp %rbx, %r9
 # INSTRUCTION_JE
 	je if_4_begin
 # INSTRUCTION_JMP
@@ -979,72 +990,83 @@ movq %rbp, 8(%rdx)
 # INSTRUCTION_LABEL
 	if_4_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %r9
+	mov -24(%rbp), %r10
 # INSTRUCTION_CONST
-	mov $1, %r10
+	mov $1, %r11
 # INSTRUCTION_ADD
-	add %r9, %r10
-# INSTRUCTION_PUSH
-	push %r10
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -32(%rbp), %r11
+	add %r10, %r11
 # INSTRUCTION_PUSH
 	push %r11
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -40(%rbp), %r12
+	mov -32(%rbp), %r12
 # INSTRUCTION_PUSH
 	push %r12
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -40(%rbp), %r13
+# INSTRUCTION_PUSH
+	push %r13
 # INSTRUCTION_FUNCTION_CALL
 	call BKnap
 # COMPLEX_RESTORE_STATIC_LINK
-	leaq staticLink, %r13
-movq %rbp, 8(%r13)
+	leaq staticLink, %r14
+movq %rbp, 8(%r14)
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 	mov %rax, -48(%rbp)
 # INSTRUCTION_LABEL
 	if_4_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -32(%rbp), %r14
+	mov -32(%rbp), %r15
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rcx
-	mov 0(%rcx), %rcx
-	movq -16(%rcx), %rdx
-	addq $1, %rdx
-	imul $-1, %rdx
-	mov -88(%rcx, %rdx, 8), %r15
+	leaq staticLink, %rdx
+	mov 0(%rdx), %rdx
+	movq -16(%rdx), %rbx
+	addq $1, %rbx
+	imul $-1, %rbx
+	mov -88(%rdx, %rbx, 8), %rcx
 # INSTRUCTION_MINUS
-	sub %r14, %r15
+	sub %rcx, %r15
 # COMPLEX_CONSTRAIN_BOOLEAN
 	push %rdx
 	cmp $0, %r15
-	seta %dl
+	setg %dl
 	movsx %dl, %r15
 	pop %rdx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %rbx
+	mov -24(%rbp), %rsi
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rdi
-	mov 0(%rdi), %rdi
-	movq -16(%rdi), %r8
-	addq $1, %r8
-	imul $-1, %r8
-	mov -80(%rdi, %r8, 8), %rsi
-# INSTRUCTION_CONST
-	mov $1, %r9
-# INSTRUCTION_MINUS
-	sub %r9, %rsi
-# INSTRUCTION_MINUS
-	sub %rbx, %rsi
+	leaq staticLink, %r8
+	mov 0(%r8), %r8
+	movq -16(%r8), %r9
+	addq $1, %r9
+	imul $-1, %r9
+	mov -80(%r8, %r9, 8), %rdi
 # INSTRUCTION_CONST
 	mov $1, %r10
 # INSTRUCTION_MINUS
-	sub %rsi, %r10
-# INSTRUCTION_AND
-	and %r15, %r10
+	sub %r10, %rdi
+# INSTRUCTION_MINUS
+	sub %rsi, %rdi
+# COMPLEX_ABS_VALUE
+	movq %rdi, %r11
+	sar $63, %r11
+	addq %r11, %rdi
+	xor %rdi, %r11
+# COMPLEX_CONSTRAIN_BOOLEAN
+	push %rdx
+	cmp $0, %r11
+	setg %dl
+	movsx %dl, %r11
+	pop %rdx
 # INSTRUCTION_CONST
-	mov $1, %r11
+	mov $1, %r12
+# INSTRUCTION_MINUS
+	sub %r11, %r12
+# INSTRUCTION_AND
+	and %r15, %r12
+# INSTRUCTION_CONST
+	mov $1, %r13
 # INSTRUCTION_CMP
-	cmp %r10, %r11
+	cmp %r12, %r13
 # INSTRUCTION_JE
 	je if_5_begin
 # INSTRUCTION_JMP
@@ -1052,49 +1074,49 @@ movq %rbp, 8(%r13)
 # INSTRUCTION_LABEL
 	if_5_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -32(%rbp), %r12
+	mov -32(%rbp), %r14
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-	leaq staticLink, %r13
-	mov 0(%r13), %r13
-	movq -16(%r13), %r14
-	addq $1, %r14
-	imul $-1, %r14
-	mov %r12, -88(%r13, %r14, 8)
+	leaq staticLink, %r15
+	mov 0(%r15), %r15
+	movq -16(%r15), %rcx
+	addq $1, %rcx
+	imul $-1, %rcx
+	mov %r14, -88(%r15, %rcx, 8)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -40(%rbp), %r15
+	mov -40(%rbp), %rdx
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-	leaq staticLink, %rcx
-	mov 0(%rcx), %rcx
-	movq -16(%rcx), %rdx
-	addq $1, %rdx
-	imul $-1, %rdx
-	mov %r15, -96(%rcx, %rdx, 8)
+	leaq staticLink, %rbx
+	mov 0(%rbx), %rbx
+	movq -16(%rbx), %rsi
+	addq $1, %rsi
+	imul $-1, %rsi
+	mov %rdx, -96(%rbx, %rsi, 8)
 # INSTRUCTION_CONST
-	mov $0, %rbx
+	mov $0, %rdi
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-	mov %rbx, -56(%rbp)
+	mov %rdi, -56(%rbp)
 # INSTRUCTION_LABEL
 	while_cnd_1:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %rsi
+	mov -56(%rbp), %r8
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -24(%rbp), %rdi
+	mov -24(%rbp), %r9
 # INSTRUCTION_MINUS
-	sub %rdi, %rsi
+	sub %r8, %r9
 # INSTRUCTION_CONST
-	mov $-1, %r8
+	mov $1, %r10
 # INSTRUCTION_ADD
-	add %r8, %rsi
+	add %r10, %r9
 # COMPLEX_CONSTRAIN_BOOLEAN
 	push %rdx
-	cmp $0, %rsi
-	seta %dl
-	movsx %dl, %rsi
+	cmp $0, %r9
+	setg %dl
+	movsx %dl, %r9
 	pop %rdx
 # INSTRUCTION_CONST
-	mov $1, %r9
+	mov $1, %r11
 # INSTRUCTION_CMP
-	cmp %rsi, %r9
+	cmp %r9, %r11
 # INSTRUCTION_JE
 	je while_1_begin
 # INSTRUCTION_JMP
@@ -1102,43 +1124,43 @@ movq %rbp, 8(%r13)
 # INSTRUCTION_LABEL
 	while_1_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %r11
-	mov 0(%r11), %r11
-	movq -16(%r11), %r12
-	addq $1, %r12
-	imul $-1, %r12
-	mov -48(%r11, %r12, 8), %r10
+	leaq staticLink, %r13
+	mov 0(%r13), %r13
+	movq -16(%r13), %r14
+	addq $1, %r14
+	imul $-1, %r14
+	mov -48(%r13, %r14, 8), %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %r13
+	mov -56(%rbp), %r15
 # INSTRUCTION_CONST
-	mov $8, %r14
+	mov $8, %rcx
 # INSTRUCTION_MUL
-	imul %r14, %r13
+	imul %rcx, %r15
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-	mov (%r10, %r13,1), %r10
+	mov (%r12, %r15,1), %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-	leaq staticLink, %rcx
-	mov 0(%rcx), %rcx
-	movq -16(%rcx), %rdx
-	addq $1, %rdx
-	imul $-1, %rdx
-	mov -40(%rcx, %rdx, 8), %r15
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-	mov -56(%rbp), %rbx
-# INSTRUCTION_CONST
-	mov $8, %rsi
-# INSTRUCTION_MUL
-	imul %rsi, %rbx
-# INSTRUCTION_MOVE_TO_OFFSET
-	mov %r10, (%r15, %rbx,1)
+	leaq staticLink, %rbx
+	mov 0(%rbx), %rbx
+	movq -16(%rbx), %rsi
+	addq $1, %rsi
+	imul $-1, %rsi
+	mov -40(%rbx, %rsi, 8), %rdx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 	mov -56(%rbp), %rdi
 # INSTRUCTION_CONST
-	mov $1, %r8
+	mov $8, %r8
+# INSTRUCTION_MUL
+	imul %r8, %rdi
+# INSTRUCTION_MOVE_TO_OFFSET
+	mov %r12, (%rdx, %rdi,1)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+	mov -56(%rbp), %r9
+# INSTRUCTION_CONST
+	mov $1, %r10
 # INSTRUCTION_ADD
-	add %rdi, %r8
+	add %r9, %r10
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-	mov %r8, -56(%rbp)
+	mov %r10, -56(%rbp)
 # INSTRUCTION_JMP
 	jmp while_cnd_1
 # INSTRUCTION_LABEL
@@ -1148,9 +1170,9 @@ movq %rbp, 8(%r13)
 # INSTRUCTION_LABEL
 	if_3_end:
 # INSTRUCTION_CONST
-	mov $0, %r9
+	mov $0, %r11
 # INSTRUCTION_RETURN
-	mov %r9, %rax
+	mov %r11, %rax
 	mov %rbp,%rsp
 pop %rbp
 ret
@@ -1209,17 +1231,17 @@ addq $1, %r14
 imul $-1, %r14
 mov -80(%r13, %r14, 8), %r12
 # INSTRUCTION_MINUS
-sub %r12, %r11
+sub %r11, %r12
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r11
-seta %dl
-movsx %dl, %r11
+cmp $0, %r12
+setg %dl
+movsx %dl, %r12
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r15
 # INSTRUCTION_CMP
-cmp %r11, %r15
+cmp %r12, %r15
 # INSTRUCTION_JE
 je while_2_begin
 # INSTRUCTION_JMP
@@ -1257,17 +1279,17 @@ addq $1, %r12
 imul $-1, %r12
 mov -72(%r11, %r12, 8), %r10
 # INSTRUCTION_MINUS
-sub %r10, %r9
+sub %r9, %r10
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r9
-seta %dl
-movsx %dl, %r9
+cmp $0, %r10
+setg %dl
+movsx %dl, %r10
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r13
 # INSTRUCTION_CMP
-cmp %r9, %r13
+cmp %r10, %r13
 # INSTRUCTION_JE
 je if_6_begin
 # INSTRUCTION_JMP
@@ -1639,17 +1661,17 @@ mov -24(%rbp), %r13
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 mov -32(%rbp), %r14
 # INSTRUCTION_MINUS
-sub %r14, %r13
+sub %r13, %r14
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r13
-seta %dl
-movsx %dl, %r13
+cmp $0, %r14
+setg %dl
+movsx %dl, %r14
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r15
 # INSTRUCTION_CMP
-cmp %r13, %r15
+cmp %r14, %r15
 # INSTRUCTION_JE
 je if_7_begin
 # INSTRUCTION_JMP
@@ -1799,99 +1821,81 @@ mov $1, %rdx
 # INSTRUCTION_MINUS
 sub %rdx, %rcx
 # INSTRUCTION_MINUS
-sub %rcx, %r15
+sub %r15, %rcx
 # INSTRUCTION_CONST
-mov $-1, %rbx
+mov $1, %rbx
 # INSTRUCTION_ADD
-add %rbx, %r15
+add %rbx, %rcx
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r15
-seta %dl
-movsx %dl, %r15
+cmp $0, %rcx
+setg %dl
+movsx %dl, %rcx
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %rsi
 # INSTRUCTION_CMP
-cmp %r15, %rsi
+cmp %rcx, %rsi
 # INSTRUCTION_JE
 je while_3_begin
 # INSTRUCTION_JMP
 jmp while_3_end
 # INSTRUCTION_LABEL
 while_3_begin:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -64(%rbp), %rdi
-# INSTRUCTION_WRITE
-movq %rdi, %rsi
-movq $intprint, %rdi
-movq $0, %rax
-call printf
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -32(%rbp), %r8
-# INSTRUCTION_CONST
-mov $1, %r9
-# INSTRUCTION_MINUS
-sub %r9, %r8
-# INSTRUCTION_WRITE
-movq %r8, %rsi
-movq $intprint, %rdi
-movq $0, %rax
-call printf
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-leaq staticLink, %r11
-mov 0(%r11), %r11
-movq -16(%r11), %r12
-addq $1, %r12
-imul $-1, %r12
-mov -32(%r11, %r12, 8), %r10
+leaq staticLink, %r8
+mov 0(%r8), %r8
+movq -16(%r8), %r9
+addq $1, %r9
+imul $-1, %r9
+mov -32(%r8, %r9, 8), %rdi
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -64(%rbp), %r13
+mov -64(%rbp), %r10
 # INSTRUCTION_CONST
-mov $8, %r14
+mov $8, %r11
 # INSTRUCTION_MUL
-imul %r14, %r13
+imul %r11, %r10
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-mov (%r10, %r13,1), %r10
+mov (%rdi, %r10,1), %rdi
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -48(%rbp), %r15
+mov -48(%rbp), %r12
 # INSTRUCTION_MUL
-imul %r10, %r15
+imul %rdi, %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -40(%rbp), %rcx
+mov -40(%rbp), %r13
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-leaq staticLink, %rbx
-mov 0(%rbx), %rbx
-movq -16(%rbx), %rsi
-addq $1, %rsi
-imul $-1, %rsi
-mov -24(%rbx, %rsi, 8), %rdx
+leaq staticLink, %r15
+mov 0(%r15), %r15
+movq -16(%r15), %rcx
+addq $1, %rcx
+imul $-1, %rcx
+mov -24(%r15, %rcx, 8), %r14
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -64(%rbp), %rdi
+mov -64(%rbp), %rdx
 # INSTRUCTION_CONST
-mov $8, %r8
+mov $8, %rbx
 # INSTRUCTION_MUL
-imul %r8, %rdi
+imul %rbx, %rdx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-mov (%rdx, %rdi,1), %rdx
+mov (%r14, %rdx,1), %r14
 # INSTRUCTION_MUL
-imul %rcx, %rdx
+imul %r13, %r14
 # INSTRUCTION_MINUS
-sub %r15, %rdx
+sub %r14, %r12
 # INSTRUCTION_CONST
-mov $-1, %r9
+mov $1, %rsi
 # INSTRUCTION_ADD
-add %r9, %rdx
+add %rsi, %r12
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %rdx
-seta %dl
-movsx %dl, %rdx
+cmp $0, %r12
+setg %dl
+movsx %dl, %r12
 pop %rdx
 # INSTRUCTION_CONST
-mov $1, %r10
+mov $1, %rdi
 # INSTRUCTION_CMP
-cmp %rdx, %r10
+cmp %r12, %rdi
 # INSTRUCTION_JE
 je if_8_begin
 # INSTRUCTION_JMP
@@ -1899,69 +1903,69 @@ jmp if_8_end
 # INSTRUCTION_LABEL
 if_8_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -56(%rbp), %r11
+mov -56(%rbp), %r8
 # INSTRUCTION_CONST
-mov $1, %r12
+mov $1, %r9
 # INSTRUCTION_ADD
-add %r11, %r12
+add %r8, %r9
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-mov %r12, -56(%rbp)
+mov %r9, -56(%rbp)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -56(%rbp), %r13
+mov -56(%rbp), %r10
 # INSTRUCTION_PUSH
-push %r13
+push %r10
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -64(%rbp), %r14
+mov -64(%rbp), %r11
 # INSTRUCTION_PUSH
-push %r14
+push %r11
 # INSTRUCTION_FUNCTION_CALL
 call exchange
 # COMPLEX_RESTORE_STATIC_LINK
-leaq staticLink, %r15
-movq %rbp, 8(%r15)
+leaq staticLink, %r12
+movq %rbp, 8(%r12)
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -72(%rbp)
 # INSTRUCTION_LABEL
 if_8_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -64(%rbp), %rcx
+mov -64(%rbp), %r13
 # INSTRUCTION_CONST
-mov $1, %rdx
+mov $1, %r14
 # INSTRUCTION_ADD
-add %rcx, %rdx
+add %r13, %r14
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-mov %rdx, -64(%rbp)
+mov %r14, -64(%rbp)
 # INSTRUCTION_JMP
 jmp while_cnd_3
 # INSTRUCTION_LABEL
 while_3_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -56(%rbp), %rbx
+mov -56(%rbp), %r15
 # INSTRUCTION_CONST
-mov $1, %rsi
+mov $1, %rcx
 # INSTRUCTION_ADD
-add %rbx, %rsi
+add %r15, %rcx
 # INSTRUCTION_PUSH
-push %rsi
+push %rcx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -32(%rbp), %rdi
+mov -32(%rbp), %rdx
 # INSTRUCTION_PUSH
-push %rdi
+push %rdx
 # INSTRUCTION_FUNCTION_CALL
 call exchange
 # COMPLEX_RESTORE_STATIC_LINK
-leaq staticLink, %r8
-movq %rbp, 8(%r8)
+leaq staticLink, %rbx
+movq %rbp, 8(%rbx)
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -72(%rbp)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -56(%rbp), %r9
+mov -56(%rbp), %rsi
 # INSTRUCTION_CONST
-mov $1, %r10
+mov $1, %rdi
 # INSTRUCTION_ADD
-add %r9, %r10
+add %rsi, %rdi
 # INSTRUCTION_RETURN
-mov %r10, %rax
+mov %rdi, %rax
 mov %rbp,%rsp
 pop %rbp
 ret
@@ -2021,7 +2025,7 @@ movq $0, -88(%rbp)
 leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-mov $10, %r15
+mov $35, %r15
 # COMPLEX_ALLOCATE
 movq $8, %rcx
 imulq %r15, %rcx
@@ -2039,7 +2043,7 @@ addq $8, %rax
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -64(%rbp)
 # INSTRUCTION_CONST
-mov $10, %rdx
+mov $35, %rdx
 # COMPLEX_ALLOCATE
 movq $8, %rbx
 imulq %rdx, %rbx
@@ -2057,7 +2061,7 @@ addq $8, %rax
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -72(%rbp)
 # INSTRUCTION_CONST
-mov $10, %rsi
+mov $35, %rsi
 # COMPLEX_ALLOCATE
 movq $8, %rdi
 imulq %rsi, %rdi
@@ -2075,7 +2079,7 @@ addq $8, %rax
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -80(%rbp)
 # INSTRUCTION_CONST
-mov $10, %r8
+mov $35, %r8
 # COMPLEX_ALLOCATE
 movq $8, %r9
 imulq %r8, %r9
@@ -2093,7 +2097,7 @@ addq $8, %rax
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %rax, -88(%rbp)
 # INSTRUCTION_CONST
-mov $10, %r10
+mov $35, %r10
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 mov %r10, -120(%rbp)
 # INSTRUCTION_CONST
@@ -2143,17 +2147,17 @@ mov -104(%rbp), %r8
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 mov -120(%rbp), %r9
 # INSTRUCTION_MINUS
-sub %r9, %r8
+sub %r8, %r9
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r8
-seta %dl
-movsx %dl, %r8
+cmp $0, %r9
+setg %dl
+movsx %dl, %r9
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r10
 # INSTRUCTION_CMP
-cmp %r8, %r10
+cmp %r9, %r10
 # INSTRUCTION_JE
 je while_4_begin
 # INSTRUCTION_JMP
@@ -2343,17 +2347,17 @@ mov -104(%rbp), %r13
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 mov -120(%rbp), %r14
 # INSTRUCTION_MINUS
-sub %r14, %r13
+sub %r13, %r14
 # COMPLEX_CONSTRAIN_BOOLEAN
 push %rdx
-cmp $0, %r13
-seta %dl
-movsx %dl, %r13
+cmp $0, %r14
+setg %dl
+movsx %dl, %r14
 pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r15
 # INSTRUCTION_CMP
-cmp %r13, %r15
+cmp %r14, %r15
 # INSTRUCTION_JE
 je while_5_begin
 # INSTRUCTION_JMP
@@ -2374,14 +2378,25 @@ mov (%rcx, %rdx,1), %rcx
 mov $1, %rsi
 # INSTRUCTION_MINUS
 sub %rcx, %rsi
-# INSTRUCTION_CONST
-mov $1, %rdi
-# INSTRUCTION_MINUS
-sub %rsi, %rdi
+# COMPLEX_ABS_VALUE
+movq %rsi, %rdi
+sar $63, %rdi
+addq %rdi, %rsi
+xor %rsi, %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+push %rdx
+cmp $0, %rdi
+setg %dl
+movsx %dl, %rdi
+pop %rdx
 # INSTRUCTION_CONST
 mov $1, %r8
+# INSTRUCTION_MINUS
+sub %rdi, %r8
+# INSTRUCTION_CONST
+mov $1, %r9
 # INSTRUCTION_CMP
-cmp %rdi, %r8
+cmp %r8, %r9
 # INSTRUCTION_JE
 je if_9_begin
 # INSTRUCTION_JMP
@@ -2389,45 +2404,45 @@ jmp if_9_end
 # INSTRUCTION_LABEL
 if_9_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -144(%rbp), %r9
+mov -144(%rbp), %r10
 # INSTRUCTION_CONST
-mov $1, %r10
+mov $1, %r11
 # INSTRUCTION_ADD
-add %r9, %r10
+add %r10, %r11
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-mov %r10, -144(%rbp)
+mov %r11, -144(%rbp)
 # INSTRUCTION_LABEL
 if_9_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -104(%rbp), %r11
+mov -104(%rbp), %r12
 # INSTRUCTION_CONST
-mov $1, %r12
+mov $1, %r13
 # INSTRUCTION_ADD
-add %r11, %r12
+add %r12, %r13
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-mov %r12, -104(%rbp)
+mov %r13, -104(%rbp)
 # INSTRUCTION_JMP
 jmp while_cnd_5
 # INSTRUCTION_LABEL
 while_5_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -144(%rbp), %r13
-# INSTRUCTION_WRITE
-movq %r13, %rsi
-movq $intprint, %rdi
-movq $0, %rax
-call printf
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -128(%rbp), %r14
+mov -144(%rbp), %r14
 # INSTRUCTION_WRITE
 movq %r14, %rsi
 movq $intprint, %rdi
 movq $0, %rax
 call printf
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-mov -136(%rbp), %r15
+mov -128(%rbp), %r15
 # INSTRUCTION_WRITE
 movq %r15, %rsi
+movq $intprint, %rdi
+movq $0, %rax
+call printf
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+mov -136(%rbp), %rcx
+# INSTRUCTION_WRITE
+movq %rcx, %rsi
 movq $intprint, %rdi
 movq $0, %rax
 call printf

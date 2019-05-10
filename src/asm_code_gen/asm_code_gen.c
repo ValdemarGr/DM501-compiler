@@ -287,7 +287,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "cmp $0, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
             printIndentation(out);
-            fprintf(out, "seta %%dl\n");
+            fprintf(out, "setg %%dl\n");
             printIndentation(out);
             fprintf(out, "movsx %%dl, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
@@ -883,6 +883,29 @@ void generateInstruction(FILE *out, Instructions* instruction) {
 
             printIndentation(out);
             fprintf(out, "popq %rbp\n");
+        } break;
+        case COMPLEX_ABS_VALUE: {
+            fprintf(out, "# COMPLEX_ABS_VALUE\n");
+            int bitsofChar = 8;
+            int sizeInt = INTEGER_SIZE;
+            int maskSize = bitsofChar * sizeInt - 1;
+
+            printIndentation(out);
+            fprintf(out, "movq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
+            printIndentation(out);
+            fprintf(out, "sar $%zu, %%%s\n",
+                    (size_t)maskSize,
+                    getNextRegister(instruction->val.arithmetic2.dest));
+            printIndentation(out);
+            fprintf(out, "addq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.dest),
+                    getNextRegister(instruction->val.arithmetic2.source));
+            printIndentation(out);
+            fprintf(out, "xor %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
         } break;
     }
 }
