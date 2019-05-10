@@ -89,6 +89,7 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
         read->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE;
         read->val.tempFromStackScope.inputTemp = reg;
         read->val.tempFromStackScope.intermediate = getTemporary(colors, -1, state);
+        read->val.tempFromStackScope.intermediate2 = getTemporary(colors, -1, state);
         read->val.tempFromStackScope.offset = location->offset;
         read->val.tempFromStackScope.scopeToFindFrame = location->scope;
     } else {
@@ -123,6 +124,7 @@ void writeToStack(int* colors, int temporary, int reg, RaState *state) {
         write->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE;
         write->val.tempIntoStackScope.tempToMove = reg;
         write->val.tempIntoStackScope.intermediate = getTemporary(colors, -1, state);
+        write->val.tempIntoStackScope.intermediate2 = getTemporary(colors, -1, state);
         write->val.tempIntoStackScope.offset = location->offset;
         write->val.tempIntoStackScope.scopeToFindFrame = location->scope;
     } else {
@@ -469,11 +471,14 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
 
                 temporaries = makeTemporary(state->current->val.tempIntoStackScope.intermediate, RaIntermidiate);
                 temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.tempToMove, RaRead);
+                temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.intermediate2, RaIntermidiate);
                 getTemporaries(colors, temporaries, state);
 
                 state->current->val.tempIntoStackScope.intermediate = temporaries->reg;
 
                 state->current->val.tempIntoStackScope.tempToMove = temporaries->next->reg;
+
+                state->current->val.tempIntoStackScope.intermediate2 = temporaries->next->next->reg;
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK:
                 state->current->val.tempFromStack.inputTemp =
@@ -482,11 +487,14 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE:
                 temporaries = makeTemporary(state->current->val.tempFromStackScope.intermediate, RaIntermidiate);
                 temporaries->next = makeTemporary(state->current->val.tempFromStackScope.inputTemp, RaWrite);
+                temporaries->next->next = makeTemporary(state->current->val.tempFromStackScope.intermediate2, RaIntermidiate);
                 getTemporaries(colors, temporaries, state);
 
                 state->current->val.tempFromStackScope.intermediate = temporaries->reg;
 
                 state->current->val.tempFromStackScope.inputTemp = temporaries->next->reg;
+
+                state->current->val.tempFromStackScope.intermediate2 = temporaries->next->next->reg;
                 break;
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:
                 temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaReadWrite);

@@ -309,6 +309,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_ALLOCATE: {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.allocate.intermediate);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
 
@@ -408,6 +409,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate2);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempIntoStackScope.tempToMove);
@@ -430,6 +432,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.inputTemp);
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate2);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
 

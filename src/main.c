@@ -65,7 +65,9 @@ int compile_file(FILE *file) {
         peephole(instructions);
     }
 
-    simpleRegisterAllocation(instructions, 13);
+    if (dePeephole) {
+        simpleRegisterAllocation(instructions, 13);
+    }
 
     if (dePeephole) {
         peephole(instructions);

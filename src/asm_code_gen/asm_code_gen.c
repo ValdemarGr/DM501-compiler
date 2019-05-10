@@ -209,6 +209,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "push %%rsi\n");
             printIndentation(out);
+            fprintf(out, "push %%rdi\n");
+            printIndentation(out);
             fprintf(out, "movq %%%s, %%rsi\n",
                     getNextRegister(instruction->val.tempToWrite));
             printIndentation(out);
@@ -217,6 +219,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rdi\n");
             printIndentation(out);
             fprintf(out, "pop %%rsi\n");
 
@@ -884,13 +888,13 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_GARBAGE_COLLECT: {
             fprintf(out, "# COMPLEX_GARBAGE_COLLECT\n");
             printIndentation(out);
-            fprintf(out, "pushq %rbp\n");
+            fprintf(out, "pushq %%rbp\n");
 
             printIndentation(out);
             fprintf(out, "call garbageCollect\n");
 
             printIndentation(out);
-            fprintf(out, "popq %rbp\n");
+            fprintf(out, "popq %%rbp\n");
         } break;
     }
 }
