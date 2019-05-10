@@ -4,6 +4,7 @@
 
 extern int lineno;
 extern int fileno();
+extern void yyerror(char const *s);
 %}
 
 %option noyywrap
@@ -11,7 +12,7 @@ extern int fileno();
 
 %%
     int comment_depth = 0;
-[ \t]+        /* ignore */;
+[ \t\r]+        /* ignore */;
 \n              lineno++;
 
 #.*             ;

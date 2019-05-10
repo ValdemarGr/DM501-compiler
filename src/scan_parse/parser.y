@@ -26,7 +26,6 @@ void yyerror(char const *s) {
    struct FunctionTail *functionTail;
    struct StatementList *statementList;
    struct Statement *statement;
-   struct Operator *operator;
    struct Variable *variable;
    struct ExpressionList *expressionList;
    struct Term *term;
@@ -84,7 +83,6 @@ void yyerror(char const *s) {
 %type <functionTail> tail
 %type <statementList> stm_list
 %type <statement> statement
-%type <operator> operator
 %type <variable> variable
 %type <expressionList> act_list exp_list
 %type <term> term
@@ -302,32 +300,6 @@ exp_list :  expression
             {$$ = makeExpList($1, NULL); }
             | expression ',' exp_list
             {$$ = makeExpList($1, $3); }
-;
-
-operator : '*'
-        {$$ = makeMultOp();}
-        | '/'
-        {$$ = makeDivOp();}
-        | '+'
-        {$$ = makePlusOp();}
-        | '-'
-        {$$ = makeMinusOp();}
-        | tEQ
-        {$$ = makeEqualityOp();}
-        | tINEQ
-        {$$ = makeInequalityOp();}
-        | tGREATER
-        {$$ = makeGreaterOp();}
-        | tLESS
-        {$$ = makeLessOp();}
-        | tGEQ
-        {$$ = makeGeqOp();}
-        | tLEQ
-        {$$ = makeLeqOp();}
-        | tAND
-        {$$ = makeAndOp();}
-        | '|' '|'
-        {$$ = makeOrOp();}
 ;
 
 variable : tIDENTIFIER

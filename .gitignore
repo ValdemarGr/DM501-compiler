@@ -309,3 +309,8 @@ tests/**/*.a
 build-files/compiler
 asmsnippets/out
 asmsnippets/run.s
+build-kitty/
+
+src/scan_parse/parser.c
+src/scan_parse/parser.h
+src/scan_parse/scanner.c
