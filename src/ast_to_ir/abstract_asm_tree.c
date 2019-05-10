@@ -1482,6 +1482,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
         } break;
         case statIfK: {
             //TODO
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifD.exp, statement->symbolTable);
             Instructions *constant = newInstruction();
             constant->kind = INSTRUCTION_CONST;
             constant->val.constant.temp = currentTemporary;
@@ -1489,8 +1491,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(constant);
             size_t constantTemp = currentTemporary;
             currentTemporary++;
-
-            size_t boolTemp = generateInstructionsForExpression(statement->val.ifD.exp, statement->symbolTable);
             Instructions *boolCmp = newInstruction();
             boolCmp->kind = INSTRUCTION_CMP;
             boolCmp->val.arithmetic2.source = boolTemp;
@@ -1528,6 +1528,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
         } break;
         case statIfElK: {
             //TODO
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
             Instructions *constant = newInstruction();
             constant->kind = INSTRUCTION_CONST;
             constant->val.constant.temp = currentTemporary;
@@ -1535,8 +1537,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(constant);
             size_t constantTemp = currentTemporary;
             currentTemporary++;
-
-            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
             Instructions *boolCmp = newInstruction();
             boolCmp->kind = INSTRUCTION_CMP;
             boolCmp->val.arithmetic2.source = boolTemp;
@@ -1599,6 +1599,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
             cndLbl->val.label = cndBuf;
             appendInstructions(cndLbl);
 
+
+            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
             Instructions *constant = newInstruction();
             constant->kind = INSTRUCTION_CONST;
             constant->val.constant.temp = currentTemporary;
@@ -1606,8 +1608,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             appendInstructions(constant);
             size_t constantTemp = currentTemporary;
             currentTemporary++;
-
-            size_t boolTemp = generateInstructionsForExpression(statement->val.ifElD.exp, statement->symbolTable);
             Instructions *boolCmp = newInstruction();
             boolCmp->kind = INSTRUCTION_CMP;
             boolCmp->val.arithmetic2.source = boolTemp;

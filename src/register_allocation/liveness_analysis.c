@@ -71,6 +71,13 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     int count = 0;
     while (iter != NULL) {
         switch (iter->kind) {
+            case INSTRUCTION_PUSH_STACK:break;
+            case INSTRUCTION_POP_STACK:break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+            case COMPLEX_GARBAGE_COLLECT:break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
+            case METADATA_DEBUG_INFO:break;
             case METADATA_CREATE_MAIN: break;
             case METADATA_BEGIN_BODY_BLOCK: break;
             case METADATA_END_BODY_BLOCK: break;
@@ -81,9 +88,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
-            case METADATA_BEGIN_GLOBAL_BLOCK:break;
-            case METADATA_END_GLOBAL_BLOCK:break;
-            case METADATA_DEBUG_INFO:break;
             case INSTRUCTION_LABEL: {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(count));
             }
@@ -91,10 +95,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_FUNCTION_LABEL: {
                 count += 1;
                 insert(labels, makeCharKey(iter->val.functionHead.label), makeIntBox(count));
-            }
-                break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-                count += 2;
             }
                 break;
             default: {
@@ -411,6 +411,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate2);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempIntoStackScope.tempToMove);
@@ -433,6 +434,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.inputTemp);
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate2);
 
                 dataFlowEntry->uses = initHeadedSortedSet();
 
@@ -469,11 +471,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
-            case METADATA_BEGIN_GLOBAL_BLOCK:break;
-            case METADATA_END_GLOBAL_BLOCK:break;
-            case METADATA_DEBUG_INFO:break;
-            case INSTRUCTION_PUSH_STACK:break;
-            case INSTRUCTION_POP_STACK:break;
         }
 
         iter = iter->next;

@@ -467,26 +467,30 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                        makeVariableLocationInScope(state->current->val.tempIntoStackScope.offset,
                                                    state->current->val.tempIntoStackScope.scopeToFindFrame));
 
-                temporaries = makeTemporary(state->current->val.tempIntoStackScope.intermediate, RaIntermidiate);
-                temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.tempToMove, RaRead);
+                temporaries = makeTemporary(state->current->val.tempIntoStackScope.intermediate2, RaIntermidiate);
+                temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.intermediate, RaIntermidiate);
+                temporaries->next->next = makeTemporary(state->current->val.tempIntoStackScope.tempToMove, RaRead);
                 getTemporaries(colors, temporaries, state);
 
-                state->current->val.tempIntoStackScope.intermediate = temporaries->reg;
+                state->current->val.tempIntoStackScope.intermediate2 = temporaries->reg;
+                state->current->val.tempIntoStackScope.intermediate = temporaries->next->reg;
 
-                state->current->val.tempIntoStackScope.tempToMove = temporaries->next->reg;
+                state->current->val.tempIntoStackScope.tempToMove = temporaries->next->next->reg;
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK:
                 state->current->val.tempFromStack.inputTemp =
                         getWriteTemporary(colors, state->current->val.tempFromStack.inputTemp, state);
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE:
-                temporaries = makeTemporary(state->current->val.tempFromStackScope.intermediate, RaIntermidiate);
-                temporaries->next = makeTemporary(state->current->val.tempFromStackScope.inputTemp, RaWrite);
+                temporaries = makeTemporary(state->current->val.tempFromStackScope.intermediate2, RaIntermidiate);
+                temporaries->next = makeTemporary(state->current->val.tempFromStackScope.intermediate, RaIntermidiate);
+                temporaries->next->next = makeTemporary(state->current->val.tempFromStackScope.inputTemp, RaWrite);
                 getTemporaries(colors, temporaries, state);
 
-                state->current->val.tempFromStackScope.intermediate = temporaries->reg;
+                state->current->val.tempFromStackScope.intermediate2 = temporaries->reg;
+                state->current->val.tempFromStackScope.intermediate = temporaries->next->reg;
 
-                state->current->val.tempFromStackScope.inputTemp = temporaries->next->reg;
+                state->current->val.tempFromStackScope.inputTemp = temporaries->next->next->reg;
                 break;
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:
                 temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaReadWrite);
@@ -503,14 +507,6 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case COMPLEX_RESTORE_STATIC_LINK:
                 state->current->val.pushPopStaticLink.temporary =
                         getTemporaryNoPushPop(colors, state->current->val.pushPopStaticLink.temporary, state);
-                break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:
-                temporaries = makeTemporary(state->current->val.loadPtrToStaticLink.ptrTemp, RaRead);
-                temporaries->next = makeTemporary(state->current->val.loadPtrToStaticLink.intermediateTemp, RaIntermidiate);
-                getTemporaries(colors, temporaries, state);
-
-                state->current->val.loadPtrToStaticLink.ptrTemp = temporaries->reg;
-                state->current->val.loadPtrToStaticLink.intermediateTemp = temporaries->next->reg;
                 break;
             case METADATA_BEGIN_BODY_BLOCK:break;
             case METADATA_END_BODY_BLOCK:break;
@@ -537,6 +533,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case INSTRUCTION_PUSH_STACK:break;
             case INSTRUCTION_POP_STACK:break;
             case METADATA_DEBUG_INFO:break;
+            case COMPLEX_GARBAGE_COLLECT:break;
         }
 
         freeSortedSet(state->regsInUse);

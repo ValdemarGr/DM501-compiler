@@ -60,7 +60,7 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    simpleRegisterAllocation(instructions, 13);
+    //simpleRegisterAllocation(instructions, 13);
 
     //peephole(instructions);
 
