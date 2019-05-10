@@ -93,10 +93,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 insert(labels, makeCharKey(iter->val.functionHead.label), makeIntBox(count));
             }
                 break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-                count += 2;
-            }
-                break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: break;
             default: {
                 count++;
             }
@@ -482,6 +479,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
         }
 
         iter = iter->next;

@@ -88,8 +88,6 @@ int writeError(Error *e) {
             fprintf(stderr, "Record item could not be found at line %i\n",
                    e->val.VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S.lineno);
             break;
-        default:
-            break;
         case VARIABLE_UNEXPECTED_CLASS: {
             fprintf(stderr, "Error: VARIABLE_UNEXPECTED_CLASS\n");
         } break;
@@ -150,6 +148,8 @@ int writeError(Error *e) {
         case NO_PRIMITIVE_GENERICS : {
             fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");
         } break;
+        default:
+            break;
     }
 
     return e->error;

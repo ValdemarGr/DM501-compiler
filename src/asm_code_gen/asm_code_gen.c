@@ -207,6 +207,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
 
 
             printIndentation(out);
+            fprintf(out, "push %%rsi\n");
+            printIndentation(out);
             fprintf(out, "movq %%%s, %%rsi\n",
                     getNextRegister(instruction->val.tempToWrite));
             printIndentation(out);
@@ -215,6 +217,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rsi\n");
 
 
             /*printIndentation(out);

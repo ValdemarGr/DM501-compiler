@@ -504,14 +504,6 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 state->current->val.pushPopStaticLink.temporary =
                         getTemporaryNoPushPop(colors, state->current->val.pushPopStaticLink.temporary, state);
                 break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:
-                temporaries = makeTemporary(state->current->val.loadPtrToStaticLink.ptrTemp, RaRead);
-                temporaries->next = makeTemporary(state->current->val.loadPtrToStaticLink.intermediateTemp, RaIntermidiate);
-                getTemporaries(colors, temporaries, state);
-
-                state->current->val.loadPtrToStaticLink.ptrTemp = temporaries->reg;
-                state->current->val.loadPtrToStaticLink.intermediateTemp = temporaries->next->reg;
-                break;
             case METADATA_BEGIN_BODY_BLOCK:break;
             case METADATA_END_BODY_BLOCK:break;
             case METADATA_FUNCTION_ARGUMENT:
@@ -537,6 +529,8 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case INSTRUCTION_PUSH_STACK:break;
             case INSTRUCTION_POP_STACK:break;
             case METADATA_DEBUG_INFO:break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+            case COMPLEX_GARBAGE_COLLECT:break;
         }
 
         freeSortedSet(state->regsInUse);
