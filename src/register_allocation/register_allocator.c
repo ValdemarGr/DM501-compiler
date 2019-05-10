@@ -10,19 +10,36 @@
 ConstMap *currentRegisterContext = NULL;
 size_t timestamp = 0;
 
+
+SymbolTable *currentSymbolTable = NULL;
+
+int getAssigned(int *colors, int temporary) {
+    if (temporary == 0) {
+        return 0;
+    }
+
+    if (temporary > -1) {
+        if (colors[temporary] > -1) {
+            return colors[temporary] + 1;
+        }
+    }
+
+    return -1;
+}
+
 RaTemporaries *makeTemporary(int id, RaTemporariesKind kind) {
     RaTemporaries *result = NEW(RaTemporaries);
     result->id = id;
     result->kind = kind;
     result->assigned = false;
     result->next = NULL;
+    return result;
 }
 
 int getTemporary(int *colors, int temporary, RaState *state) {
-    if (temporary > -1) {
-        if (colors[temporary] != -1) {
-            return colors[temporary];
-        }
+    int assigned = getAssigned(colors, temporary);
+    if (assigned != -1) {
+        return assigned;
     }
 
     SortedSet *regs = sortedSetDiff(state->allRegs, state->regsInUse);
@@ -34,6 +51,7 @@ int getTemporary(int *colors, int temporary, RaState *state) {
     pushInstruction->val.tempToPush = reg;
     state->previous->next = pushInstruction;
     pushInstruction->next = state->current;
+    state->previous = pushInstruction;
 
     Instructions *popInstruction = NEW(Instructions);
     popInstruction->kind = INSTRUCTION_POP;
@@ -53,11 +71,18 @@ int getTemporary(int *colors, int temporary, RaState *state) {
 void readFromStack(int* colors, int temporary, int reg, RaState *state) {
     Pair *pair = get(state->stackLocation, makeIntKey(temporary));
 
+    RaVariableLocation *location;
     if (pair == NULL) {
-        return;
+        location = NEW(RaVariableLocation);
+        location->useScope = false;
+        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+
+        insert(state->stackLocation, makeIntKey(temporary), location);
+        currentSymbolTable->nextSymbolId++;
+    } else {
+        location = pair->v;
     }
 
-    RaVariableLocation *location = pair->v;
     Instructions *read = NEW(Instructions);
 
     if (location->useScope) {
@@ -72,18 +97,26 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
         read->val.tempFromStack.offset = location->offset;
     }
 
-    state->previous = read;
+    state->previous->next = read;
     read->next = state->current;
+    state->previous = read;
 }
 
 void writeToStack(int* colors, int temporary, int reg, RaState *state) {
     Pair *pair = get(state->stackLocation, makeIntKey(temporary));
 
+    RaVariableLocation *location;
     if (pair == NULL) {
-        return;
+        location = NEW(RaVariableLocation);
+        location->useScope = false;
+        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+
+        insert(state->stackLocation, makeIntKey(temporary), location);
+        currentSymbolTable->nextSymbolId++;
+    } else {
+        location = pair->v;
     }
 
-    RaVariableLocation *location = pair->v;
     Instructions *write = NEW(Instructions);
 
     if (location->useScope) {
@@ -103,8 +136,9 @@ void writeToStack(int* colors, int temporary, int reg, RaState *state) {
 }
 
 int getReadTemporary(int *colors, size_t temporary, RaState *state) {
-    if (colors[temporary] != -1) {
-        return colors[temporary];
+    int assigned = getAssigned(colors, temporary);
+    if (assigned != -1) {
+        return assigned;
     }
 
     int reg = getTemporary(colors, temporary, state);
@@ -115,8 +149,12 @@ int getReadTemporary(int *colors, size_t temporary, RaState *state) {
 }
 
 int getWriteTemporary(int *colors, size_t temporary, RaState *state) {
+    if (temporary == 0) {
+        return 0;
+    }
+
     if (colors[temporary] != -1) {
-        return colors[temporary];
+        return colors[temporary] + 1;
     }
 
     int reg = getTemporary(colors, temporary, state);
@@ -127,8 +165,9 @@ int getWriteTemporary(int *colors, size_t temporary, RaState *state) {
 }
 
 int getReadWriteTemporary(int *colors, size_t temporary, RaState *state) {
-    if (colors[temporary] != -1) {
-        return colors[temporary];
+    int assigned = getAssigned(colors, temporary);
+    if (assigned != -1) {
+        return assigned;
     }
 
     int reg = getTemporary(colors, temporary, state);
@@ -139,12 +178,14 @@ int getReadWriteTemporary(int *colors, size_t temporary, RaState *state) {
     return reg;
 }
 
-SortedSet *getTemporaries(int *colors, struct RaTemporaries *temporaries, RaState *state) {
+void getTemporaries(int *colors, struct RaTemporaries *temporaries, RaState *state) {
     struct RaTemporaries *temporary = temporaries;
 
+    int assigned;
     while (temporary != NULL) {
-        if (colors[temporary->id] != -1) {
-            temporary->reg = colors[temporary->id];
+        assigned = getAssigned(colors, temporary->id);
+        if (assigned != -1) {
+            temporary->reg = assigned;
             temporary->assigned = true;
             insertSortedSet(state->regsInUse, temporary->reg);
         }
@@ -175,6 +216,44 @@ SortedSet *getTemporaries(int *colors, struct RaTemporaries *temporaries, RaStat
     }
 }
 
+int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
+    int assigned = getAssigned(colors, temporary);
+
+    if (assigned != -1) {
+        return assigned;
+    }
+
+    int offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+    currentSymbolTable->nextSymbolId++;
+
+
+    SortedSet *regs = sortedSetDiff(state->allRegs, state->regsInUse);
+    int reg = sortedSetFirst(regs);
+
+    Instructions *pushInstruction = NEW(Instructions);
+    pushInstruction->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
+    pushInstruction->val.tempIntoStack.tempToMove = reg;
+    pushInstruction->val.tempIntoStack.offset = offset;
+    state->previous->next = pushInstruction;
+    pushInstruction->next = state->current;
+    state->previous = pushInstruction;
+
+    Instructions *popInstruction = NEW(Instructions);
+    popInstruction->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+    popInstruction->val.tempFromStack.inputTemp = reg;
+    popInstruction->val.tempFromStack.offset = offset;
+    popInstruction->next = state->current->next;
+    state->current->next = popInstruction;
+
+    if (!state->hasAddedPop) {
+        state->latest = popInstruction;
+        state->hasAddedPop = true;
+    }
+
+    insertSortedSet(state->regsInUse, reg);
+    return reg;
+}
+
 void handleArithmetic2(int *colors, RaState *state) {
     RaTemporaries *temporaries = makeTemporary(state->current->val.arithmetic2.source, RaWrite);
     temporaries->next = makeTemporary(state->current->val.arithmetic2.dest, RaReadWrite);
@@ -200,13 +279,65 @@ RaVariableLocation *makeVariableLocation(int offset) {
     return result;
 }
 
+void handlePopInstruction(int *colors, RaState *state) {
+    int assigned = getAssigned(colors, state->current->val.tempToPopInto);
+
+    if (assigned != -1) {
+        state->current->val.tempToPopInto = assigned;
+        return;
+    }
+
+    Pair *pair = get(state->stackLocation, makeIntKey(state->current->val.tempToPopInto));
+
+    RaVariableLocation *location;
+    if (pair == NULL) {
+        location = NEW(RaVariableLocation);
+        location->useScope = false;
+        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+
+        insert(state->stackLocation, makeIntKey(state->current->val.tempToPopInto), location);
+        currentSymbolTable->nextSymbolId++;
+    } else {
+        location = pair->v;
+    }
+
+    state->current->kind = INSTRUCTION_POP_STACK;
+    state->current->val.popPushStack.offset = location->offset;
+}
+
+void handlePushInstruction(int *colors, RaState *state) {
+    int assigned = getAssigned(colors, state->current->val.tempToPush);
+
+    if (assigned != -1) {
+        state->current->val.tempToPush = assigned;
+        return;
+    }
+
+    Pair *pair = get(state->stackLocation, makeIntKey(state->current->val.tempToPush));
+
+    RaVariableLocation *location;
+    if (pair == NULL) {
+        location = NEW(RaVariableLocation);
+        location->useScope = false;
+        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+
+        insert(state->stackLocation, makeIntKey(state->current->val.tempToPush), location);
+        currentSymbolTable->nextSymbolId++;
+    } else {
+        location = pair->v;
+    }
+
+    state->current->kind = INSTRUCTION_PUSH_STACK;
+    state->current->val.popPushStack.offset = location->offset;
+}
+
 /*
  * When we spill we put intermediate products on the stack
  * The position will be the context pointer: rbp + sizeof(var) * varsInContext
  */
 Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
     LivenessAnalysisResult *livenessAnalysisResult = livenessAnalysis(head);
-    int *colors = colorGraph(livenessAnalysisResult->sets, livenessAnalysisResult->numberSets, numberRegisters);
+    int *colors = colorGraph(livenessAnalysisResult->sets, livenessAnalysisResult->numberSets, numberRegisters + 1);
 
     RaState *state = NEW(RaState);
     state->current = head;
@@ -217,7 +348,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
     Instructions *nextInstruction;
 
     for (int i = 0; i < numberRegisters; ++i) {
-        insertSortedSet(state->allRegs, i);
+        insertSortedSet(state->allRegs, i + 1);
     }
 
     RaTemporaries *temporaries;
@@ -240,10 +371,19 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                         getWriteTemporary(colors, state->current->val.constant.temp, state);
                 break;
             case INSTRUCTION_PROGRAM_BEGIN:break;
-            case INSTRUCTION_FUNCTION_LABEL:break;
+            case INSTRUCTION_FUNCTION_LABEL:
+                currentSymbolTable = state->current->val.functionHead.tableForFunction;
+                currentSymbolTable->nextSymbolId++;
+
+                state->current->val.functionHead.temporary =
+                        getTemporary(colors, state->current->val.functionHead.temporary, state);
+                break;
             case INSTRUCTION_VAR:break;
             case INSTRUCTION_FUNCTION_END:break;
-            case INSTRUCTION_RETURN:break;
+            case INSTRUCTION_RETURN:
+                state->current->val.tempToReturn =
+                        getReadTemporary(colors, state->current->val.tempToReturn, state);
+                break;
             case INSTRUCTION_WRITE:
                 state->current->val.tempToWrite =
                         getReadTemporary(colors, state->current->val.tempToWrite, state);
@@ -253,12 +393,10 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case INSTRUCTION_OR:handleArithmetic2(colors, state);
                 break;
             case INSTRUCTION_PUSH:
-                state->current->val.tempToPush =
-                        getReadTemporary(colors, state->current->val.tempToPush, state);
+                handlePushInstruction(colors, state);
                 break;
             case INSTRUCTION_POP:
-                state->current->val.tempToPopInto =
-                        getWriteTemporary(colors, state->current->val.tempToPopInto, state);
+                handlePopInstruction(colors, state);
                 break;
             case INSTRUCTION_NEGATE:
                 state->current->val.tempToNegate =
@@ -275,25 +413,53 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 break;
             case INSTRUCTION_XOR:handleArithmetic2(colors, state);
                 break;
-            case INSTRUCTION_COPY:break;
-            case INSTRUCTION_CMP:break;
+            case INSTRUCTION_COPY:
+                handleArithmetic2(colors, state);
+                break;
+            case INSTRUCTION_CMP:
+                handleArithmetic2(colors, state);
+                break;
             case INSTRUCTION_LABEL:break;
             case INSTRUCTION_JE:break;
             case INSTRUCTION_JMP:break;
-            case INSTRUCTION_MOVE:break;
-            case INSTRUCTION_ADD_CONST:break;
-            case INSTRUCTION_MUL_CONST:break;
-            case INSTRUCTION_MOVE_TO_OFFSET:break;
+            case INSTRUCTION_MOVE:
+                handleArithmetic2(colors, state);
+                break;
+            case INSTRUCTION_ADD_CONST:
+                state->current->val.art2const.temp =
+                        getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
+                break;
+            case INSTRUCTION_MUL_CONST:
+                state->current->val.art2const.temp =
+                        getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
+                break;
+            case INSTRUCTION_MOVE_TO_OFFSET:
+                temporaries = makeTemporary(state->current->val.moveToOffset.tempToMove, RaRead);
+                temporaries->next = makeTemporary(state->current->val.moveToOffset.offsetTemp, RaRead);
+                temporaries->next->next = makeTemporary(state->current->val.moveToOffset.ptrTemp, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.moveToOffset.tempToMove = temporaries->reg;
+                state->current->val.moveToOffset.offsetTemp = temporaries->next->reg;
+                state->current->val.moveToOffset.ptrTemp = temporaries->next->next->reg;
+                break;
             case INSTRUCTION_LEA_TO_OFFSET:break;
-            case COMPLEX_ALLOCATE:break;
+            case COMPLEX_ALLOCATE:
+                state->current->val.allocate.timesTemp =
+                        getReadTemporary(colors, state->current->val.allocate.timesTemp, state);
+                break;
             case COMPLEX_ALLOCATE_END:break;
-            case COMPLEX_CONSTRAIN_BOOLEAN:break;
+            case COMPLEX_CONSTRAIN_BOOLEAN:
+                state->current->val.tempToConstrain =
+                        getReadTemporary(colors, state->current->val.tempToConstrain, state);
+            break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK:
                 insert(state->stackLocation,
                        makeIntKey(state->current->val.tempIntoStack.tempToMove),
                        makeVariableLocation(state->current->val.tempIntoStack.offset));
 
-                state->current->val.tempIntoStack.tempToMove = getReadTemporary(colors, state->current->val.tempIntoStack.tempToMove, state);
+                state->current->val.tempIntoStack.tempToMove =
+                        getReadTemporary(colors, state->current->val.tempIntoStack.tempToMove, state);
                 break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE:
                 insert(state->stackLocation,
@@ -322,16 +488,55 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
 
                 state->current->val.tempFromStackScope.inputTemp = temporaries->next->reg;
                 break;
-            case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:break;
-            case COMPLEX_SAVE_STATIC_LINK:break;
-            case COMPLEX_RESTORE_STATIC_LINK:break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+            case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:
+                temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaReadWrite);
+                temporaries->next = makeTemporary(state->current->val.dereferenceOffset.offsetTemp, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.dereferenceOffset.ptrTemp = temporaries->reg;
+                state->current->val.dereferenceOffset.offsetTemp = temporaries->next->reg;
+                break;
+            case COMPLEX_SAVE_STATIC_LINK:
+                state->current->val.pushPopStaticLink.temporary =
+                        getTemporaryNoPushPop(colors, state->current->val.pushPopStaticLink.temporary, state);
+                break;
+            case COMPLEX_RESTORE_STATIC_LINK:
+                state->current->val.pushPopStaticLink.temporary =
+                        getTemporaryNoPushPop(colors, state->current->val.pushPopStaticLink.temporary, state);
+                break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:
+                temporaries = makeTemporary(state->current->val.loadPtrToStaticLink.ptrTemp, RaRead);
+                temporaries->next = makeTemporary(state->current->val.loadPtrToStaticLink.intermediateTemp, RaIntermidiate);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.loadPtrToStaticLink.ptrTemp = temporaries->reg;
+                state->current->val.loadPtrToStaticLink.intermediateTemp = temporaries->next->reg;
+                break;
             case METADATA_BEGIN_BODY_BLOCK:break;
             case METADATA_END_BODY_BLOCK:break;
-            case METADATA_FUNCTION_ARGUMENT:break;
-            case METADATA_CREATE_MAIN:break;
+            case METADATA_FUNCTION_ARGUMENT:
+                state->current->val.args.moveReg =
+                        getTemporary(colors, state->current->val.args.moveReg, state);
+                break;
+            case METADATA_CREATE_MAIN:
+                currentSymbolTable = state->current->val.mainHeader.tableForFunction;
+                currentSymbolTable->nextSymbolId++;
+                break;
             case METADATA_BEGIN_ARITHMETIC_EVALUATION:break;
             case METADATA_END_ARITHMETIC_EVALUATION:break;
+            case INSTRUCTION_REGISTER_CALL:
+                state->current->val.callRegister =
+                        getReadTemporary(colors, state->current->val.callRegister, state);
+                break;
+            case COMPLEX_RIP_LAMBDA_LOAD:
+                state->current->val.lambdaLoad.temporary =
+                        getWriteTemporary(colors, state->current->val.lambdaLoad.temporary, state);
+                break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
+            case INSTRUCTION_PUSH_STACK:break;
+            case INSTRUCTION_POP_STACK:break;
+            case METADATA_DEBUG_INFO:break;
         }
 
         freeSortedSet(state->regsInUse);

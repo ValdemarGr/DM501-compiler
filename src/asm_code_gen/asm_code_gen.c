@@ -10,6 +10,11 @@ void printIndentation(FILE *file) {
 }
 
 char *getNextRegister(size_t reg) {
+/*
+    char *str = malloc(sizeof(char) * 12);
+    sprintf(str, "%d", (int)reg);
+    return str;
+*/
     if (reg == 0) {
         return "rax";
     }
@@ -246,6 +251,18 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "pop %%%s\n",
                     getNextRegister(instruction->val.tempToPopInto));
+        } break;
+        case INSTRUCTION_PUSH_STACK: {
+            fprintf(out, "# INSTRUCTION_PUSH_STACK\n");
+            printIndentation(out);
+            fprintf(out, "push %d(%%rbp)\n",
+                    (int)instruction->val.popPushStack.offset);
+        } break;
+        case INSTRUCTION_POP_STACK: {
+            fprintf(out, "# INSTRUCTION_POP_STACK\n");
+            printIndentation(out);
+            fprintf(out, "pop %d(%%rbp)\n",
+                    (int)instruction->val.popPushStack.offset);
         } break;
         case INSTRUCTION_NEGATE: {
             fprintf(out, "# INSTRUCTION_NEGATE\n");

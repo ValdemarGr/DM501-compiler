@@ -41,6 +41,8 @@ typedef enum {
     INSTRUCTION_OR,
     INSTRUCTION_PUSH,
     INSTRUCTION_POP,
+    INSTRUCTION_PUSH_STACK,
+    INSTRUCTION_POP_STACK,
     INSTRUCTION_NEGATE,
     INSTRUCTION_ABS,
     INSTRUCTION_FUNCTION_CALL,
@@ -115,6 +117,7 @@ typedef struct Instructions {
         struct {SymbolTable *tableForFunction; SortedSet *pointerSet;} mainHeader;
         char* label;
         char* debugInfo;
+        struct { size_t offset; } popPushStack;
         struct { size_t offset; size_t tempToMove; } tempIntoStack;
         struct { size_t offset; size_t tempToMove; size_t scopeToFindFrame; size_t intermediate; size_t intermediate2; } tempIntoStackScope;
         struct { size_t offset; size_t inputTemp; } tempFromStack;

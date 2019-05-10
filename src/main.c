@@ -26,6 +26,8 @@ bool verbose = false;
 bool registerAllocation = false;
 size_t maxDistFromRoot = 0;
 
+extern void yyparse();
+
 int compile_file(FILE *file) {
     SymbolTable *globalScope = initSymbolTable();
     struct Type intStaticType = {.kind = typeIntK};
@@ -58,9 +60,7 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    if (registerAllocation) {
-        simpleRegisterAllocation(instructions, 12);
-    }
+    simpleRegisterAllocation(instructions, 13);
 
     //peephole(instructions);
 
