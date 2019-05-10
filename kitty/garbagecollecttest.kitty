@@ -1,6 +1,9 @@
 class A {
     var afield: int;
     val v = 10;
+    val writer = (): void -> {
+        write afield;
+    };
 };
 
 class B {
@@ -32,9 +35,13 @@ write c.refToB.refToA.afield;
 d.refToB = c.refToB;
 write d.refToB.refToA.afield;
 
+
 gc;
 
 write c.refToB.refToA.afield;
+
+d.refToB.refToA.writer();
+
 
 gc;
 
