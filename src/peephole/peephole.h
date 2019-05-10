@@ -23,22 +23,36 @@ typedef struct Rule2 {
 typedef struct SimpleInstruction {
     InstructionKind kind;
     struct SimpleInstruction *next;
-    union {
-        Rule1 rule1;
-        Rule2 rule2;
-    } val;
 } SimpleInstruction;
 
 typedef enum {
     REMOVE_CONST_REGISTER_ADD,
-    REMOVE_CONST_REGISTER_MUL
+    REMOVE_CONST_REGISTER_MUL,
+    REMOVE_PUSH_POP
 } PeepholeApplyType;
 
 typedef struct PeepholeTemplates {
     PeepholeApplyType apply;
     SimpleInstruction *simpleInstruction;
     struct PeepholeTemplates *next;
+    struct PeepholeTemplates *last;
+    int size;
 } PeepholeTemplates;
+
+typedef struct Kinds {
+    InstructionKind kind;
+    struct Kinds *next;
+} Kinds;
+
+typedef struct PeepholeTemplate {
+    void* apply;
+    Kinds *kinds;
+} PeepholeTemplate;
+
+typedef struct PeepholeTemplateList{
+    PeepholeTemplate *peepholeTemplate;
+    struct PeepholeTemplateList *next;
+} PeepholeTemplateList;
 
 void peephole(Instructions *instructions);
 

@@ -7,34 +7,24 @@
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions);
 
-void addInstructionTemplate(PeepholeTemplates *peepholeTemplates, SimpleInstruction *simpleInstruction, PeepholeApplyType apply) {
-    PeepholeTemplates *iter = peepholeTemplates;
+void addInstructionTemplate(PeepholeTemplates *peepholeTemplates, SimpleInstruction *simpleInstruction, PeepholeApplyType apply, int size) {
+    PeepholeTemplates *last = peepholeTemplates->last;
 
-    while (iter != NULL) {
-
-        if (iter->next == NULL || iter->simpleInstruction == NULL) {
-            break;
-        }
-
-        iter = iter->next;
-    }
-
-    if (iter == NULL) {
-        return;
-    }
-
-    if (iter->simpleInstruction == NULL) {
-        iter->next = NULL;
-        iter->simpleInstruction = simpleInstruction;
-        iter->apply = apply;
+    PeepholeTemplates *newTemplates;
+    if (last == NULL) {
+        newTemplates = peepholeTemplates;
+        peepholeTemplates->next = newTemplates;
     } else {
-        PeepholeTemplates *newTemplates = (PeepholeTemplates*)(malloc(sizeof(PeepholeTemplates)));
-
-        newTemplates->next = NULL;
-        iter->next = newTemplates;
-        newTemplates->simpleInstruction = simpleInstruction;
-        newTemplates->apply = apply;
+        newTemplates = NEW(PeepholeTemplates);
+        peepholeTemplates->last->next = newTemplates;
     }
+
+    newTemplates->next = NULL;
+    newTemplates->simpleInstruction = simpleInstruction;
+    newTemplates->apply = apply;
+    newTemplates->size = size;
+
+    peepholeTemplates->last = newTemplates;
 }
 
 void appendInstruction(SimpleInstruction *simpleInstruction, SimpleInstruction *new) {
@@ -48,7 +38,8 @@ void appendTemplates(PeepholeTemplates *peepholeTemplates, PeepholeTemplates *ne
 }
 
 PeepholeTemplates *generateRulesetsForSize(int n) {
-    PeepholeTemplates *peepholeTemplates = (PeepholeTemplates*)(malloc(sizeof(PeepholeTemplates)));
+    PeepholeTemplates *peepholeTemplates = NEW(PeepholeTemplates);
+    peepholeTemplates->last = NULL;
 
     switch (n) {
         case 1: {
@@ -61,17 +52,13 @@ PeepholeTemplates *generateRulesetsForSize(int n) {
 
                 SimpleInstruction *movConst = NEW(SimpleInstruction);
                 movConst->kind = INSTRUCTION_CONST;
-                movConst->val.rule1.reg1 = registerTrackerForBlock;
                 registerTrackerForBlock++;
 
                 SimpleInstruction *simpleAdd = NEW(SimpleInstruction);
                 simpleAdd->kind = INSTRUCTION_ADD;
-                simpleAdd->val.rule2.reg1 = registerTrackerForBlock - 1;
-                simpleAdd->val.rule2.reg2 = registerTrackerForBlock;
                 registerTrackerForBlock++;
                 appendInstruction(movConst, simpleAdd);
-
-                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_ADD);
+                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_ADD, 2);
             }
 
             {
@@ -79,17 +66,27 @@ PeepholeTemplates *generateRulesetsForSize(int n) {
 
                 SimpleInstruction *movConst = NEW(SimpleInstruction);
                 movConst->kind = INSTRUCTION_CONST;
-                movConst->val.rule1.reg1 = registerTrackerForBlock;
                 registerTrackerForBlock++;
 
                 SimpleInstruction *simpleMul = NEW(SimpleInstruction);
                 simpleMul->kind = INSTRUCTION_MUL;
-                simpleMul->val.rule2.reg1 = registerTrackerForBlock - 1;
-                simpleMul->val.rule2.reg2 = registerTrackerForBlock;
                 registerTrackerForBlock++;
                 appendInstruction(movConst, simpleMul);
+                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_MUL, 2);
+            }
 
-                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_MUL);
+            {
+                size_t registerTrackerForBlock = ANY + 1;
+
+                SimpleInstruction *push = NEW(SimpleInstruction);
+                push->kind = INSTRUCTION_PUSH;
+                registerTrackerForBlock++;
+
+                SimpleInstruction *pop = NEW(SimpleInstruction);
+                pop->kind = INSTRUCTION_POP;
+                registerTrackerForBlock++;
+                appendInstruction(push, pop);
+                addInstructionTemplate(peepholeTemplates, push, REMOVE_PUSH_POP, 2);
             }
 
         } break;
@@ -163,189 +160,93 @@ size_t smallestRegister(PeepholeTemplates *template, Instructions *instructions)
     return (size_t)smallestValue;
 }
 */
-//Replacement patterns
-void applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_t n, PeepholeApplyType apply) {//, size_t min) {
-    SimpleInstruction *simpleIter = simpleHead;
-    Instructions *instructionsIter = instrHead;
 
-    Instructions *instructionHead = newInstruction();
-    Instructions *currentInstruction = instructionHead;
+bool templateMatch(Instructions *head, PeepholeTemplate *template) {
+    Kinds *kind = template->kinds;
+    Instructions *instruction = head;
 
-    if (instrHead->kind == INSTRUCTION_CONST && instrHead->next->kind == INSTRUCTION_ADD) {
-        if (instrHead->val.constant.temp == instrHead->next->val.arithmetic2.source) {
-                //apply
+    while(kind != NULL && instruction != NULL) {
+        if (instruction->kind != kind->kind) {
+            return false;
         }
-
+        kind = kind->next;
+        instruction = skipToNextImportantInstruction(instruction);
     }
 
-    switch (apply) {
-        case REMOVE_CONST_REGISTER_ADD: {
-
-
-
-            instructionHead->kind = INSTRUCTION_ADD_CONST;
-            instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
-            instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
-            instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
-        } break;
-        case REMOVE_CONST_REGISTER_MUL: {
-            instructionHead->kind = INSTRUCTION_MUL_CONST;
-            instructionHead->val.art2const.constant = instrHead->val.constant.value;
-            instructionsIter = skipToNextImportantInstruction(instructionsIter->next);
-            instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
-        } break;
-    }
-
-    //Replace entire context
-    Instructions *toReplaceFrom = instrHead->previous;
-    Instructions *toReplaceTo = instrHead;
-
-    for (int i = 0; i < n; ++i) {
-        toReplaceTo = toReplaceTo->next;
-    }
-
-    toReplaceFrom->next = instructionHead;
-    currentInstruction->next = toReplaceTo->next;
-}
-
-bool checkForInstructionEquality(SimpleInstruction *simpleHead, Instructions *instrHead) {
-    if (simpleHead->kind != instrHead->kind) {
+    /*
+     * The template requires more instructions than there is left
+     */
+    if (kind != NULL) {
         return false;
-    }
-
-    //Now do register equality
-    switch (instrHead->kind) {
-        case INSTRUCTION_ADD: {
-            int instrDiff = (int)instrHead->val.arithmetic2.dest -
-                    (int)instrHead->val.arithmetic2.source;
-            int simpleDiff = (int)simpleHead->val.rule2.reg2 -
-                    (int)simpleHead->val.rule2.reg1;
-            if (simpleDiff != instrDiff) {
-                return false;
-            }
-        } break;
-        case INSTRUCTION_MINUS: {
-
-        } break;
-        case INSTRUCTION_MUL: {
-
-        } break;
-        case INSTRUCTION_DIV: {
-
-        } break;
-        case INSTRUCTION_CONST: {
-
-        } break;
-        case INSTRUCTION_PROGRAM_BEGIN: {
-
-        } break;
-        case INSTRUCTION_FUNCTION_LABEL: {
-
-        } break;
-        case INSTRUCTION_VAR: {
-
-        } break;
-        case INSTRUCTION_FUNCTION_END: {
-
-        } break;
-        case INSTRUCTION_RETURN: {
-
-        } break;
-        case INSTRUCTION_WRITE: {
-
-        } break;
-        case INSTRUCTION_AND: {
-
-        } break;
-        case INSTRUCTION_OR: {
-
-        } break;
-        case INSTRUCTION_PUSH: {
-
-        } break;
-        case INSTRUCTION_POP: {
-
-        } break;
-        case INSTRUCTION_NEGATE: {
-
-        } break;
-        case INSTRUCTION_ABS: {
-
-        } break;
-        case INSTRUCTION_FUNCTION_CALL: {
-
-        } break;
-        case INSTRUCTION_RIGHT_SHIFT: {
-
-        } break;
-        case INSTRUCTION_XOR: {
-
-        } break;
-        case INSTRUCTION_COPY: {
-
-        } break;
-        case INSTRUCTION_CMP: {
-
-        } break;
-        case INSTRUCTION_LABEL: {
-
-        } break;
-        case INSTRUCTION_JE: {
-
-        } break;
-        case INSTRUCTION_JMP: {
-
-        } break;
-        case INSTRUCTION_MOVE: {
-
-        } break;
-        case COMPLEX_ALLOCATE: {
-
-        } break;
-        case COMPLEX_ALLOCATE_END: {
-
-        } break;
-        case COMPLEX_CONSTRAIN_BOOLEAN: {
-
-        } break;
-        case COMPLEX_SAVE_STATIC_LINK: {
-
-        } break;
-        case COMPLEX_RESTORE_STATIC_LINK: {
-
-        } break;
-        case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: {
-
-        } break;
-        case METADATA_BEGIN_BODY_BLOCK: {
-
-        } break;
-        case METADATA_END_BODY_BLOCK: {
-
-        } break;
-        case METADATA_FUNCTION_ARGUMENT: {
-
-        } break;
-        case METADATA_CREATE_MAIN: {
-
-        } break;
-        case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
-
-        } break;
-        case METADATA_END_ARITHMETIC_EVALUATION: {
-
-        } break;
-        case INSTRUCTION_ADD_CONST: {
-
-        } break;
-        case INSTRUCTION_MUL_CONST: {
-
-        } break;
     }
 
     return true;
 }
 
+//Replacement patterns
+Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHead, size_t n, PeepholeApplyType apply) {//, size_t min) {
+    SimpleInstruction *simpleIter = simpleHead;
+    Instructions *instructionsIter = instrHead;
+
+    Instructions *instructionHead = NULL;
+    Instructions *currentInstruction = NULL;
+    bool templateApplied = false;
+
+    switch (apply) {
+        case REMOVE_CONST_REGISTER_ADD: {
+            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+                instructionHead = newInstruction();
+                instructionHead->kind = INSTRUCTION_ADD_CONST;
+                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
+                instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
+                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                currentInstruction = instructionHead;
+                templateApplied = true;
+            }
+        } break;
+        case REMOVE_CONST_REGISTER_MUL: {
+            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+                instructionHead = newInstruction();
+                instructionHead->kind = INSTRUCTION_MUL_CONST;
+                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
+                instructionsIter = skipToNextImportantInstruction(instructionsIter->next);
+                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                currentInstruction = instructionHead;
+                templateApplied = true;
+            }
+        } break;
+        case REMOVE_PUSH_POP: {
+            if (instructionsIter->val.tempToPush == instructionsIter->val.tempToPopInto) {
+                instructionHead = NULL;
+                currentInstruction = instructionHead;
+                templateApplied = true;
+            }
+        }
+        default: break;
+    }
+
+    if (templateApplied) {
+        //Replace entire context
+        Instructions *toReplaceFrom = instrHead->previous;
+        Instructions *toReplaceTo = instrHead;
+
+        for (int i = 0; i < n; ++i) {
+            toReplaceTo = skipToNextImportantInstruction(toReplaceTo->next);
+        }
+
+        if (instructionHead == NULL) {
+            toReplaceFrom->next = toReplaceTo;
+        } else {
+            toReplaceFrom->next = instructionHead;
+            currentInstruction->next = toReplaceTo;
+            currentInstruction->previous = instructionHead;
+            toReplaceTo->previous = currentInstruction;
+        }
+
+        return toReplaceFrom;
+    }
+    return instrHead;
+}
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions) {
     switch (instructions->kind) {
@@ -384,11 +285,26 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case COMPLEX_RESTORE_STATIC_LINK: { return instructions;} break;
         case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: { return instructions;} break;
         case METADATA_BEGIN_BODY_BLOCK: { return instructions; } break; //<-- this is holy
-        case METADATA_END_BODY_BLOCK: { return skipToNextImportantInstruction(instructions->next);} break;
-        case METADATA_FUNCTION_ARGUMENT: { return skipToNextImportantInstruction(instructions->next);} break;
-        case METADATA_CREATE_MAIN: { return skipToNextImportantInstruction(instructions->next);} break;
+        case METADATA_END_BODY_BLOCK: { return instructions;} break;
+        case METADATA_FUNCTION_ARGUMENT: { return instructions;} break;
+        case METADATA_CREATE_MAIN: { return instructions;} break;
         case METADATA_BEGIN_ARITHMETIC_EVALUATION: { return skipToNextImportantInstruction(instructions->next);} break;
         case METADATA_END_ARITHMETIC_EVALUATION: {return skipToNextImportantInstruction(instructions->next); } break;
+        case INSTRUCTION_PUSH_STACK: { return instructions; } break;
+        case INSTRUCTION_POP_STACK: { return instructions; } break;
+        case INSTRUCTION_MOVE_TO_OFFSET: { return instructions; } break;
+        case INSTRUCTION_LEA_TO_OFFSET: { return instructions; } break;
+        case INSTRUCTION_REGISTER_CALL: { return instructions; } break;
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK: { return instructions; } break;
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE: { return instructions; } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK: { return instructions; } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: { return instructions; } break;
+        case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: { return instructions; } break;
+        case COMPLEX_RIP_LAMBDA_LOAD: { return instructions; } break;
+        case METADATA_BEGIN_GLOBAL_BLOCK: { return instructions; } break;
+        case METADATA_END_GLOBAL_BLOCK: { return instructions; } break;
+        case METADATA_DEBUG_INFO: { return skipToNextImportantInstruction(instructions->next); } break;
+        case COMPLEX_GARBAGE_COLLECT: { return instructions; } break;
     }
 }
 
@@ -398,6 +314,7 @@ void peephole(Instructions *instructions) {
     PeepholeTemplates *peepholeTemplates = generateRulesetsForSize(n);
 
     Instructions *iter = instructions;
+    bool notEqual;
 
     while (iter != NULL) {
         PeepholeTemplates *templateIter = peepholeTemplates;
@@ -405,18 +322,20 @@ void peephole(Instructions *instructions) {
         while (templateIter != NULL) {
             SimpleInstruction *simpleInstructionIter = templateIter->simpleInstruction;
             Instructions *realInstructionIter = iter;
+            notEqual = false;
 
             //Test equality of templates, this includes register layout
-            while (simpleInstructionIter != NULL &&
-            realInstructionIter != NULL &&
-            checkForInstructionEquality(simpleInstructionIter, realInstructionIter)) {
-
+            while (simpleInstructionIter != NULL && realInstructionIter != NULL) {
+                if (simpleInstructionIter->kind != realInstructionIter->kind) {
+                    notEqual = true;
+                    break;
+                }
                 realInstructionIter = skipToNextImportantInstruction(realInstructionIter->next);
                 simpleInstructionIter = simpleInstructionIter->next;
             }
 
             //Null test
-            if (simpleInstructionIter != NULL) {
+            if (simpleInstructionIter != NULL || notEqual) {
                 templateIter = templateIter->next;
                 continue;
             }
@@ -430,17 +349,7 @@ void peephole(Instructions *instructions) {
             simpleInstructionIter = templateIter->simpleInstruction;
             realInstructionIter = iter;
 
-            while (simpleInstructionIter != NULL &&
-                   realInstructionIter != NULL) {
-
-                applyTemplate(simpleInstructionIter, realInstructionIter, (size_t)n, templateIter->apply);//, smallestReg);
-
-                realInstructionIter = skipToNextImportantInstruction(realInstructionIter->next);
-                simpleInstructionIter = simpleInstructionIter->next;
-            }
-
-            //We reset iter if we do a peephole
-            iter = iter->previous;
+            iter = applyTemplate(simpleInstructionIter, realInstructionIter, (size_t)templateIter->size, templateIter->apply);//, smallestReg);
 
             templateIter = templateIter->next;
         }

@@ -1017,10 +1017,10 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                 case opMultK: {
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MUL;
-                    instruction->val.arithmetic2.source = lhsTemp;
-                    instruction->val.arithmetic2.dest = rhsTemp;
+                    instruction->val.arithmetic2.source = rhsTemp;
+                    instruction->val.arithmetic2.dest = lhsTemp;
                     appendInstructions(instruction);
-                    toReturn = rhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opDivK: {
                     Instructions *instruction = newInstruction();
@@ -1033,10 +1033,10 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                 case opPlusK: {
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_ADD;
-                    instruction->val.arithmetic2.source = lhsTemp;
-                    instruction->val.arithmetic2.dest = rhsTemp;
+                    instruction->val.arithmetic2.source = rhsTemp;
+                    instruction->val.arithmetic2.dest = lhsTemp;
                     appendInstructions(instruction);
-                    toReturn = rhsTemp;
+                    toReturn = lhsTemp;
                 } break;
                 case opMinusK: {
                     Instructions *instruction = newInstruction();

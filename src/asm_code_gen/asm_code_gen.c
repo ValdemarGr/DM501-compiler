@@ -742,7 +742,11 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.art2const.temp));
         } break;
         case INSTRUCTION_MUL_CONST: {
-
+            fprintf(out, "# INSTRUCTION_MUL_CONST\n");
+            printIndentation(out);
+            fprintf(out, "imul $%i, %%%s\n",
+                    instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp));
         } break;
         case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
 
