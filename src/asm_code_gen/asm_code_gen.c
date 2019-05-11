@@ -2,6 +2,7 @@
 #include "../ast_to_ir/intermediate_representation.h"
 
 int currentIndendation = 0;
+extern int initialGcSizeMB;
 
 void printIndentation(FILE *file) {
     for (int i = 0; i < currentIndendation; i++) {
@@ -526,8 +527,9 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# METADATA_CREATE_MAIN\n");
             printIndentation(out);
             fprintf(out, ASM_HEADER);
+            int asBytes = initialGcSizeMB * 1048576;
             printIndentation(out);
-            fprintf(out, MAIN_HEADER);
+            fprintf(out, MAIN_HEADER, asBytes, asBytes, asBytes, asBytes);
             printIndentation(out);
             offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",

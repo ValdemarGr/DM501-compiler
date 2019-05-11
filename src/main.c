@@ -25,6 +25,7 @@ bool prettyPrint = false;
 bool verbose = false;
 bool registerAllocation = false;
 size_t maxDistFromRoot = 0;
+int initialGcSizeMB = 10;
 
 extern void yyparse();
 
@@ -91,9 +92,16 @@ int main(int argc, char *argv[]) {
                     registerAllocation = true;
                     break;
                 default:
-                    printf("Please supply the correct argument for %s\n", arg);
+                    if (strstr(arg, "mem=")) {
+                        char *size = strstr(arg, "mem=") + strlen("mem=");
+                        initialGcSizeMB = (int)atoi(size);
+                    } else {
+                        printf("Please supply the correct argument for %s\n", arg);
+                    }
                     break;
             }
+
+
 
             continue;
         }

@@ -241,9 +241,7 @@ garbageCollect:
     push %rbp
     movq %rsp, %rbp
 
-    pushq 16(%rbp)
-    call garbageCollectBFS
-    pop 16(%rbp)
+    movq 16(%rbp), -8(%rbp)
 
     push %rax
     push %rcx
@@ -260,6 +258,24 @@ garbageCollect:
     push %r14
     push %r15
 
+    # double heap size for new heap
+
+   # leaq gcHeapOne, %r15
+   # cmp $0, 0(%r15)
+   # je heapSelectorEnd
+   # leaq gcHeapTwo, %r15
+   # getNewHeap:
+
+    #movq 16(%r15), %r13 # size of heap
+
+    #mov $0, %rdi
+    #mov $12, %rax
+   # s#yscall
+
+    pushq -8(%rbp)
+    call garbageCollectBFS
+    pop %rax
+
     leaq gcHeapOne, %r15
     leaq gcHeapTwo, %r14
     cmp $1, 0(%r15)
@@ -267,6 +283,8 @@ garbageCollect:
     leaq gcHeapTwo, %r15
     leaq gcHeapOne, %r14
     heapSelectorEnd:
+
+
 
     # traverse new heap, if ptr to old heap found, move it to new heap, we know new heap is packed
     movq $0, %rdx # rdx is heap iterator
@@ -445,7 +463,6 @@ garbageCollect:
     movq 8(%r15), %rax # rax has current new heap pos
 
 
-
     pop %r15
     pop %r14
     pop %r13
@@ -488,6 +505,28 @@ garbageCollectAllocate:
     je heapSelectorEndAlloc
     leaq gcHeapTwo, %r15
     heapSelectorEndAlloc:
+
+    # current heap position
+    movq 8(%r15), %r14
+    # size to add
+    movq -8(%rbp), %rax
+    # heap max size
+    movq 16(%r15), %r13
+    # buffer
+    addq $32, %r14
+    # add size
+    addq %rax, %r14
+    # if no more space left, we gc
+
+    cmp %r13, %r14
+    jl performAlloc
+
+        # else we gc
+        pushq -16(%rbp)
+        call garbageCollect
+        popq %r13
+
+    performAlloc:
 
     # current heap position
     movq 8(%r15), %r14
