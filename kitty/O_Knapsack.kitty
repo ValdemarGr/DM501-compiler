@@ -122,11 +122,11 @@ var p_elem : int, w_elem : int, i : int, j : int, dummy : bool;
 end partition
 
 (* Initialisering af probleminstans *)
-allocate w of length 35; (* Array med vaegt af elementer *)
-allocate p of length 35; (* Array med profit af elementer *)
-allocate x of length 35; (* Array med hvilke elementer i resultat *)
-allocate y of length 35;
-n = 35; (* Total antal elementer *)
+allocate w of length 1000; (* Array med vaegt af elementer *)
+allocate p of length 1000; (* Array med profit af elementer *)
+allocate x of length 1000; (* Array med hvilke elementer i resultat *)
+allocate y of length 1000;
+n = 1000; (* Total antal elementer *)
 m = 600; (* Max weight *)
 fp = 0-1; (* Final profit *)
 fw = 0; (* Final weight *)

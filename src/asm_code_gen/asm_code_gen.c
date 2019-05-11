@@ -129,6 +129,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq %%rbp, %zu(%%%s)\n",
                     instruction->val.functionHead.distance * POINTER_SIZE,
                     getNextRegister(instruction->val.functionHead.temporary));
+            currentIndendation++;
             break;
         case INSTRUCTION_VAR:{
             fprintf(out, "# VAR %s\n", instruction->val.var->name);
