@@ -2,15 +2,13 @@
 
 .global main
 main:
-    movq $20, %r8
-    movq $4, %r9
+    movq $0, %r8
 
-    movq %r8, %rax
-    cqto
-    idiv %r9
+    cmp $0, %r8
+    setg %dl
+    movsx %dl, %r8 
 
-
-    push %rax
+    push %r8
     call print_number
 
 	mov $60, %rax

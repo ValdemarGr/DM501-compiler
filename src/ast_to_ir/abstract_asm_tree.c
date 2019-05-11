@@ -615,6 +615,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 appendInstructions(ptrAccess);
                 return tempToAbsOn;
             } else {
+                Instructions *abs = newInstruction();
+                abs->kind = COMPLEX_ABS_VALUE;
+                abs->val.arithmetic2.source = tempToAbsOn;
+                abs->val.arithmetic2.dest = currentTemporary++;
+                appendInstructions(abs);
+                return currentTemporary - 1;
+/*
                 //We must evaluate (sizeof(int) * bitsof(char) - 1)
                 int bitsofChar = 8;
                 int sizeInt = INTEGER_SIZE;
@@ -650,7 +657,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 xor->val.arithmetic2.dest = maskTemp;
                 appendInstructions(xor);
 
-                return currentTemporary - 1;
+                return currentTemporary - 1;*/
             }
         } break;
         case numK: {
@@ -1047,57 +1054,64 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     toReturn = lhsTemp;
                 } break;
                 case opInequalityK: {
-                    //subtract
-                    Instructions *instruction = newInstruction();
-                    instruction->kind = INSTRUCTION_MINUS;
-                    instruction->val.arithmetic2.source = lhsTemp;
-                    instruction->val.arithmetic2.dest = rhsTemp;
-                    appendInstructions(instruction);
-                    toReturn = rhsTemp;
-                } break;
-                case opEqualityK: {
-                    //subtract equal check
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
 
-                    Instructions *constant = newInstruction();
-                    constant->kind = INSTRUCTION_CONST;
-                    constant->val.constant.value = 1;
-                    constant->val.constant.temp = currentTemporary;
-                    appendInstructions(constant);
-                    currentTemporary++;
+                    Instructions *abs = newInstruction();
+                    abs->kind = COMPLEX_ABS_VALUE;
+                    abs->val.arithmetic2.source = rhsTemp;
+                    abs->val.arithmetic2.dest = currentTemporary++;
+                    appendInstructions(abs);
 
-                    Instructions *trick = newInstruction();
-                    trick->kind = INSTRUCTION_MINUS;
-                    trick->val.arithmetic2.source = rhsTemp; // For the 1 constant
-                    trick->val.arithmetic2.dest = currentTemporary - 1; // For the resulting subtraction
-                    appendInstructions(trick);
+                    Instructions *constrain = newInstruction();
+                    constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
+                    constrain->val.tempToConstrain = currentTemporary - 1;
+                    appendInstructions(constrain);
 
                     toReturn = currentTemporary - 1;
+                } break;
+                case opEqualityK: {
+                    Instructions *instruction = newInstruction();
+                    instruction->kind = INSTRUCTION_MINUS;
+                    instruction->val.arithmetic2.source = lhsTemp;
+                    instruction->val.arithmetic2.dest = rhsTemp;
+                    appendInstructions(instruction);
+
+                    Instructions *abs = newInstruction();
+                    abs->kind = COMPLEX_ABS_VALUE;
+                    abs->val.arithmetic2.source = rhsTemp;
+                    abs->val.arithmetic2.dest = currentTemporary++;
+                    size_t absReg = currentTemporary - 1;
+                    appendInstructions(abs);
+
+                    Instructions *constrain = newInstruction();
+                    constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
+                    constrain->val.tempToConstrain = absReg;
+                    appendInstructions(constrain);
+
+                    Instructions *contOne = newInstruction();
+                    contOne->kind = INSTRUCTION_CONST;
+                    contOne->val.constant.value = 1;
+                    contOne->val.constant.temp = currentTemporary++;
+                    size_t constOneTemp = currentTemporary - 1;
+                    appendInstructions(contOne);
+
+                    Instructions *invert = newInstruction();
+                    invert->kind = INSTRUCTION_MINUS;
+                    invert->val.arithmetic2.source = absReg;
+                    invert->val.arithmetic2.dest = constOneTemp;
+                    appendInstructions(invert);
+
+                    toReturn = constOneTemp;
                 } break;
                 case opGreaterK: {
                     //TODO Use smart x86 instruction for this
                     //x > y -> lhs > rhs
                     //subtract x from y and check if the result is > 0 later
                     //also constrain to boolean
-                    Instructions *instruction = newInstruction();
-                    instruction->kind = INSTRUCTION_MINUS;
-                    instruction->val.arithmetic2.source = lhsTemp;
-                    instruction->val.arithmetic2.dest = rhsTemp;
-                    appendInstructions(instruction);
-
-                    Instructions *constrain = newInstruction();
-                    constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
-                    constrain->val.tempToConstrain = rhsTemp;
-                    appendInstructions(constrain);
-                    toReturn = rhsTemp;
-                } break;
-                case opLessK: {
-                    //TODO Use smart x86 instruction for this
-                    //Same as above, but lhs and rhs flipped
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = rhsTemp;
@@ -1108,30 +1122,16 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
                     constrain->val.tempToConstrain = lhsTemp;
                     appendInstructions(constrain);
-
                     toReturn = lhsTemp;
                 } break;
-                case opGeqK: {
+                case opLessK: {
                     //TODO Use smart x86 instruction for this
-                    //Can be hacked by using greater but adding a constant of one
+                    //Same as above, but lhs and rhs flipped
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = lhsTemp;
                     instruction->val.arithmetic2.dest = rhsTemp;
                     appendInstructions(instruction);
-
-                    Instructions *constant = newInstruction();
-                    constant->kind = INSTRUCTION_CONST;
-                    constant->val.constant.value = -1;
-                    constant->val.constant.temp = currentTemporary;
-                    appendInstructions(constant);
-                    currentTemporary++;
-
-                    Instructions *trick = newInstruction();
-                    trick->kind = INSTRUCTION_ADD;
-                    trick->val.arithmetic2.source = currentTemporary - 1; // For the 1 constant
-                    trick->val.arithmetic2.dest = rhsTemp; // For the resulting subtraction
-                    appendInstructions(trick);
 
                     Instructions *constrain = newInstruction();
                     constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
@@ -1140,9 +1140,9 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     toReturn = rhsTemp;
                 } break;
-                case opLeqK: {
+                case opGeqK: {
                     //TODO Use smart x86 instruction for this
-                    //Same as above, but lhs and rhs flipped
+                    //Can be hacked by using greater but adding a constant of one
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_MINUS;
                     instruction->val.arithmetic2.source = rhsTemp;
@@ -1151,7 +1151,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 
                     Instructions *constant = newInstruction();
                     constant->kind = INSTRUCTION_CONST;
-                    constant->val.constant.value = -1;
+                    constant->val.constant.value = 1;
                     constant->val.constant.temp = currentTemporary;
                     appendInstructions(constant);
                     currentTemporary++;
@@ -1168,6 +1168,35 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     appendInstructions(constrain);
 
                     toReturn = lhsTemp;
+                } break;
+                case opLeqK: {
+                    //TODO Use smart x86 instruction for this
+                    //Same as above, but lhs and rhs flipped
+                    Instructions *instruction = newInstruction();
+                    instruction->kind = INSTRUCTION_MINUS;
+                    instruction->val.arithmetic2.source = lhsTemp;
+                    instruction->val.arithmetic2.dest = rhsTemp;
+                    appendInstructions(instruction);
+
+                    Instructions *constant = newInstruction();
+                    constant->kind = INSTRUCTION_CONST;
+                    constant->val.constant.value = 1;
+                    constant->val.constant.temp = currentTemporary;
+                    appendInstructions(constant);
+                    currentTemporary++;
+
+                    Instructions *trick = newInstruction();
+                    trick->kind = INSTRUCTION_ADD;
+                    trick->val.arithmetic2.source = currentTemporary - 1; // For the 1 constant
+                    trick->val.arithmetic2.dest = rhsTemp; // For the resulting subtraction
+                    appendInstructions(trick);
+
+                    Instructions *constrain = newInstruction();
+                    constrain->kind = COMPLEX_CONSTRAIN_BOOLEAN;
+                    constrain->val.tempToConstrain = rhsTemp;
+                    appendInstructions(constrain);
+
+                    toReturn = rhsTemp;
                 } break;
                 case opAndK: {
                     //and lhs and rhs
