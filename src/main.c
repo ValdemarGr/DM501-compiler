@@ -26,6 +26,7 @@ bool verbose = false;
 bool registerAllocation = false;
 size_t maxDistFromRoot = 0;
 int initialGcSizeMB = 10;
+extern char *filename;
 
 extern void yyparse();
 
@@ -101,8 +102,6 @@ int main(int argc, char *argv[]) {
                     break;
             }
 
-
-
             continue;
         }
 
@@ -112,6 +111,7 @@ int main(int argc, char *argv[]) {
 
         //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
+        filename = arg;
         r = compile_file(fp);
 
         if (r != 0) {
@@ -122,6 +122,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!gotFile) {
+        filename = "(stdin)";
         r = compile_file(stdin);
     }
 

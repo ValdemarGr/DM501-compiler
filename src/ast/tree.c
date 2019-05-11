@@ -8,19 +8,21 @@ extern int stmDeclNum;
 int typeIndex = 0;
 int lambdaId = 0;
 
-TypeList *makeTypeList(TypeList* next, Type *elem) {
+TypeList *makeTypeList(TypeList* next, Type *elem, Location location) {
     TypeList *tpeLst = NEW(TypeList);
 
     tpeLst->next = next;
     tpeLst->type = elem;
+    tpeLst->location = location;
 
     return tpeLst;
 }
 
-TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType){
+TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType, Location location){
     TypeList *tpeLst = NEW(TypeList);
 
     tpeLst->next = next;
+    tpeLst->location = location;
 
     Type *tpe = NEW(Type);
 
@@ -35,166 +37,182 @@ TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType){
     return tpeLst;
 }
 
-Expression *makeEXPFromTerm(Term *term) {
+Expression *makeEXPFromTerm(Term *term, Location location) {
     Expression *returning = NEW(Expression);
 
     returning->lineno = lineno;
     returning->kind = termK;
     returning->val.termD.term = term;
+    returning->location = location;
 
     return returning;
 }
 
-Variable* makeVariable(char *id) {
-    Variable* returning = NEW(Variable);
+Variable* makeVariable(char *id, Location location) {
+    Variable* variable = NEW(Variable);
 
-    returning->lineno = lineno;
-    returning->kind = varIdK;
-    returning->val.idD.id = id;
+    variable->lineno = lineno;
+    variable->kind = varIdK;
+    variable->val.idD.id = id;
+    variable->location = location;
 
-    return returning;
+    return variable;
 }
 
-Variable* makeArraySubscript(Variable *variable, Expression *expression) {
-    Variable* returning = NEW(Variable);
+Variable* makeArraySubscript(Variable *variable, Expression *expression, Location location) {
+    Variable* var = NEW(Variable);
 
-    returning->lineno = lineno;
-    returning->kind = arrayIndexK;
-    returning->val.arrayIndexD.var = variable;
-    returning->val.arrayIndexD.idx = expression;
+    var->lineno = lineno;
+    var->kind = arrayIndexK;
+    var->val.arrayIndexD.var = variable;
+    var->val.arrayIndexD.idx = expression;
+    var->location = location;
 
-    return returning;
+    return var;
 }
 
-Variable* makeRecordSubscript(Variable* variable, char *id) {
-    Variable* returning = NEW(Variable);
+Variable* makeRecordSubscript(Variable* variable, char *id, Location location) {
+    Variable* var = NEW(Variable);
 
-    returning->lineno = lineno;
-    returning->kind = recordLookupK;
-    returning->val.recordLookupD.var = variable;
-    returning->val.recordLookupD.id = id;
+    var->lineno = lineno;
+    var->kind = recordLookupK;
+    var->val.recordLookupD.var = variable;
+    var->val.recordLookupD.id = id;
+    var->location=location;
 
-    return returning;
+    return var;
 }
 
-Term *makeTermFromVariable(Variable *variable) {
-    Term* returning = NEW(Term);
+Term *makeTermFromVariable(Variable *variable, Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->val.variableD.var = variable;
-    returning->kind = variableK;
+    term->lineno = lineno;
+    term->val.variableD.var = variable;
+    term->kind = variableK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList) {
-    Term* returning = NEW(Term);
+Term *makeFunctionCallTerm(char *functionId, ExpressionList *expressionList, Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->val.functionCallD.expressionList = expressionList;
-    returning->val.functionCallD.functionId = functionId;
-    returning->kind = functionCallK;
+    term->lineno = lineno;
+    term->val.functionCallD.expressionList = expressionList;
+    term->val.functionCallD.functionId = functionId;
+    term->kind = functionCallK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeParentheses(Expression *expression) {
-    Term* returning = NEW(Term);
+Term *makeParentheses(Expression *expression, Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->val.parenthesesD.expression = expression;
-    returning->kind = parenthesesK;
+    term->lineno = lineno;
+    term->val.parenthesesD.expression = expression;
+    term->kind = parenthesesK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeNegatedTerm(Term *term) {
-    Term* returning = NEW(Term);
+Term *makeNegatedTerm(Term *termToNegate, Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->val.negateD.term = term;
-    returning->kind = negateK;
+    term->lineno = lineno;
+    term->val.negateD.term = termToNegate;
+    term->kind = negateK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeAbsTerm(Expression *expression) {
-    Term* returning = NEW(Term);
+Term *makeAbsTerm(Expression *expression, Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->val.absD.expression = expression;
-    returning->kind = absK;
+    term->lineno = lineno;
+    term->val.absD.expression = expression;
+    term->kind = absK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeNumTerm(int n) {
+Term *makeNumTerm(int n, Location location) {
     Term* term = NEW(Term);
 
     term->lineno = lineno;
     term->val.numD.num = n;
     term->kind = numK;
+    term->location = location;
 
     return term;
 }
 
-Term *makeTrueTerm() {
-    Term* returning = NEW(Term);
+Term *makeTrueTerm(Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->kind = trueK;
+    term->lineno = lineno;
+    term->kind = trueK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeFalseTerm() {
-    Term* returning = NEW(Term);
+Term *makeFalseTerm(Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->kind = falseK;
+    term->lineno = lineno;
+    term->kind = falseK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeNullTerm() {
-    Term* returning = NEW(Term);
+Term *makeNullTerm(Location location) {
+    Term* term = NEW(Term);
 
-    returning->lineno = lineno;
-    returning->kind = nullK;
+    term->lineno = lineno;
+    term->kind = nullK;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeLambdaTerm(Lambda *lambda) {
-    Term* returning = NEW(Term);
+Term *makeLambdaTerm(Lambda *lambda, Location location) {
+    Term* term = NEW(Term);
 
-    returning->kind = lambdaK;
-    returning->val.lambdaD.lambda = lambda;
+    term->kind = lambdaK;
+    term->val.lambdaD.lambda = lambda;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeDowncastTerm(Variable *var, Type *toCastTo) {
-    Term* returning = NEW(Term);
+Term *makeDowncastTerm(Variable *var, Type *toCastTo, Location location) {
+    Term* term = NEW(Term);
 
-    returning->kind = classDowncastk;
-    returning->val.classDowncastD.var = var;
-    returning->val.classDowncastD.toCastTo = toCastTo;
+    term->kind = classDowncastk;
+    term->val.classDowncastD.var = var;
+    term->val.classDowncastD.toCastTo = toCastTo;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList) {
-    Term* returning = NEW(Term);
+Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList, Location location) {
+    Term* term = NEW(Term);
 
-    returning->kind = shorthandCallK;
-    returning->val.shorthandCallD.var = access;
-    returning->val.shorthandCallD.expressionList = expressionList;
+    term->kind = shorthandCallK;
+    term->val.shorthandCallD.var = access;
+    term->val.shorthandCallD.expressionList = expressionList;
+    term->location = location;
 
-    return returning;
+    return term;
 }
 
-Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
+Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs, Location location) {
     Expression *e = NEW(Expression);
 
     e->lineno = lhs->lineno;
@@ -202,6 +220,7 @@ Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs) {
     e->val.op.left = lhs;
     e->val.op.operator = op;
     e->val.op.right = rhs;
+    e->location = location;
 
     return e;
 }
@@ -318,34 +337,38 @@ Operator *makeOrOp() {
 
 //OPERATORS END
 
-FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type) {
+FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type, Location location) {
     FunctionHead *head;
     head = NEW(FunctionHead);
     head->indentifier = identifier;
     head->declarationList = declerationList;
     head->returnType = type;
+    head->lineno = lineno;
+    head->location = location;
     return head;
 }
 
-FunctionTail *makeFunctionTail(char *identifier) {
+FunctionTail *makeFunctionTail(char *identifier, Location location) {
     FunctionTail *tail;
     tail = NEW(FunctionTail);
     tail->indentifier = identifier;
     tail->lineno = lineno;
+    tail->location = location;
     return tail;
 }
 
-Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail) {
+Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail, Location location) {
     Function *function = NEW(Function);
 
     function->head = head;
     function->body = body;
     function->tail = tail;
+    function->location = location;
 
     return function;
 }
 
-Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
+Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body, Location location) {
     Lambda *lambda = NEW(Lambda);
 
     lambda->returnType = returnType;
@@ -354,28 +377,31 @@ Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body) {
     lambda->id = lambdaId;
     lambdaId++;
     lambda->inClassContext = false;
+    lambda->location = location;
 
     return lambda;
 }
 
-VarDelList *makeVarDelList(char *identifier, Type *type, VarDelList *next) {
+VarDelList *makeVarDelList(VarType *varType, VarDelList *next, Location location) {
     VarDelList *list;
     list = NEW(VarDelList);
-    list->identifier = identifier;
-    list->type = type;
+    list->identifier = varType->identifier;
+    list->type = varType->type;
     list->next = next;
+    list->location = location;
     return list;
 }
 
-DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next) {
+DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next, Location location) {
     DeclarationList *result;
     result = NEW(DeclarationList);
     result->declaration = declaration;
     result->next = next;
+    result->location = location;
     return result;
 }
 
-Declaration *makeVarDeclaration(char *id, Type *type) {
+Declaration *makeVarDeclaration(char *id, Type *type, Location location) {
     Declaration *result;
     result = NEW(Declaration);
     stmDeclNum++;
@@ -385,18 +411,20 @@ Declaration *makeVarDeclaration(char *id, Type *type) {
     result->kind = declVarK;
     result->val.varD.id = id;
     result->val.varD.type = type;
+    result->location = location;
     return result;
 }
 
-StatementList *makeStatementList(Statement *statement, StatementList *next) {
+StatementList *makeStatementList(Statement *statement, StatementList *next, Location location) {
     StatementList *stmList = NEW(StatementList);
     stmList->statement = statement;
     stmList->next = next;
+    stmList->location = location;
 
     return stmList;
 }
 
-Statement *makeReturnStatement(Expression *exp) {
+Statement *makeReturnStatement(Expression *exp, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -404,35 +432,38 @@ Statement *makeReturnStatement(Expression *exp) {
     statement->lineno = lineno;
     statement->kind = statReturnK;
     statement->val.returnD.exp = exp;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeIfStatement(Expression *exp, Statement *statement) {
-    Statement *returning = NEW(Statement);
+Statement *makeIfStatement(Expression *exp, Statement *statement, Location location) {
+    Statement *s = NEW(Statement);
     stmDeclNum++;
-    returning->internal_stmDeclNum = stmDeclNum;
+    s->internal_stmDeclNum = stmDeclNum;
 
-    returning->lineno = lineno;
-    returning->kind = statIfK;
-    returning->val.ifElD.exp = exp;
-    returning->val.ifElD.statement = statement;
-    return returning;
+    s->lineno = lineno;
+    s->kind = statIfK;
+    s->val.ifElD.exp = exp;
+    s->val.ifElD.statement = statement;
+    s->location = location;
+    return s;
 }
 
-Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement) {
-    Statement *returning = NEW(Statement);
+Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement, Location location) {
+    Statement *s = NEW(Statement);
     stmDeclNum++;
-    returning->internal_stmDeclNum = stmDeclNum;
+    s->internal_stmDeclNum = stmDeclNum;
 
-    returning->lineno = lineno;
-    returning->kind = statIfElK;
-    returning->val.ifElD.exp = exp;
-    returning->val.ifElD.statement = statement;
-    returning->val.ifElD.elseStatement = elseStatement;
-    return returning;
+    s->lineno = lineno;
+    s->kind = statIfElK;
+    s->val.ifElD.exp = exp;
+    s->val.ifElD.statement = statement;
+    s->val.ifElD.elseStatement = elseStatement;
+    s->location = location;
+    return s;
 }
 
-Statement *makeAssignment(Variable* variable, Expression *exp) {
+Statement *makeAssignment(Variable* variable, Expression *exp, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -441,10 +472,11 @@ Statement *makeAssignment(Variable* variable, Expression *exp) {
     statement->kind = assignmentK;
     statement->val.assignmentD.exp = exp;
     statement->val.assignmentD.var = variable;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeAllocateStatement(Variable *var) {
+Statement *makeAllocateStatement(Variable *var, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -452,10 +484,11 @@ Statement *makeAllocateStatement(Variable *var) {
     statement->lineno = lineno;
     statement->kind = statAllocateK;
     statement->val.allocateD.var = var;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
+Statement *makeAllocateOfLenStatement(Variable *var, Expression *len, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -464,10 +497,11 @@ Statement *makeAllocateOfLenStatement(Variable *var, Expression *len) {
     statement->kind = statAllocateLenK;
     statement->val.allocateLenD.var = var;
     statement->val.allocateLenD.len = len;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeWriteStatement(Expression *exp) {
+Statement *makeWriteStatement(Expression *exp, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -475,10 +509,11 @@ Statement *makeWriteStatement(Expression *exp) {
     statement->lineno = lineno;
     statement->kind = statWriteK;
     statement->val.writeD.exp = exp;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeWhileStatement(Expression *exp, Statement *stm) {
+Statement *makeWhileStatement(Expression *exp, Statement *stm, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -487,77 +522,85 @@ Statement *makeWhileStatement(Expression *exp, Statement *stm) {
     statement->kind = statWhileK;
     statement->val.whileD.exp = exp;
     statement->val.whileD.statement = stm;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeStatementFromList(StatementList *statementList) {
-    Statement *returning = NEW(Statement);
+Statement *makeStatementFromList(StatementList *statementList, Location location) {
+    Statement *s = NEW(Statement);
     stmDeclNum++;
-    returning->internal_stmDeclNum = stmDeclNum;
+    s->internal_stmDeclNum = stmDeclNum;
 
-    returning->lineno = lineno;
-    returning->kind = stmListK;
-    returning->val.stmListD.statementList = statementList;
-    return returning;
+    s->lineno = lineno;
+    s->kind = stmListK;
+    s->val.stmListD.statementList = statementList;
+    s->location = location;
+    return s;
 }
 
-Statement *makeEmptyExpression(Expression *expression) {
-    Statement *returning = NEW(Statement);
+Statement *makeEmptyExpression(Expression *expression, Location location) {
+    Statement *s = NEW(Statement);
     stmDeclNum++;
-    returning->internal_stmDeclNum = stmDeclNum;
+    s->internal_stmDeclNum = stmDeclNum;
 
-    returning->lineno = lineno;
-    returning->kind = emptyK;
-    returning->val.empty.exp = expression;
-    return returning;
+    s->lineno = lineno;
+    s->kind = emptyK;
+    s->val.empty.exp = expression;
+    s->location = location;
+    return s;
 }
 
-Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next) {
-    Declaration *result;
-    result = NEW(Declaration);
-    result->lineno = lineno;
-    result->kind = declVarsK;
-    result->val.varsD.var = makeVarDeclaration(id, type);
-    result->val.varsD.next = next;
-    return result;
+Declaration *makeVarsDeclaration(char *id, Type *type, Declaration *next, Location location) {
+    Declaration *d;
+    d = NEW(Declaration);
+    d->lineno = lineno;
+    d->kind = declVarsK;
+    d->val.varsD.var = makeVarDeclaration(id, type, location);
+    d->val.varsD.next = next;
+    d->location = location;
+    return d;
 }
 
-Type *makeIntType() {
+Type *makeIntType(Location location) {
     Type *result = NEW(Type);
     result->kind = typeIntK;
+    result->location = location;
     return result;
 }
 
-Type *makeBoolType() {
+Type *makeBoolType(Location location) {
     Type *result = NEW(Type);
     result->kind = typeBoolK;
+    result->location = location;
     return result;
 }
 
-Declaration *makeVarDeclarations(VarDelList *vars) {
+Declaration *makeVarDeclarations(VarDelList *vars, Location location) {
     if (vars == NULL) {
         return NULL;
     }
 
-    Declaration *result;
-    result = makeVarsDeclaration(vars->identifier, vars->type,
-                                 makeVarDeclarations(vars->next));
+    Declaration *d;
+    d = makeVarsDeclaration(vars->identifier, vars->type,
+                                 makeVarDeclarations(vars->next, location), vars->location);
 
 
     stmDeclNum++;
-    result->internal_stmDeclNum = stmDeclNum;
-    return result;
+    d->internal_stmDeclNum = stmDeclNum;
+    d->location = location;
+    return d;
 }
 
-Body *makeBody(DeclarationList *declarationList, StatementList *statementList) {
+Body *makeBody(DeclarationList *declarationList, StatementList *statementList, Location location) {
     Body *body = NEW(Body);
     body->declarationList = declarationList;
     body->statementList = statementList;
+    body->location = location;
 
     return body;
 }
 
-Declaration *makeFunctionDecleration(Function *function) {
+Declaration *makeFunctionDecleration(Function *function, Location location) {
     Declaration *declaration = NEW(Declaration);
     stmDeclNum++;
     declaration->internal_stmDeclNum = stmDeclNum;
@@ -565,11 +608,12 @@ Declaration *makeFunctionDecleration(Function *function) {
     declaration->lineno = lineno;
     declaration->kind = declFuncK;
     declaration->val.functionD.function = function;
+    declaration->location = location;
 
     return declaration;
 }
 
-Declaration *makeTypeDeclaration(char *id, Type *type) {
+Declaration *makeTypeDeclaration(char *id, Type *type, Location location) {
     Declaration *result;
     result = NEW(Declaration);
     result->lineno = lineno;
@@ -577,67 +621,74 @@ Declaration *makeTypeDeclaration(char *id, Type *type) {
     result->val.typeD.id = id;
     result->val.typeD.type = type;
     stmDeclNum++;
-result->internal_stmDeclNum = stmDeclNum;
+    result->internal_stmDeclNum = stmDeclNum;
+    result->location = location;
     return result;
 }
 
-Type *makeIdType(char *id) {
+Type *makeIdType(char *id, Location location) {
     Type *type;
     type = NEW(Type);
 
     type->kind = typeIdK;
     type->val.idType.id = id;
+    type->location = location;
 
     return type;
 }
 
-Type *makeArrayType(Type *type) {
+Type *makeArrayType(Type *type, Location location) {
     Type *t;
     t = NEW(Type);
 
     t->kind = typeArrayK;
     t->val.arrayType.type = type;
+    t->location = location;
 
     return t;
 }
 
-Type *makeRecordType(VarDelList *record) {
+Type *makeRecordType(VarDelList *record, Location location) {
     Type *t;
     t = NEW(Type);
 
     t->kind = typeRecordK;
     t->val.recordType.types = record;
+    t->location = location;
 
     return t;
 }
 
-Type *makeLambdaType(TypeList *typeList, Type *type) {
+Type *makeLambdaType(TypeList *typeList, Type *type, Location location) {
     Type *t = NEW(Type);
 
     t->kind = typeLambdaK;
     t->val.typeLambdaK.typeList = typeList;
     t->val.typeLambdaK.returnType = type;
+    t->location = location;
 
     return t;
 }
 
-Type *makeVoidType() {
+Type *makeVoidType(Location location) {
     Type *t = NEW(Type);
 
     t->kind = typeVoidK;
+    t->location = location;
 
     return t;
 }
 
-ExpressionList *makeExpList(Expression *exp, ExpressionList *next) {
+ExpressionList *makeExpList(Expression *exp, ExpressionList *next, Location location) {
     ExpressionList *list = NEW(ExpressionList);
     list->lineno = lineno;
     list->expression = exp;
     list->next = next;
+    list->location = location;
     return list;
 }
 
-Declaration *makeValDeclaration(char *id, Expression *rhs) {
+Declaration *makeValDeclaration(char *id, Expression *rhs, Location location) {
     Declaration *declaration = NEW(Declaration);
     stmDeclNum++;
     declaration->internal_stmDeclNum = stmDeclNum;
@@ -645,11 +696,12 @@ Declaration *makeValDeclaration(char *id, Expression *rhs) {
     declaration->kind = declValK;
     declaration->val.valD.id = id;
     declaration->val.valD.rhs = rhs;
+    declaration->location = location;
 
     return declaration;
 }
 
-Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList, Constructor* constructor) {
+Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList, Constructor* constructor, Location location) {
     Declaration *declaration = NEW(Declaration);
     stmDeclNum++;
     declaration->internal_stmDeclNum = stmDeclNum;
@@ -660,25 +712,28 @@ Declaration *makeClassDeclaration(char *id, DeclarationList *declarationList, Ty
     declaration->val.classD.genericTypeParameters = typeList;
     declaration->val.classD.extendedClasses = extensionList;
     declaration->val.classD.constructor = constructor;
+    declaration->location = location;
     typeIndex = 0;
 
     return declaration;
 }
 
-Type *makeClassType(char *id, TypeList *genericBoundTypes) {
+Type *makeClassType(char *id, TypeList *genericBoundTypes, Location location) {
     Type *type;
     type = NEW(Type);
 
     type->kind = typeClassK;
     type->val.typeClass.classId = id;
     type->val.typeClass.genericBoundValues = genericBoundTypes;
+    type->location = location;
 
     return type;
 }
 
-TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
+TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes, Location location) {
     TypeList *tpeLst = NEW(TypeList);
 
+    tpeLst->location = location;
     tpeLst->next = next;
 
     Type *type = NEW(Type);
@@ -687,6 +742,10 @@ TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
     type->val.typeClass.classId = class;
     type->val.typeClass.genericBoundValues = boundTypes;
     type->val.typeGeneric.typeIndex = typeIndex;
+    // TODO: What about when it is NULL ?
+    if (boundTypes != NULL) {
+        type->location = boundTypes->location;
+    }
     typeIndex++;
 
     tpeLst->type = type;
@@ -694,17 +753,18 @@ TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes) {
     return tpeLst;
 }
 
-Constructor *makeClassConstructor(VarDelList *vdl, Body *body) {
+Constructor *makeClassConstructor(VarDelList *vdl, Body *body, Location location) {
     Constructor *constructor;
     constructor = NEW(Constructor);
 
     constructor->body = body;
     constructor->declarationList = vdl;
+    constructor->location = location;
 
     return constructor;
 }
 
-Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *expressionList) {
+Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *expressionList, Location location) {
     Statement *statement = NEW(Statement);
     stmDeclNum++;
     statement->internal_stmDeclNum = stmDeclNum;
@@ -713,14 +773,24 @@ Statement *makeAllocateWithConstructorStatement(Variable *var, ExpressionList *e
     statement->kind = statAllocateK;
     statement->val.allocateD.var = var;
     statement->val.allocateD.constructorList = expressionList;
+    statement->location = location;
     return statement;
 }
 
-Statement *makeGCStatement() {
+Statement *makeGCStatement(Location location) {
     Statement *returning = NEW(Statement);
     stmDeclNum++;
     returning->internal_stmDeclNum = stmDeclNum;
     returning->lineno = lineno;
     returning->kind = gcK;
+    returning->location = location;
     return returning;
+}
+
+VarType *makeVarType(char *id, Type *type, Location location) {
+    VarType *varType = NEW(VarType);
+    varType->type = type;
+    varType->identifier = id;
+    varType->location = location;
+    return varType;
 }

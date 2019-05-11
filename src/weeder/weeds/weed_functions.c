@@ -3,6 +3,7 @@
 //
 
 #include "weed_functions.h"
+#include "../../ast/tree.h"
 
 Error *weedFunctionNames(Body *body) {
     //Find all functions
@@ -32,6 +33,7 @@ Error *weedFunctionNames(Body *body) {
                 e->error = WEED_FUNC_HAS_NO_END;
                 e->val.WEED_FUNC_HAS_NO_END_S.headId = thisHead;
                 e->val.WEED_FUNC_HAS_NO_END_S.lineno = l->declaration->val.functionD.function->tail->lineno;
+                e->location = l->declaration->val.functionD.function->tail->location;
 
                 return e;
             }
@@ -163,6 +165,7 @@ Error *checkStatementReturns(Statement *stm, char* fid) {
     e = NEW(Error);
     e->error = WEED_FUNC_HAS_NO_RETURN;
     e->val.WEED_FUNC_HAS_NO_RETURN_S.fid = fid;
+    e->location = stm->location;
 
     return e;
 }
@@ -184,6 +187,7 @@ Error *weedReturnsForStatementList(StatementList *sl, char* fid) {
     e = NEW(Error);
     e->error = WEED_FUNC_HAS_NO_RETURN;
     e->val.WEED_FUNC_HAS_NO_RETURN_S.fid = fid;
+    e->location = statementList->location;
 
     return e;
 }

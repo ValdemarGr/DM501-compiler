@@ -879,13 +879,13 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_GARBAGE_COLLECT: {
             fprintf(out, "# COMPLEX_GARBAGE_COLLECT\n");
             printIndentation(out);
-            fprintf(out, "pushq %rbp\n");
+            fprintf(out, "pushq %%rbp\n");
 
             printIndentation(out);
             fprintf(out, "call garbageCollect\n");
 
             printIndentation(out);
-            fprintf(out, "popq %rbp\n");
+            fprintf(out, "popq %%rbp\n");
         } break;
         case COMPLEX_ABS_VALUE: {
             fprintf(out, "# COMPLEX_ABS_VALUE\n");

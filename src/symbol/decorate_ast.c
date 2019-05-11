@@ -239,6 +239,7 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                         e = NEW(Error);
 
                         e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+                        e->location = statement->val.assignmentD.exp->val.termD.term->location;
 
                         return e;
                     }
@@ -246,6 +247,7 @@ Error *decorateNestedStatementBody(Statement *statement, SymbolTable *symbolTabl
                         e = NEW(Error);
 
                         e->error = NESTED_LAMBDA;
+                        e->location = statement->val.assignmentD.exp->val.termD.term->location;
 
                         return e;
                     } else
@@ -467,6 +469,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 e = NEW(Error);
 
                 e->error = NO_FUNC_IN_CONSTRUCTOR;
+                e->location = declaration->location;
 
                 return e;
             }
@@ -474,12 +477,14 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 e = NEW(Error);
 
                 e->error = NESTED_LAMBDA;
+                e->location = declaration->location;
 
                 return e;
             } else if (inClassContext) {
                 e = NEW(Error);
 
                 e->error = DECLARATIONS_IN_CLASS;
+                e->location = declaration->location;
 
                 return e;
             }
@@ -516,6 +521,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e = NEW(Error);
 
                     e->error = NO_LAMBDA_IN_CONSTRUCTOR;
+                    e->location = declaration->val.valD.rhs->val.termD.term->location;
 
                     return e;
                 }
@@ -523,6 +529,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e = NEW(Error);
 
                     e->error = NESTED_LAMBDA;
+                    e->location = declaration->val.valD.rhs->val.termD.term->location;
 
                     return e;
                 }
@@ -562,6 +569,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 e = NEW(Error);
 
                 e->error = NO_CLASS_IN_CONSTRUCTOR;
+                e->location = declaration->location;
 
                 return e;
             }
@@ -583,6 +591,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e->error = NOT_TYPE;
                     e->val.NOT_TYPE.id = extensions->type->val.idType.id;
                     e->val.NOT_TYPE.lineno = declaration->lineno;
+                    e->location = extensions->type->location;
 
                     return e;
                 }
@@ -595,6 +604,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e->error = NOT_CLASS;
                     e->val.NOT_CLASS.id = extensions->type->val.idType.id;
                     e->val.NOT_CLASS.lineno = declaration->lineno;
+                    e->location = extensions->type->location;
 
                     return e;
                 }
@@ -700,6 +710,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                 e = NEW(Error);
 
                 e->error = EMPTY_CLASS;
+                e->location = declaration->location;
 
                 return e;
             }
@@ -713,6 +724,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     e->error = DECLARATIONS_IN_CLASS;
                     e->val.DECLARATIONS_IN_CLASS.classId = declaration->val.classD.id;
                     e->val.DECLARATIONS_IN_CLASS.lineno = declaration->lineno;
+                    e->location = declarationList->declaration->location;
 
                     return e;
                 }

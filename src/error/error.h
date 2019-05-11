@@ -12,6 +12,7 @@
 #include "../utils/enum_to_string.h"
 
 typedef struct Error {
+    Location location;
     enum {
         WEED_FUNC_HAS_NO_END,
         WEED_FUNC_HAS_NO_RETURN,
@@ -83,6 +84,7 @@ typedef struct Error {
         struct { char *id; int lineno; } NOT_TYPE;
         struct { char *classId; int lineno; } DECLARATIONS_IN_CLASS;
         struct { TypeKind foundReturnType; int lineno; } RETURN_IN_VOID_LAMBDA;
+        struct { int lineno; } INVALID_ALLOCATE_TARGET;
     } val;
 } Error;
 
