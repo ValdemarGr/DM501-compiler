@@ -16,7 +16,13 @@ function compile_file {
     local subdirectory="$2"
 
     local output_file="$output_directory/$subdirectory/$filename.s"
-    local error="$(${compiler} ${filepath} 2<&1 > ${output_file})"
+    error=$(${compiler} ${filepath} 2<&1 > ${output_file})
+    status=$?
+
+    if [[ ${status} -eq 139 ]]; then
+        error="Segmentation fault (core dumped)"
+    fi
+
     number_files=$((number_files + 1))
 
     if [[ -n "$error" ]]; then

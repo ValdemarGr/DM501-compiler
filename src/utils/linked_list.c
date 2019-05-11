@@ -47,7 +47,7 @@ LinkedListNode *nextIteratorLinkedList(LinkedListNode *node) {
 }
 
 int getValueIteratorIntLinkedList(LinkedListNode *node) {
-    return (int) node->value;
+    return (long) node->value;
 }
 
 LinkedList *mapLinkedList(LinkedList *list, void *(*transformer)(void*)) {

@@ -8,6 +8,10 @@ int writeError(Error *e) {
         return 0;
     }
 
+    fprintf(stderr, "%s:%d.%d-%d.%d: ", e->location.filename,
+            e->location.first_line, e->location.first_column, e->location.last_line,
+            e->location.last_column);
+
     switch (e->error) {
         case WEED_FUNC_HAS_NO_END:
             fprintf(stderr, "Function \"%s\" has no end. ", e->val.WEED_FUNC_HAS_NO_END_S.headId);
@@ -97,13 +101,14 @@ int writeError(Error *e) {
             fprintf(stderr, "Error: ILLEGAL_DOWNCAST\n");
         } break;
         case VALUE_IS_NULL: {
-            fprintf(stderr, "Error: VALUE_IS_NULL\n");
+            fprintf(stderr, "Variable %%s is null at line number %i.\n",
+                    e->val.VALUE_IS_NULL.lineno);
         } break;
         case NULL_COMPARISON: {
             fprintf(stderr, "Error: NULL_COMPARISON\n");
         } break;
         case CONST_REASSIGNMENT: {
-            fprintf(stderr, "Error: CONST_REASSIGNMENT\n");
+            fprintf(stderr, "error: Reassignment of const %s\n", e->val.CONST_REASSIGNMENT.id);
         } break;
         case INVALID_ASSIGMENT_TO_TYPE: {
             fprintf(stderr, "Error: INVALID_ASSIGMENT_TO_TYPE\n");
@@ -145,7 +150,8 @@ int writeError(Error *e) {
             fprintf(stderr, "INVALID_GENERIC_HAS_TYPE_CONSTRAINT\n");
         } break;
         case INVALID_ALLOCATE_TARGET: {
-            fprintf(stderr, "INVALID_ALLOCATE_TARGET\n");
+            fprintf(stderr, "Variable %%s is not an valid allocate target at line %i\n",
+                    e->val.INVALID_ALLOCATE_TARGET.lineno);
         } break;
         case NO_PRIMITIVE_GENERICS : {
             fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");

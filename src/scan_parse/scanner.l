@@ -5,15 +5,22 @@
 extern int lineno;
 extern int fileno();
 extern void yyerror(char const *s);
+
+int yycolumn = 1;
+
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; \
+    yylloc.first_column = yycolumn; yylloc.last_column = yycolumn+yyleng-1; \
+    yycolumn += yyleng; yylloc.filename = filename;
 %}
 
 %option noyywrap
 %x comment
+%option yylineno
 
 %%
     int comment_depth = 0;
 [ \t\r]+        /* ignore */;
-\n              lineno++;
+\n              {yycolumn = 1;}
 
 #.*             ;
 "(*"            { comment_depth = 1; BEGIN(comment); }
@@ -21,7 +28,7 @@ extern void yyerror(char const *s);
 <comment>"*"+[^*()\n]*   ;
 <comment>"("+[^*(\n]*    ;
 <comment>[^*\n]+")"      ;
-<comment>\n              lineno++;
+<comment>\n              {yycolumn = 1;}
 <comment>"("+"*"         { comment_depth++;}
 <comment>"*"+")"         { if (--comment_depth < 1) {BEGIN(INITIAL);}}
 <comment><<EOF>>         { yyerror("unterminated comment"); BEGIN(INITIAL); }
