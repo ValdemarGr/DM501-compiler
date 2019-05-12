@@ -1772,9 +1772,11 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
         case opK:
             //Check if the operator takes boolean or integer as rhs/lhs
             expressionType = &intStaticType;
+            bool isEqOrIneq = false;
 
             switch (expression->val.op.operator->kind) {
                 /* GIT BLAME: MADS */
+                //legit mads, det her sted skaber bugs
                 case opGreaterK:
                 case opLessK:
                 case opGeqK:
@@ -1796,6 +1798,13 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                     returnType = &intStaticType;
             }
 
+            switch (expression->val.op.operator->kind) {
+                case opEqualityK:
+                case opInequalityK:
+                    isEqOrIneq = true;
+                    break;
+                default: break;
+            }
 
             if (areTypesEqual(expectedType, returnType, symbolTable) == false) {
                 e = NEW(Error);
@@ -1814,7 +1823,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             Error *e2 = NULL;
 
             //We also want to check if try to perform an integer operation on a null, this we cannot do
-            if (expressionType->kind == intStaticType.kind) {
+            if (expressionType->kind == intStaticType.kind && isEqOrIneq == false) {
                 Type* leftExpType = evaluateExpressionType(expression->val.op.left, symbolTable);
                 Type* rightExpType = evaluateExpressionType(expression->val.op.right, symbolTable);
 

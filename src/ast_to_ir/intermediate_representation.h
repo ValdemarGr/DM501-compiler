@@ -59,6 +59,7 @@ typedef enum {
     INSTRUCTION_MOVE_TO_OFFSET,
     INSTRUCTION_LEA_TO_OFFSET,
     INSTRUCTION_REGISTER_CALL,
+    INSTRUCTION_ADD_STACK_PTR,
 
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
@@ -74,6 +75,8 @@ typedef enum {
     COMPLEX_RIP_LAMBDA_LOAD,
     COMPLEX_GARBAGE_COLLECT,
     COMPLEX_ABS_VALUE,
+    COMPLEX_SAVE_ALL,
+    COMPLEX_RESTORE_ALL,
 
     METADATA_BEGIN_BODY_BLOCK,
     METADATA_END_BODY_BLOCK,
@@ -108,6 +111,7 @@ typedef struct Instructions {
         size_t callRegister;
         struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
         struct {size_t argNum; size_t moveReg; size_t stackNum; } args; //METADATA_FUNCTION_ARGUMENT
+        size_t toAddStackPtr;
         size_t tempToWrite; //INSTRUCTION_WRITE
         size_t tempToReturn; //INSTRUCTION_RETURN
         size_t tempToConstrain; //COMPLEX_CONSTRAIN_BOOLEAN

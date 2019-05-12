@@ -17,7 +17,6 @@ while ( t1 < |a| ) do
 {
   allocate a[t1] of length 6;
   t2 = 0;
-  write t2;
   while ( t2 < |a[t1]| ) do
   {
     allocate a[t1][t2] of length 7;

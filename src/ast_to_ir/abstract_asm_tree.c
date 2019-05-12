@@ -474,7 +474,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 functionToCall = generateInstructionsForVariableAccess(fvar, symbolTable);
             }
 
+            Instructions *saveall = newInstruction();
+            saveall->kind = COMPLEX_SAVE_ALL;
+            appendInstructions(saveall);
+
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
+
+            int toAdd = 0;
 
             while (expressionList != NULL) {
 
@@ -487,10 +493,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 push->val.tempToPush = temporaryForArgument;
                 appendInstructions(push);
 
+                toAdd++;
                 expressionList = expressionList->next;
             }
 
+
             if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
+
                 Instructions *call = newInstruction();
                 call->kind = INSTRUCTION_REGISTER_CALL;
                 call->val.callRegister = functionToCall;
@@ -529,7 +538,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 push->kind = INSTRUCTION_PUSH;
                 push->val.tempToPush = fncPtrTemp;
                 appendInstructions(push);
-
+                toAdd++;
 
                 fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
 
@@ -561,6 +570,15 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 appendInstructions(call);
             }
 
+            Instructions *sp = newInstruction();
+            sp->kind = INSTRUCTION_ADD_STACK_PTR;
+            sp->val.toAddStackPtr = toAdd * POINTER_SIZE;
+            appendInstructions(sp);
+
+            Instructions *restoreall = newInstruction();
+            restoreall->kind = COMPLEX_RESTORE_ALL;
+            appendInstructions(restoreall);
+
             //Return value is in rax
 
             /*
@@ -578,6 +596,8 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             popLink->val.pushPopStaticLink.temporary = currentTemporary;
             appendInstructions(popLink);
             currentTemporary++;
+
+
             return 0;
         } break;
         case parenthesesK: {
@@ -930,7 +950,13 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(push);
             currentTemporary++;*/
 
+            Instructions *saveall = newInstruction();
+            saveall->kind = COMPLEX_SAVE_ALL;
+            appendInstructions(saveall);
+
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
+
+            int toAdd = 0;
 
             while (expressionList != NULL) {
                 //Evaluate
@@ -942,6 +968,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 push->val.tempToPush = temporaryForArgument;
                 appendInstructions(push);
 
+                toAdd++;
                 expressionList = expressionList->next;
             }
 
@@ -970,6 +997,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             push2->kind = INSTRUCTION_PUSH;
             push2->val.tempToPush = fncPtrTemp;
             appendInstructions(push2);
+            toAdd++;
 
             fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
 
@@ -994,6 +1022,15 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             call->kind = INSTRUCTION_REGISTER_CALL;
             call->val.callRegister = fncPtrTemp;
             appendInstructions(call);
+
+            Instructions *sp = newInstruction();
+            sp->kind = INSTRUCTION_ADD_STACK_PTR;
+            sp->val.toAddStackPtr = toAdd * POINTER_SIZE;
+            appendInstructions(sp);
+
+            Instructions *restoreall = newInstruction();
+            restoreall->kind = COMPLEX_RESTORE_ALL;
+            appendInstructions(restoreall);
 
             //We need to restore the static link
             Instructions *popLink = newInstruction();
@@ -1424,6 +1461,8 @@ void generateInstructionTreeForStatement(Statement *statement) {
                     //push args first, then class context ptr
                     ExpressionList *argIter = statement->val.allocateD.constructorList;
 
+                    int toAdd = 0;
+
                     while (argIter != NULL) {
 
                         size_t tempForArg = generateInstructionsForExpression(argIter->expression, statement->symbolTable);
@@ -1434,10 +1473,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
                         push->val.tempToPush = tempForArg;
                         appendInstructions(push);
 
+                        toAdd++;
                         argIter = argIter->next;
                     }
 
 
+                    toAdd++;
                     //Push class ptr
                     Instructions *clsPush = newInstruction();
                     clsPush->kind = INSTRUCTION_PUSH;
@@ -1448,6 +1489,11 @@ void generateInstructionTreeForStatement(Statement *statement) {
                     call->kind = INSTRUCTION_FUNCTION_CALL;
                     call->val.function = buf;
                     appendInstructions(call);
+
+                    Instructions *sp = newInstruction();
+                    sp->kind = INSTRUCTION_ADD_STACK_PTR;
+                    sp->val.toAddStackPtr = toAdd * POINTER_SIZE;
+                    appendInstructions(sp);
 
                 }
             }
@@ -1760,6 +1806,10 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             //For function label
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier);
 
+            Instructions *beginGlobalBLock = newInstruction();
+            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+            appendInstructions(beginGlobalBLock);
+
             Instructions *label = newInstruction();
             label->val.functionHead.label = declaration->val.functionD.function->head->indentifier;
             label->val.functionHead.distance = symbol->distanceFromRoot + 1;
@@ -1810,6 +1860,10 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             }
 
             generateInstructionTree(declaration->val.functionD.function->body);
+
+            Instructions *endGlobalBLock = newInstruction();
+            endGlobalBLock->kind = METADATA_END_GLOBAL_BLOCK;
+            appendInstructions(endGlobalBLock);
         } break;
         case declValK: {
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.valD.id);
