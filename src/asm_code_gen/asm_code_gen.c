@@ -209,6 +209,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
 
 
             printIndentation(out);
+            fprintf(out, "push %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "push %%rdi\n");
+            printIndentation(out);
             fprintf(out, "movq %%%s, %%rsi\n",
                     getNextRegister(instruction->val.tempToWrite));
             printIndentation(out);
@@ -217,6 +221,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "pop %%rsi\n");
 
 
             /*printIndentation(out);
@@ -749,7 +757,11 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.art2const.temp));
         } break;
         case INSTRUCTION_MUL_CONST: {
-
+            fprintf(out, "# INSTRUCTION_MUL_CONST\n");
+            printIndentation(out);
+            fprintf(out, "imul $%i, %%%s\n",
+                    instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp));
         } break;
         case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
 
@@ -909,6 +921,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "xor %%%s, %%%s\n",
                     getNextRegister(instruction->val.arithmetic2.source),
                     getNextRegister(instruction->val.arithmetic2.dest));
+            fprintf(out, "popq %%rbp\n");
         } break;
     }
 }

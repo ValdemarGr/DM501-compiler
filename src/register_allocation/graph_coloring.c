@@ -166,7 +166,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
      * assigned a color that has not been used
      */
     while (!isEmpty(removedStack)) {
-        poppedNode = pop(stack);
+        poppedNode = pop(removedStack);
         colorFound = false;
 
         for (int i = 1; i < colors; i++) {
