@@ -1918,7 +1918,11 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 }
 
 void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTable) {
-    if (symbol->value->kind != typeK) {
+    if (symbol->value->kind == symTypeClassK) {
+        return;
+    }
+
+    if (symbol->value->kind == typeFunctionK && !symbol->value->val.typeFunctionD.isLambda) {
         return;
     }
 

@@ -1,0 +1,35 @@
+class B {
+    val field = 5;
+};
+
+class A {
+    val field = 22;
+    var b: class B;
+    val lambda = (x: int): void -> {
+        write x;
+        write field;
+    };
+};
+
+var a: class A;
+allocate a;
+allocate a.b;
+
+write a.b.field;
+a.lambda(42);
+write 0;
+write 0;
+
+gc;
+
+write a.b.field;
+a.lambda(42);
+write 0;
+write 0;
+
+gc;
+
+write a.b.field;
+a.lambda(42);
+write 0;
+write 0;

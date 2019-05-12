@@ -4,6 +4,11 @@
 main:
     movq $0, %r8
 
+    negq %r8
+
+    push %r8
+    call print_number
+
     cmp $0, %r8
     setg %dl
     movsx %dl, %r8 
