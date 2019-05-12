@@ -13,6 +13,7 @@
 #include "utils/stack.h"
 #include "register_allocation/register_allocator.h"
 #include "peephole/peephole.h"
+#include "constant_fold/constant_fold.h"
 
 int lineno;
 int stmDeclNum;
@@ -26,6 +27,8 @@ bool verbose = false;
 bool registerAllocation = false;
 bool dePeephole = true;
 size_t maxDistFromRoot = 0;
+int initialGcSizeMB = 10;
+extern char *filename;
 
 extern void yyparse();
 
@@ -58,6 +61,8 @@ int compile_file(FILE *file) {
     if (prettyPrint) {
         prettyBody(theexpression);
     }
+
+    constantFoldBody(theexpression);
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
@@ -100,7 +105,12 @@ int main(int argc, char *argv[]) {
                     dePeephole = false;
                     break;
                 default:
-                    printf("Please supply the correct argument for %s\n", arg);
+                    if (strstr(arg, "mem=")) {
+                        char *size = strstr(arg, "mem=") + strlen("mem=");
+                        initialGcSizeMB = (int)atoi(size);
+                    } else {
+                        printf("Please supply the correct argument for %s\n", arg);
+                    }
                     break;
             }
 
@@ -113,6 +123,7 @@ int main(int argc, char *argv[]) {
 
         //We can also do smart decorateFunction like a preprocessor and bundle it all in an out file
         FILE *fp = fopen(arg, "r");
+        filename = arg;
         r = compile_file(fp);
 
         if (r != 0) {
@@ -123,6 +134,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (!gotFile) {
+        filename = "(stdin)";
         r = compile_file(stdin);
     }
 

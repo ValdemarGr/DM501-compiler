@@ -724,6 +724,7 @@ Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, Sy
             Error *e = NEW(Error);
 
             e->error = NO_PRIMITIVE_GENERICS;
+            e->location = boundIter->type->location;
 
             return e;
         }
@@ -737,6 +738,7 @@ Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, Sy
         Error *e = NEW(Error);
 
         e->error = TOO_MANY_GENERICS;
+        e->location = generic->location;
 
         return e;
     }
@@ -1017,6 +1019,17 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
             symbol = getSymbol(symbolTable, variable->val.idD.id);
 
+            if (symbol == NULL) {
+                e = NEW(Error);
+
+                e->error = SYMBOL_NOT_FOUND;
+                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
+                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                e->location = variable->location;
+
+                return e;
+            }
+
             if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
                 if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
@@ -1024,6 +1037,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e = NEW(Error);
 
                         e->error = LAMBDA_CAPTURE_INVALID;
+                        e->location = variable->location;
 
                         return e;
                     }
@@ -1033,21 +1047,13 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e = NEW(Error);
 
                         e->error = LAMBDA_CAPTURE_INVALID;
+                        e->location = variable->location;
 
                         return e;
                     }
                 }
             }
 
-            if (symbol == NULL) {
-                e = NEW(Error);
-
-                e->error = SYMBOL_NOT_FOUND;
-                e->val.SYMBOL_NOT_FOUND_S.id = variable->val.idD.id;
-                e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
-
-                return e;
-            }
 
             if (symbol->value->kind == typeK) {
                 symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
@@ -1063,6 +1069,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e->error = SYMBOL_NOT_FOUND;
                         e->val.SYMBOL_NOT_FOUND_S.id = expectedType->val.idType.id;
                         e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                        e->location = variable->location;
 
                         return e;
                     }
@@ -1078,6 +1085,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e->val.VARIABLE_UNEXPECTED_CLASS_S.lineno = variable->lineno;
                         e->val.VARIABLE_UNEXPECTED_CLASS_S.expectedClass = second->name;
                         e->val.VARIABLE_UNEXPECTED_CLASS_S.foundClass = symAsType->val.typeClass.classId;
+                        e->location = variable->location;
 
                         return e;
                     }
@@ -1091,6 +1099,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                     e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
                     e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
                     e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
+                    e->location = variable->location;
 
 
                     return e;
@@ -1113,6 +1122,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                             e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
                             e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
                             e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = returnType->kind;
+                            e->location = varDelList->location;
 
 
                             return e;
@@ -1130,6 +1140,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = "FIX ME 2";
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = 0;
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = 0;
+                        e->location = variable->location;
 
                         return e;
                     }
@@ -1158,6 +1169,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = typeArrayK;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = toCompare->kind;
+                e->location = variable->location;
 
                 return e;
             }
@@ -1172,6 +1184,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = toCompare->val.arrayType.type->kind;
+                e->location = variable->location;
 
                 return e;
             }
@@ -1197,6 +1210,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = variable->val.recordLookupD.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                e->location = variable->location;
 
                 return e;
             }
@@ -1209,6 +1223,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = variable->val.recordLookupD.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = variable->lineno;
+                e->location = variable->location;
 
                 return e;
             } else {
@@ -1302,6 +1317,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = term->val.functionCallD.functionId;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+                e->location = term->location;
 
                 return e;
             }
@@ -1316,6 +1332,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->error = SYMBOL_NOT_FOUND;
                     e->val.SYMBOL_NOT_FOUND_S.id = "userType";
                     e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+                    e->location = term->location;
 
                     return e;
                 }
@@ -1326,6 +1343,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->error = TYPE_TERM_IS_NOT_FUNCTION;
                     e->val.TYPE_TERM_IS_NOT_FUNCTION_S.lineno = term->lineno;
                     e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid = term->val.functionCallD.functionId;
+                    e->location = term->location;
 
                     return e;
                 }
@@ -1343,6 +1361,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
                 e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.lineno = term->lineno;
                 e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.fid = term->val.functionCallD.functionId;
+                e->location = term->location;
 
                 return e;
             }
@@ -1386,6 +1405,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                    e->location = term->location;
 
                     return e;
                 }
@@ -1399,6 +1419,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                         e->error = SYMBOL_NOT_FOUND;
                         e->val.SYMBOL_NOT_FOUND_S.id = "userType";
                         e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+                        e->location = term->location;
 
                         return e;
                     }
@@ -1440,6 +1461,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                    e->location = term->location;
 
                     return e;
                 }
@@ -1488,6 +1510,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno =  term->lineno;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = term->val.lambdaD.lambda->returnType->kind;
+                e->location = term->val.lambdaD.lambda->returnType->location;
 
 
                 return e;
@@ -1509,6 +1532,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->location = term->location;
 
                 return e;
             }
@@ -1524,6 +1548,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_INTEGER;
                 e->val.TYPE_TERM_NOT_INTEGER_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
+                e->location = term->location;
 
                 return e;
             }
@@ -1543,6 +1568,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_INTEGER;
                 e->val.TYPE_TERM_NOT_INTEGER_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
+                e->location = term->location;
 
                 return e;
             }
@@ -1554,6 +1580,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->location = term->location;
 
                 return e;
             }
@@ -1565,6 +1592,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->location = term->location;
 
                 return e;
             }
@@ -1586,6 +1614,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.ILLEGAL_DOWNCAST.idFrom = type->val.typeClass.classId;
                 e->val.ILLEGAL_DOWNCAST.idTo = expectedType->val.idType.id;
                 e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
+                e->location = term->location;
 
                 return e;
             } else {
@@ -1595,6 +1624,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.ILLEGAL_DOWNCAST.idFrom = type->val.typeClass.classId;
                 e->val.ILLEGAL_DOWNCAST.idTo = expectedType->val.idType.id;
                 e->val.ILLEGAL_DOWNCAST.lineno = term->lineno;
+                e->location = term->location;
 
                 return e;
             }
@@ -1626,6 +1656,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = "LAMBDA_INVOKE";
                 e->val.SYMBOL_NOT_FOUND_S.lineno = term->lineno;
+                e->location = term->location;
 
                 return e;
             }
@@ -1668,6 +1699,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                e->location = term->location;
 
                 return e;
             }
@@ -1737,6 +1769,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError = expression;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType = expectedType->kind;
                 e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType = expressionType->kind;
+                e->location = expression->location;
 
                 return e;
             }
@@ -1753,6 +1786,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                     e = NEW(Error);
 
                     e->error = LAMBDA_CAPTURE_INVALID;
+                    e->location = expression->location;
 
                     return e;
                 }
@@ -1761,8 +1795,16 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                             rightExpType == NULL_KITTY_VALUE_INDICATOR) {
                     e = NEW(Error);
 
+                    Expression *exp;
+                    if (leftExpType == NULL_KITTY_VALUE_INDICATOR) {
+                        exp = expression->val.op.left;
+                    } else {
+                        exp = expression->val.op.right;
+                    }
+
                     e->error = VALUE_IS_NULL;
                     e->val.VALUE_IS_NULL.lineno = expression->lineno;
+                    e->location = exp->location;
 
                     return e;
                 }
@@ -1778,8 +1820,16 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
                 if (e == NULL_KITTY_VALUE_INDICATOR || e2 == NULL_KITTY_VALUE_INDICATOR) {
                     e = NEW(Error);
 
+                    Expression *exp;
+                    if (e == NULL_KITTY_VALUE_INDICATOR) {
+                        exp = expression->val.op.left;
+                    } else {
+                        exp = expression->val.op.right;
+                    }
+
                     e->error = VALUE_IS_NULL;
                     e->val.VALUE_IS_NULL.lineno = expression->lineno;
+                    e->location = exp->location;
 
                     return e;
                 }
@@ -1804,6 +1854,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
                         e->error = NULL_COMPARISON;
                         e->val.NULL_COMPARISON.lineno = expression->lineno;
+                        e->location = expression->val.op.left->location;
 
                         return e;
                     } else {
@@ -1822,6 +1873,7 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
 
                         e->error = NULL_COMPARISON;
                         e->val.NULL_COMPARISON.lineno = expression->lineno;
+                        e->location = expression->location;
 
                         return e;
                     } else {
@@ -1894,6 +1946,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e->error = RETURN_IN_VOID_LAMBDA;
                 e->val.RETURN_IN_VOID_LAMBDA.foundReturnType = evaluateExpressionType(statement->val.returnD.exp, statement->symbolTable)->kind;
                 e->val.RETURN_IN_VOID_LAMBDA.lineno = statement->lineno;
+                e->location = statement->location;
 
                 return e;
             }
@@ -1931,6 +1984,8 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e = NEW(Error);
 
                 e->error = INVALID_ALLOCATE_TARGET;
+                e->val.INVALID_ALLOCATE_TARGET.lineno = statement->lineno;
+                e->location = statement->location;
 
                 return e;
             }
@@ -1943,6 +1998,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                         e = NEW(Error);
 
                         e->error = NO_CONSTRUCTOR;
+                        e->location = statement->location;
 
                         return e;
                     }
@@ -1995,6 +2051,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = unwrapped->val.typeClass.classId;
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                        e->location = statement->location;
 
                         return e;
                     }
@@ -2007,6 +2064,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e = NEW(Error);
 
                 e->error = INVALID_ALLOCATE_TARGET;
+                e->location = statement->location;
 
                 return e;
             }
@@ -2076,6 +2134,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                     e->error = CONST_REASSIGNMENT;
                     e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
                     e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+                    e->location = statement->location;
 
                     return e;
                 } else if (getSymbolForBaseVariable(statement->val.assignmentD.var, statement->symbolTable)->distanceFromRoot != constructorReachLevel) {
@@ -2084,6 +2143,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                     e->error = CONST_REASSIGNMENT;
                     e->val.CONST_REASSIGNMENT.id = statement->val.assignmentD.var->val.idD.id;
                     e->val.CONST_REASSIGNMENT.lineno = statement->lineno;
+                    e->location = statement->location;
 
                     return e;
                 }
@@ -2096,6 +2156,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e->error = INVALID_ASSIGMENT_TO_TYPE;
                 e->val.INVALID_ASSIGMENT_TO_TYPE.id = statement->val.assignmentD.var->val.idD.id;
                 e->val.INVALID_ASSIGMENT_TO_TYPE.lineno = statement->lineno;
+                e->location = statement->location;
 
                 return e;
             }
@@ -2108,6 +2169,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e->error = INVALID_TYPE;
                 e->val.INVALID_TYPE.id = statement->val.assignmentD.var->val.idD.id;
                 e->val.INVALID_TYPE.lineno = statement->lineno;
+                e->location = statement->location;
 
                 return e;
             }
@@ -2122,6 +2184,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e->error = INVALID_ASSIGMENT_TO_NULL;
                 e->val.INVALID_ASSIGMENT_TO_NULL.id = statement->val.assignmentD.var->val.idD.id;
                 e->val.INVALID_ASSIGMENT_TO_NULL.lineno = statement->lineno;
+                e->location = statement->location;
 
                 return e;
             }
@@ -2173,6 +2236,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+                e->location = type->location;
 
                 return e;
             }
@@ -2191,6 +2255,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+                e->location = type->location;
 
                 return e;
             } else {
@@ -2247,6 +2312,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = type->val.idType.id;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+                e->location = type->location;
 
                 return e;
             }
@@ -2321,6 +2387,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
             Error *e = NEW(Error);
 
             e->error = NO_PRIMITIVE_GENERICS;
+            e->location = boundCounter->type->location;
 
             return e;
         }
@@ -2334,6 +2401,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
                 e->error = SYMBOL_NOT_FOUND;
                 e->val.SYMBOL_NOT_FOUND_S.id = boundCounter->type->val.typeClass.classId;
                 e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+                e->location = boundCounter->type->location;
 
                 return e;
             }
@@ -2349,6 +2417,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
                 e->error = NOT_CLASS;
                 e->val.NOT_CLASS.id = symbol->name;
                 e->val.NOT_CLASS.lineno = lineno;
+                e->location = boundCounter->type->location;
 
                 return e;
             }
@@ -2359,6 +2428,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
                 e->error = NOT_CLASS;
                 e->val.NOT_CLASS.id = classSymbol->name;
                 e->val.NOT_CLASS.lineno = lineno;
+                e->location = boundCounter->type->location;
 
                 return e;
             }
@@ -2379,6 +2449,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
 
         e->error = TOO_FEW_GENERICS;
         e->val.TOO_FEW_GENERICS.lineno = lineno;
+        e->location = boundCounter->location;
 
         return e;
     }
@@ -2389,6 +2460,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
 
         e->error = TOO_MANY_GENERICS;
         e->val.TOO_MANY_GENERICS.lineno = lineno;
+        e->location = genericCounter->location;
 
         return e;
     }
@@ -2407,6 +2479,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
             e->error = NOT_CLASS;
             e->val.NOT_CLASS.id = classId;
             e->val.NOT_CLASS.lineno = 0;
+            e->location = boundVars->location;
 
             return e;
         }
@@ -2417,6 +2490,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
             e->error = NOT_CLASS;
             e->val.NOT_CLASS.id = classId;
             e->val.NOT_CLASS.lineno = 0;
+            e->location = boundVars->location;
 
             return e;
         }
@@ -2444,6 +2518,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
                     e = NEW(Error);
 
                     e->error = INVALID_GENERIC_HAS_TYPE_CONSTRAINT;
+                    e->location = generics->location;
 
                     return e;
                 }
@@ -2460,6 +2535,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
                     e->error = SYMBOL_NOT_FOUND;
                     e->val.SYMBOL_NOT_FOUND_S.id = boundVars->type->val.typeClass.classId;
                     e->val.SYMBOL_NOT_FOUND_S.lineno = lineno;
+                    e->location = boundVars->type->location;
 
                     return e;
                 }
@@ -2470,6 +2546,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
                     e->error = NOT_CLASS;
                     e->val.NOT_CLASS.id = symbols->name;
                     e->val.NOT_CLASS.lineno = lineno;
+                    e->location = boundVars->type->location;
 
                     return e;
                 }
@@ -2480,6 +2557,7 @@ Error *checkClassTypeValidity(TypeList *boundVars, TypeList *generics, char *cla
                     e->error = CLASS_NOT_EXTENDED;
                     e->val.CLASS_NOT_EXTENDED.id = symbols->name;
                     e->val.CLASS_NOT_EXTENDED.lineno = lineno;
+                    e->location = boundVars->type->location;
 
                     return e;
                 }

@@ -470,15 +470,15 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                                                    state->current->val.tempIntoStackScope.scopeToFindFrame));
 
                 temporaries = makeTemporary(state->current->val.tempIntoStackScope.intermediate, RaIntermidiate);
-                temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.tempToMove, RaRead);
                 temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.intermediate2, RaIntermidiate);
+                temporaries->next->next = makeTemporary(state->current->val.tempIntoStackScope.tempToMove, RaRead);
                 getTemporaries(colors, temporaries, state);
 
                 state->current->val.tempIntoStackScope.intermediate = temporaries->reg;
 
-                state->current->val.tempIntoStackScope.tempToMove = temporaries->next->reg;
+                state->current->val.tempIntoStackScope.intermediate2 = temporaries->next->reg;
 
-                state->current->val.tempIntoStackScope.intermediate2 = temporaries->next->next->reg;
+                state->current->val.tempIntoStackScope.tempToMove = temporaries->next->next->reg;
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK:
                 state->current->val.tempFromStack.inputTemp =

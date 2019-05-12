@@ -71,6 +71,13 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     int count = 0;
     while (iter != NULL) {
         switch (iter->kind) {
+            case INSTRUCTION_PUSH_STACK:break;
+            case INSTRUCTION_POP_STACK:break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+            case COMPLEX_GARBAGE_COLLECT:break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
+            case METADATA_DEBUG_INFO:break;
             case METADATA_CREATE_MAIN: break;
             case METADATA_BEGIN_BODY_BLOCK: break;
             case METADATA_END_BODY_BLOCK: break;
@@ -81,9 +88,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
-            case METADATA_BEGIN_GLOBAL_BLOCK:break;
-            case METADATA_END_GLOBAL_BLOCK:break;
-            case METADATA_DEBUG_INFO:break;
             case INSTRUCTION_LABEL: {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(count));
             }
@@ -93,7 +97,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 insert(labels, makeCharKey(iter->val.functionHead.label), makeIntBox(count));
             }
                 break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME: break;
             default: {
                 count++;
             }
@@ -469,20 +472,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
-            case METADATA_BEGIN_GLOBAL_BLOCK:break;
-            case METADATA_END_GLOBAL_BLOCK:break;
-            case METADATA_DEBUG_INFO:break;
-            case INSTRUCTION_PUSH_STACK:break;
-            case INSTRUCTION_POP_STACK:break;
-            case COMPLEX_GARBAGE_COLLECT:{
-                dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-
-                dataFlowEntry->uses = initHeadedSortedSet();
-
-                dataFlowEntry->successors = makeLineList(line + 1);
-            }break;
-            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
         }
 
         iter = iter->next;

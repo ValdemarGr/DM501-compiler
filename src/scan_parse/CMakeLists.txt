@@ -5,7 +5,7 @@ BISON_TARGET(Parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.c)
 FLEX_TARGET(Scanner scanner.l ${CMAKE_CURRENT_BINARY_DIR}/scanner.c)
 ADD_FLEX_BISON_DEPENDENCY(Scanner Parser)
 
-SET(SOURCES ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS})
+SET(SOURCES ${BISON_Parser_OUTPUTS} ${FLEX_Scanner_OUTPUTS} parser_extra.h)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 add_library(ScanParsePrint ${SOURCES})

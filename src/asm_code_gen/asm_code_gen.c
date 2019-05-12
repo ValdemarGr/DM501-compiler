@@ -2,6 +2,7 @@
 #include "../ast_to_ir/intermediate_representation.h"
 
 int currentIndendation = 0;
+extern int initialGcSizeMB;
 
 void printIndentation(FILE *file) {
     for (int i = 0; i < currentIndendation; i++) {
@@ -128,6 +129,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq %%rbp, %zu(%%%s)\n",
                     instruction->val.functionHead.distance * POINTER_SIZE,
                     getNextRegister(instruction->val.functionHead.temporary));
+            currentIndendation++;
             break;
         case INSTRUCTION_VAR:{
             fprintf(out, "# VAR %s\n", instruction->val.var->name);
@@ -295,7 +297,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "cmp $0, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
             printIndentation(out);
-            fprintf(out, "seta %%dl\n");
+            fprintf(out, "setg %%dl\n");
             printIndentation(out);
             fprintf(out, "movsx %%dl, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
@@ -534,8 +536,9 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# METADATA_CREATE_MAIN\n");
             printIndentation(out);
             fprintf(out, ASM_HEADER);
+            int asBytes = initialGcSizeMB * 1048576;
             printIndentation(out);
-            fprintf(out, MAIN_HEADER);
+            fprintf(out, MAIN_HEADER, asBytes, asBytes, asBytes, asBytes);
             printIndentation(out);
             offsetForFunction = (int)length(instruction->val.mainHeader.pointerSet) + 1 + 1;
             fprintf(out, "subq $%i, %%rsp\n",
@@ -894,6 +897,30 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "call garbageCollect\n");
 
             printIndentation(out);
+            fprintf(out, "popq %%rbp\n");
+        } break;
+        case COMPLEX_ABS_VALUE: {
+            fprintf(out, "# COMPLEX_ABS_VALUE\n");
+            int bitsofChar = 8;
+            int sizeInt = INTEGER_SIZE;
+            int maskSize = bitsofChar * sizeInt - 1;
+
+            printIndentation(out);
+            fprintf(out, "movq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
+            printIndentation(out);
+            fprintf(out, "sar $%zu, %%%s\n",
+                    (size_t)maskSize,
+                    getNextRegister(instruction->val.arithmetic2.dest));
+            printIndentation(out);
+            fprintf(out, "addq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.dest),
+                    getNextRegister(instruction->val.arithmetic2.source));
+            printIndentation(out);
+            fprintf(out, "xor %%%s, %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
             fprintf(out, "popq %%rbp\n");
         } break;
     }

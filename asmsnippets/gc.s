@@ -7,10 +7,6 @@ gcHeapOne:
     .space 32
 gcHeapTwo:
     .space 32
-metaHashMap:
-    .space 16
-metaLambdaList:
-    .space 16
 .section .text
 .global main
 .extern printf
@@ -42,17 +38,25 @@ garbageCollectBFS:
     #reset heap counter for both &
     # swap in use values
     leaq gcHeapTwo, %rsi
-    negq 0(%rsi)
     movq $0, 8(%rsi)
-    leaq gcHeapOne, %rsi
-    negq 0(%rsi)
-    movq $0, 8(%rsi)
+    leaq gcHeapOne, %rax
+    movq $0, 8(%rax)
 
-    movq 0(%rsi), %r12
-    cmp $1, %r12
-    je loadHeapEnd
-    leaq gcHeapTwo, %rsi
+    cmp $0, 0(%rsi)
+    je heapTwoIsNew
+    jmp heapOneIsNew
+
+    heapOneIsNew:
+        leaq gcHeapOne, %rsi
+        leaq gcHeapTwo, %rax
+    jmp loadHeapEnd
+    heapTwoIsNew:
+        #already loaded
+
     loadHeapEnd:
+
+    movq $0, 0(%rax)
+    movq $1, 0(%rsi)
 
 	mov 16(%rbp), %r15
     # we will find the amount of ptrs in -16
@@ -506,7 +510,6 @@ garbageCollectAllocate:
     mov %rbp,%rsp
     pop %rbp
     ret
-
 
 main:
     push %rbp
