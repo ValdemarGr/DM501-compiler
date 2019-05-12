@@ -564,9 +564,16 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 call->val.callRegister = fncPtrTemp;
                 appendInstructions(call);
             } else {
+                //Append depdth to name
+                char *baseName = term->val.functionCallD.functionId;
+                int extra = 16;
+                char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                sprintf(buf, "%s%i", baseName, (int)symbol->distanceFromRoot);
+
                 Instructions *call = newInstruction();
                 call->kind = INSTRUCTION_FUNCTION_CALL;
-                call->val.function = term->val.functionCallD.functionId;
+                call->val.function = buf;
                 appendInstructions(call);
             }
 
@@ -1810,8 +1817,16 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
             appendInstructions(beginGlobalBLock);
 
+            //Append depdth to name
+            char *baseName = declaration->val.functionD.function->head->indentifier;
+            int extra = 16;
+            char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+            sprintf(buf, "%s%i", baseName, (int)symbol->distanceFromRoot);
+
+
             Instructions *label = newInstruction();
-            label->val.functionHead.label = declaration->val.functionD.function->head->indentifier;
+            label->val.functionHead.label = buf;
             label->val.functionHead.distance = symbol->distanceFromRoot + 1;
             label->val.functionHead.temporary = currentTemporary;
             label->val.functionHead.pointerSet =
