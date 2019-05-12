@@ -211,3 +211,16 @@ Error *weedFunctionReturns(Body *body) {
     return NULL;
 }
 
+Error *weedMainReturn(Body *body) {
+    StatementList *iter = body->statementList;
+
+    while (iter != NULL) {
+        if (iter->statement->kind == statReturnK) {
+            Error *e = NEW(Error);
+            e->error = RETURN_IN_MAIN;
+            return e;
+        }
+        iter = iter->next;
+    }
+    return NULL;
+}

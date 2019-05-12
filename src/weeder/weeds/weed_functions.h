@@ -16,4 +16,6 @@ Error *weedFunctionNames(Body *body);
 
 Error *weedFunctionReturns(Body *body);
 
+Error *weedMainReturn(Body *body);
+
 #endif //HELLO_FUNCTION_H

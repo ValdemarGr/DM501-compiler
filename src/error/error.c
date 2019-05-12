@@ -151,11 +151,17 @@ int writeError(Error *e) {
         } break;
         case INVALID_ALLOCATE_TARGET: {
             fprintf(stderr, "Variable %%s is not an valid allocate target at line %i\n",
-                    e->val.INVALID_ALLOCATE_TARGET.lineno);
+                    e->location.first_line);
         } break;
         case NO_PRIMITIVE_GENERICS : {
             fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");
         } break;
+        case RECURSIVE_TYPEDEF: {
+            fprintf(stderr, "RECURSIVE_TYPEDEF\n");
+        } break;
+        case RETURN_IN_MAIN: {
+            fprintf(stderr, "RETURN_IN_MAIN\n");
+        }
     }
 
     return e->error;

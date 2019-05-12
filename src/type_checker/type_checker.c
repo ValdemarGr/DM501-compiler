@@ -38,6 +38,8 @@ SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
 //when we get type start returning, apply subscripting and such as we go up
 Type *getClassSubtype(char* varId, char* subtype, SymbolTable *symbolTable);
 
+Error *checkForRecursiveTypedefOnly(Type *pType, SymbolTable *pTable, CharLL *pLl);
+
 bool canDowncastType(Type *toCastTo, SYMBOL *traverse, SymbolTable *symbolTable) {
     TypeList *extendedList = traverse->value->val.typeClassD.extendedClasses;
 
@@ -182,7 +184,7 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
                 if (symbol->value->val.typeD.tpe->kind == typeLambdaK) {
                     return symbol->value->val.typeD.tpe->val.typeLambdaK.returnType;
                 } else if (symbol->value->val.typeD.tpe->kind == typeIdK) {
-                    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+                    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
 
                     if (unwrapped->kind == typeLambdaK) {
                         return unwrapped->val.typeLambdaK.returnType;
@@ -456,7 +458,8 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
     }
 }
 
-Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
+
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds) {
     SYMBOL *symbol;
     if (type == ANY_TYPE) {
         return type;
@@ -509,7 +512,38 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable) {
                     return dummy;
                 }
 
-                return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+                //If type encountered we fail
+                {
+                    CharLL *iter = accumulatedIds;
+
+                    while (iter != NULL) {
+                        if (strcmp(iter->data, type->val.idType.id) == 0) {
+                            return NULL;
+                        }
+                        iter = iter->next;
+                    }
+                }
+
+                if (accumulatedIds == NULL) {
+                    accumulatedIds = NEW(CharLL);
+
+                    accumulatedIds->next = NULL;
+                    accumulatedIds->data = type->val.idType.id;
+                } else {
+                    CharLL *iter = accumulatedIds;
+
+                    CharLL *newEle = NEW(CharLL);
+                    newEle->next = NULL;
+                    newEle->data = type->val.idType.id;
+
+                    while (iter->next != NULL) {
+                        iter = iter->next;
+                    }
+
+                    iter->next = newEle;
+                }
+
+                return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, accumulatedIds);
             break;
         default:
             return type;
@@ -611,7 +645,7 @@ typedef struct BoundAndGenericPair {
 Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *symbolTable) {
     switch (typeToBindOn->kind) {
         case typeIdK:
-            return bindGenericTypes(genericMap, unwrapTypedef(typeToBindOn, symbolTable), symbolTable);
+            return bindGenericTypes(genericMap, unwrapTypedef(typeToBindOn, symbolTable, NULL), symbolTable);
             break;
         case typeIntK:
             return typeToBindOn;
@@ -800,12 +834,12 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 }
             }
 
-            return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+            return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
             break;
         case arrayIndexK:
             innerType = unwrapVariable(variable->val.arrayIndexD.var, symbolTable);
 
-            varType = unwrapTypedef(innerType, symbolTable);
+            varType = unwrapTypedef(innerType, symbolTable, NULL);
 
             //Check if expression is int
             e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
@@ -826,7 +860,7 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                 return NULL;
             }
 
-            innerType = unwrapTypedef(varType, symbolTable);
+            innerType = unwrapTypedef(varType, symbolTable, NULL);
 
             if (innerType == NULL) {
                 return NULL;
@@ -1056,8 +1090,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
 
 
             if (symbol->value->kind == typeK) {
-                symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
-                Type *unwrapped = unwrapTypedef(expectedType, symbolTable);
+                symAsType = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
+                Type *unwrapped = unwrapTypedef(expectedType, symbolTable, NULL);
 
                 //If unwrapped is null, this might be a class
                 if (unwrapped == NULL && expectedType->kind == typeIdK) {
@@ -1106,7 +1140,7 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 }
             } else {
                 if (expectedType->kind == typeLambdaK) {
-                    Type *returnType = unwrapTypedef(expectedType->val.typeLambdaK.returnType, symbolTable);
+                    Type *returnType = unwrapTypedef(expectedType->val.typeLambdaK.returnType, symbolTable, NULL);
 
                     TypeList *typeList = expectedType->val.typeLambdaK.typeList;
                     VarDelList *varDelList = symbol->value->val.typeFunctionD.tpe;
@@ -1159,9 +1193,9 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             e = typeCheckExpression(variable->val.arrayIndexD.idx, &intStaticType, symbolTable);
             if (e != NULL) return e;
 
-            toCompare = unwrapTypedef(unwrapVariable(variable->val.arrayIndexD.var, symbolTable), symbolTable);
+            toCompare = unwrapTypedef(unwrapVariable(variable->val.arrayIndexD.var, symbolTable), symbolTable, NULL);
 
-            if (unwrapTypedef(toCompare, symbolTable)->kind != typeArrayK) {
+            if (unwrapTypedef(toCompare, symbolTable, NULL)->kind != typeArrayK) {
                 e = NEW(Error);
 
                 e->error = VARIABLE_UNEXPECTED_TYPE;
@@ -1174,8 +1208,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 return e;
             }
 
-            if (areTypesEqual(unwrapTypedef(toCompare->val.arrayType.type, symbolTable),
-                    unwrapTypedef(expectedType, symbolTable),
+            if (areTypesEqual(unwrapTypedef(toCompare->val.arrayType.type, symbolTable, NULL),
+                              unwrapTypedef(expectedType, symbolTable, NULL),
                     symbolTable) == false) {
                 e = NEW(Error);
 
@@ -1215,9 +1249,9 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 return e;
             }
 
-            symAsType = unwrapTypedef(unwrapped, symbolTable);
+            symAsType = unwrapTypedef(unwrapped, symbolTable, NULL);
 
-            if (areTypesEqual(unwrapTypedef(expectedType, symbolTable), symAsType, symbolTable) == false) {
+            if (areTypesEqual(unwrapTypedef(expectedType, symbolTable, NULL), symAsType, symbolTable) == false) {
                 e = NEW(Error);
 
                 e->error = SYMBOL_NOT_FOUND;
@@ -1324,7 +1358,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
             if (symbol->value->kind != typeFunctionK) {
                 //Check for lambda
-                Type *ret = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+                Type *ret = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
 
                 if (ret == NULL) {
                     e = NEW(Error);
@@ -1350,12 +1384,13 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
 
             if ((symbol->value->kind == typeFunctionK &&
-               areTypesEqual(unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable),
-                       unwrapTypedef(expectedType, symbolTable), symbolTable) == false) ||
-               (symbol->value->kind == typeK &&
+                 areTypesEqual(unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable, NULL),
+                               unwrapTypedef(expectedType, symbolTable, NULL), symbolTable) == false) ||
+                (symbol->value->kind == typeK &&
                symbol->value->val.typeD.tpe->kind == typeLambdaK &&
-               areTypesEqual(unwrapTypedef(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, symbolTable),
-                       unwrapTypedef(expectedType, symbolTable), symbolTable) == false)) {
+                areTypesEqual(unwrapTypedef(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, symbolTable,
+                                            NULL),
+                              unwrapTypedef(expectedType, symbolTable, NULL), symbolTable) == false)) {
                 e = NEW(Error);
 
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
@@ -1403,8 +1438,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
-                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
-                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = expectedCount;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = paramNum;
                     e->location = term->location;
 
                     return e;
@@ -1412,7 +1447,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             } else {
                 TypeList *varDelList;
                 if (symbol->value->val.typeD.tpe->kind == typeIdK) {
-                    varDelList = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable)->val.typeLambdaK.typeList;
+                    varDelList = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL)->val.typeLambdaK.typeList;
                     if (varDelList == NULL) {
                         e = NEW(Error);
 
@@ -1459,8 +1494,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                     e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
                     e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
-                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
-                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = expectedCount;
+                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = paramNum;
                     e->location = term->location;
 
                     return e;
@@ -1553,7 +1588,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 return e;
             }
 
-            if (unwrapTypedef(evaluateExpressionType(term->val.absD.expression, symbolTable), symbolTable)->kind == typeArrayK) {
+            if (unwrapTypedef(evaluateExpressionType(term->val.absD.expression, symbolTable), symbolTable,
+                              NULL)->kind == typeArrayK) {
                 return NULL;
             }
 
@@ -1697,8 +1733,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = term->lineno;
                 e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = term->val.functionCallD.functionId;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
-                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = expectedCount;
+                e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = paramNum;
                 e->location = term->location;
 
                 return e;
@@ -1972,14 +2008,14 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                                     statement->symbolTable);
 
             if (e != NULL && e2 != NULL) {
-                if (e != NULL) return e;
                 if (e2 != NULL) return e2;
+                if (e != NULL) return e;
             }
 
             return NULL;
             break;
         case statAllocateK: {
-            Type* unwrapped = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            Type* unwrapped = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
             if (unwrapped->kind != typeClassK && unwrapped->kind != typeRecordK) {
                 e = NEW(Error);
 
@@ -2049,8 +2085,8 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                         e->error = TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH;
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno = statement->lineno;
                         e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid = unwrapped->val.typeClass.classId;
-                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = paramNum;
-                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = expectedCount;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount = expectedCount;
+                        e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount = paramNum;
                         e->location = statement->location;
 
                         return e;
@@ -2059,7 +2095,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
             }
         } break;
         case statAllocateLenK: {
-            Type* unwrapped = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
+            Type* unwrapped = unwrapTypedef(unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable), statement->symbolTable, NULL);
             if (unwrapped->kind != typeArrayK) {
                 e = NEW(Error);
 
@@ -2204,25 +2240,27 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
     return NULL;
 }
 
-typedef struct TypedefEncounteredLL {
-    char* encountered;
-    struct TypedefEncounteredLL *next;
-} TypedefEncounteredLL;
-
-Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefEncounteredLL *typedefEncounteredLL) {
+Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, CharLL *encounteredType, bool onlyFoundIdTypes) {
     Error *e;
     SYMBOL *symbol;
     VarDelList *vdl;
-    TypedefEncounteredLL *iter;
 
     switch (type->kind) {
-        case typeIdK:
+        case typeIdK: {
             //If we have already encountered the current type
-            iter = typedefEncounteredLL;
+            CharLL *iter = encounteredType;
 
             while (iter != NULL) {
-                if (strcmp(iter->encountered, type->val.idType.id) == 0) {
-                    return NULL;
+                if (strcmp(iter->data, type->val.idType.id) == 0) {
+                    if (onlyFoundIdTypes) {
+                        e = NEW(Error);
+
+                        e->error = RECURSIVE_TYPEDEF;
+
+                        return e;
+                    } else {
+                        return NULL;
+                    }
                 }
 
                 iter = iter->next;
@@ -2241,13 +2279,28 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
                 return e;
             }
 
-            //Prepend this type
-            TypedefEncounteredLL *newLL = NEW(TypedefEncounteredLL);
-            newLL->next = typedefEncounteredLL;
-            newLL->encountered = type->val.idType.id;
+            //Append this type
+            if (encounteredType == NULL) {
+                encounteredType = NEW(CharLL);
+
+                encounteredType->next = NULL;
+                encounteredType->data = type->val.idType.id;
+            } else {
+                CharLL *iter = encounteredType;
+
+                CharLL *newEle = NEW(CharLL);
+                newEle->next = NULL;
+                newEle->data = type->val.idType.id;
+
+                while (iter->next != NULL) {
+                    iter = iter->next;
+                }
+
+                iter->next = newEle;
+            }
 
             if (symbol->value->kind == typeK) {
-                e = checkTypeExist(symbol->value->val.typeD.tpe, symbolTable, lineno, newLL);
+                e = checkTypeExist(symbol->value->val.typeD.tpe, symbolTable, lineno, encounteredType, true);
                 if (e != NULL) return e;
             } else if (symbol->value->kind == symTypeClassK) {
                 e = NEW(Error);
@@ -2259,44 +2312,46 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, TypedefE
 
                 return e;
             } else {
-                e = checkTypeExist(symbol->value->val.typeFunctionD.returnType, symbolTable, lineno, newLL);
+                e = checkTypeExist(symbol->value->val.typeFunctionD.returnType, symbolTable, lineno, encounteredType,
+                                   true);
                 if (e != NULL) return e;
 
                 vdl = symbol->value->val.typeFunctionD.tpe;
 
                 while (vdl != NULL) {
 
-                    e = checkTypeExist(vdl->type, symbolTable, lineno, newLL);
+                    e = checkTypeExist(vdl->type, symbolTable, lineno, encounteredType, true);
                     if (e != NULL) return e;
 
                     vdl = vdl->next;
                 }
             }
+
             return NULL;
-            break;
+        } break;
         case typeArrayK:
-            return checkTypeExist(type->val.arrayType.type, symbolTable, lineno, typedefEncounteredLL);
+            return checkTypeExist(type->val.arrayType.type, symbolTable, lineno, encounteredType, false);
             break;
         case typeRecordK:
             vdl = type->val.recordType.types;
 
             while (vdl != NULL) {
 
-                e = checkTypeExist(vdl->type, symbolTable, lineno, typedefEncounteredLL);
+                e = checkTypeExist(vdl->type, symbolTable, lineno, encounteredType, false);
                 if (e != NULL) return e;
 
                 vdl = vdl->next;
             }
             break;
         case typeLambdaK:
-            e = checkTypeExist(type->val.typeLambdaK.returnType, symbolTable, lineno, typedefEncounteredLL);
+            e = checkTypeExist(type->val.typeLambdaK.returnType, symbolTable, lineno, encounteredType, false);
             if (e != NULL) return e;
 
             TypeList *typeList = type->val.typeLambdaK.typeList;
 
             while (typeList != NULL) {
 
-                e = checkTypeExist(typeList->type, symbolTable, lineno, typedefEncounteredLL);
+                e = checkTypeExist(typeList->type, symbolTable, lineno, encounteredType, false);
                 if (e != NULL) return e;
 
                 typeList = typeList->next;
@@ -2582,7 +2637,7 @@ Error *checkDeclValidity(Declaration *declaration) {
 
     switch (declaration->kind) {
         case declVarK:
-            e = checkTypeExist(declaration->val.varD.type, declaration->symbolTable, lineno, NULL);
+            e = checkTypeExist(declaration->val.varD.type, declaration->symbolTable, lineno, NULL, true);
             if (e != NULL) return e;
             //return NULL;
             //If its type is a class, check the generic bindings' validity
@@ -2606,10 +2661,23 @@ Error *checkDeclValidity(Declaration *declaration) {
             }
 
             break;
-        case declTypeK:
-            e = checkTypeExist(declaration->val.typeD.type, declaration->symbolTable, lineno, NULL);
+        case declTypeK:{
+            //Create self
+            CharLL *cll = NULL;
+            cll = NEW(CharLL);
+            cll->next = NULL;
+            cll->data = declaration->val.typeD.id;
+
+            e = checkTypeExist(declaration->val.typeD.type, declaration->symbolTable, lineno, cll, true);
             if (e != NULL) return e;
-            break;
+/*
+            cll = NEW(CharLL);
+            cll->next = NULL;
+            cll->data = declaration->val.typeD.id;
+
+            e = checkForRecursiveTypedefOnly(declaration->val.typeD.type, declaration->symbolTable, (CharLL*)NULL);*/
+            if (e != NULL) return e;
+        } break;
         case declClassK: {
             //Check that extension types are valid
             TypeList *extended = declaration->val.classD.extendedClasses;
@@ -2631,6 +2699,43 @@ Error *checkDeclValidity(Declaration *declaration) {
 
     return NULL;
 }
+/*
+Error *checkForRecursiveTypedefOnly(Type *pType, SymbolTable *pTable, CharLL *pLl) {
+    switch (pType->kind) {
+        case typeIdK: {
+            //Append this type
+            if (pLl == NULL) {
+                pLl = NEW(CharLL);
+
+                pLl->next = NULL;
+                pLl->data = pType->val.idType.id;
+            } else {
+                CharLL *iter = pLl;
+
+                CharLL *newEle = NEW(CharLL);
+                newEle->next = NULL;
+                newEle->data = pType->val.idType.id;
+
+                while (iter->next != NULL) {
+                    iter = iter->next;
+                }
+
+                iter->next = newEle;
+            }
+
+            //If we have seen ourselves
+
+            //Check children if they contain ONLY this typedefs
+
+
+        } break;
+        case typeArrayK:break;
+        case typeRecordK:break;
+        case typeLambdaK:break;
+        case typeClassK:break;
+    }
+    return NULL;
+}*/
 
 Error *typeCheckDeclaration(Declaration *declaration) {
     DeclarationList *classDeclList;

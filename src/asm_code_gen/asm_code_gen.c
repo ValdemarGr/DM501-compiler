@@ -528,7 +528,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# METADATA_CREATE_MAIN\n");
             printIndentation(out);
             fprintf(out, ASM_HEADER);
-            int asBytes = initialGcSizeMB * 1048576;
+            unsigned long long asBytes = ((unsigned long long)initialGcSizeMB) * 1048576;
             printIndentation(out);
             fprintf(out, MAIN_HEADER, asBytes, asBytes, asBytes, asBytes);
             printIndentation(out);

@@ -223,7 +223,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
-            Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
+            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL);
 
             VarDelList *varDelList = NULL;
             size_t sizeAccumulator = 0;
@@ -374,7 +374,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
-            Type *unwrappedType = unwrapVariable(variable->val.recordLookupD.var, symbolTable);
+            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL);
 
             VarDelList *varDelList = NULL;
 
@@ -597,7 +597,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //TODO DO this manually or MMX SSSE3 PABSD OR USE PROVIDED METHOD
             // mask = n >> (sizeof(int) * bitsof(char) - 1)
             // (mask + n)^mask
-            Type *e = evaluateExpressionType(term->val.absD.expression, symbolTable);
+            Type *e = unwrapTypedef(evaluateExpressionType(term->val.absD.expression, symbolTable), symbolTable, NULL);
             size_t tempToAbsOn = generateInstructionsForExpression(term->val.absD.expression, symbolTable);
 
             if (e->kind == typeArrayK) {
@@ -1270,7 +1270,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
         }
             break;
         case statAllocateK: {
-            Type *tpe = unwrapVariable(statement->val.allocateD.var, statement->symbolTable);
+            Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
 
             size_t fieldCount = 0;
 
@@ -1282,7 +1282,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
                 bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
-                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable);
+                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable, NULL);
                     if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
                         insertSortedSet(bodySet, (int)fieldCount);
                     }
@@ -1466,7 +1466,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
-            Type *type = unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable);
+            Type *type = unwrapTypedef(unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable), statement->symbolTable, NULL);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
@@ -1690,8 +1690,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             if (unwrapVariable(statement->val.assignmentD.var, statement->symbolTable)->kind == typeLambdaK) {
                 if (unwrapTypedef(
                         symbol->value->val.typeD.tpe,
-                        statement->symbolTable
-                    )->kind == typeClassK) {
+                        statement->symbolTable, NULL)->kind == typeClassK) {
                     //We need to bind class to second slot offset POINTER_SIZE
                     //expressionTemp holds our 2 arr
 
@@ -1926,7 +1925,12 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
         return;
     }
 
-    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable);
+    Type *unwrapped = unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
+
+    if (unwrapped == NULL) {
+        //We handle this later
+        return;
+    }
 
     if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
         insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);

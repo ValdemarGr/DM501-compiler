@@ -16,8 +16,12 @@
 #define ANY_TYPE ((void *)2)
 
 typedef struct Error Error;
+typedef struct CharLL {
+    char *data;
+    struct CharLL *next;
+} CharLL;
 
-Type *unwrapTypedef(Type *type, SymbolTable *symbolTable);
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds);
 SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable);
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
 Error *typeCheck(Body *body, Type *functionReturnType);

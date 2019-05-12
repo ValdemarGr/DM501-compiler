@@ -17,6 +17,7 @@ while ( t1 < |a| ) do
 {
   allocate a[t1] of length 6;
   t2 = 0;
+  write t2;
   while ( t2 < |a[t1]| ) do
   {
     allocate a[t1][t2] of length 7;
@@ -28,12 +29,11 @@ while ( t1 < |a| ) do
       a[t1][t2][t3].b = t2;
       a[t1][t2][t3].c = t3;
       t3 = t3 + 1;
-    } 
+    }
     t2 = t2 + 1;
-  } 
+  }
   t1 = t1 + 1;
-} 
-
+}
 write a[4][5][6].a * 100 + a[4][5][6].b * 10 +a[4][5][6].c;
 p1 = a[4][5][6];
 a[4][5][6] = a[4][5][5];

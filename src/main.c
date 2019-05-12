@@ -52,6 +52,8 @@ int compile_file(FILE *file) {
     ei = writeError(e); if (ei != 0) return ei;
     e = weedFunctionReturns(theexpression);
     ei = writeError(e); if (ei != 0) return ei;
+    e = weedMainReturn(theexpression);
+    ei = writeError(e); if (ei != 0) return ei;
     e = decorateAstWithSymbols(theexpression, globalScope);
     ei = writeError(e); if (ei != 0) return ei;
     e = typeCheck(theexpression, &intStaticType);

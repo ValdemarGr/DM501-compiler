@@ -9,5 +9,8 @@ Error *weeder(Body *body) {
     e = weedFunctionNames(body);
     if (e != NULL) return e;
     e = weedFunctionReturns(body);
+    if (e != NULL) return e;
+    e = weedMainReturn(body);
     return e;
 }
+
