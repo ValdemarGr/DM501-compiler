@@ -13,6 +13,7 @@
 #include "utils/stack.h"
 #include "register_allocation/register_allocator.h"
 #include "peephole/peephole.h"
+#include "constant_fold/constant_fold.h"
 
 int lineno;
 int stmDeclNum;
@@ -59,6 +60,8 @@ int compile_file(FILE *file) {
     if (prettyPrint) {
         prettyBody(theexpression);
     }
+
+    constantFoldBody(theexpression);
 
     Instructions *instructions = generateInstructionTree(theexpression);
 

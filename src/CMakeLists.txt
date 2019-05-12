@@ -10,9 +10,8 @@ add_subdirectory(asm_code_gen)
 add_subdirectory(ast_to_ir)
 add_subdirectory(register_allocation)
 add_subdirectory(peephole)
-add_subdirectory(liveness)
-add_subdirectory(garbage_collector)
+add_subdirectory(constant_fold)
 
 add_executable(compiler main.c ${SOURCES})
 
-target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AsmCodeGen AstToIR RegisterAllocation Peephole Liveness GarbageCollector)
+target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AsmCodeGen AstToIR RegisterAllocation Peephole ConstantFold)

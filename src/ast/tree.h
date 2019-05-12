@@ -28,12 +28,29 @@ typedef enum {
 typedef struct Type {
     TypeKind kind;
     union {
-        struct { char *id;} idType;
-        struct { struct Type *type; } arrayType;
-        struct { VarDelList *types; } recordType;
-        struct { TypeList *typeList; Type *returnType; int lambdaId; } typeLambdaK;
-        struct { char *classId; TypeList *genericBoundValues; } typeClass;
-        struct { char *genericName; char *subType; int typeIndex; } typeGeneric;
+        struct {
+            char *id;
+        } idType;
+        struct {
+            struct Type *type;
+        } arrayType;
+        struct {
+            VarDelList *types;
+        } recordType;
+        struct {
+            TypeList *typeList;
+            Type *returnType;
+            int lambdaId;
+        } typeLambdaK;
+        struct {
+            char *classId;
+            TypeList *genericBoundValues;
+        } typeClass;
+        struct {
+            char *genericName;
+            char *subType;
+            int typeIndex;
+        } typeGeneric;
     } val;
     Location location;
 } Type;
@@ -87,14 +104,32 @@ typedef struct Declaration {
     int internal_stmDeclNum;
 
     int lineno;
-    enum { declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK } kind;
+    enum {
+        declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK
+    } kind;
     union {
-        struct { char* id; Type *type; } varD;
-        struct { struct Declaration *var; struct Declaration *next; } varsD;
-        struct { char* id; Type *type; } typeD;
-        struct { Function *function; } functionD;
-        struct { char* id; Expression *rhs; Type *tpe; } valD;
-        struct { char* id;
+        struct {
+            char *id;
+            Type *type;
+        } varD;
+        struct {
+            struct Declaration *var;
+            struct Declaration *next;
+        } varsD;
+        struct {
+            char *id;
+            Type *type;
+        } typeD;
+        struct {
+            Function *function;
+        } functionD;
+        struct {
+            char *id;
+            Expression *rhs;
+            Type *tpe;
+        } valD;
+        struct {
+            char *id;
             struct DeclarationList *declarationList;
             struct TypeList *genericTypeParameters;
             struct TypeList *extendedClasses;
@@ -137,19 +172,58 @@ typedef struct Statement {
     int lineno;
     int internal_stmDeclNum;
 
-    enum { statReturnK, statWriteK, statAllocateK, statAllocateLenK, statIfK, statIfElK, statWhileK, stmListK, assignmentK, emptyK, gcK } kind;
+    enum {
+        statReturnK,
+        statWriteK,
+        statAllocateK,
+        statAllocateLenK,
+        statIfK,
+        statIfElK,
+        statWhileK,
+        stmListK,
+        assignmentK,
+        emptyK,
+        gcK
+    } kind;
     SymbolTable *symbolTable;
     union {
-        struct { Expression* exp; } returnD;
-        struct { Expression* exp; } writeD;
-        struct { Variable* var; struct ExpressionList *constructorList; } allocateD;
-        struct { Variable* var; Expression* len; } allocateLenD;
-        struct { Expression* exp; struct Statement *statement; } ifD;
-        struct { Expression* exp; struct Statement *statement; struct Statement *elseStatement; } ifElD;
-        struct { Expression* exp; struct Statement* statement; } whileD;
-        struct { struct StatementList* statementList; } stmListD;
-        struct { Variable* var; Expression* exp; } assignmentD;
-        struct { Expression* exp; } empty;
+        struct {
+            Expression *exp;
+        } returnD;
+        struct {
+            Expression *exp;
+        } writeD;
+        struct {
+            Variable *var;
+            struct ExpressionList *constructorList;
+        } allocateD;
+        struct {
+            Variable *var;
+            Expression *len;
+        } allocateLenD;
+        struct {
+            Expression *exp;
+            struct Statement *statement;
+        } ifD;
+        struct {
+            Expression *exp;
+            struct Statement *statement;
+            struct Statement *elseStatement;
+        } ifElD;
+        struct {
+            Expression *exp;
+            struct Statement *statement;
+        } whileD;
+        struct {
+            struct StatementList *statementList;
+        } stmListD;
+        struct {
+            Variable *var;
+            Expression *exp;
+        } assignmentD;
+        struct {
+            Expression *exp;
+        } empty;
     } val;
     Location location;
 } Statement;
@@ -163,7 +237,20 @@ typedef struct StatementList {
 
 typedef struct Operator {
     int lineno;
-    enum { opMultK, opDivK, opPlusK, opMinusK, opEqualityK, opInequalityK, opGreaterK, opLessK, opGeqK, opLeqK, opAndK, opOrK } kind;
+    enum {
+        opMultK,
+        opDivK,
+        opPlusK,
+        opMinusK,
+        opEqualityK,
+        opInequalityK,
+        opGreaterK,
+        opLessK,
+        opGeqK,
+        opLeqK,
+        opAndK,
+        opOrK
+    } kind;
 } Operator;
 
 typedef struct ExpressionList {
@@ -176,28 +263,75 @@ typedef struct ExpressionList {
 typedef struct Variable {
     int lineno;
     Location location;
-    enum { varIdK, arrayIndexK, recordLookupK } kind;
+    enum {
+        varIdK, arrayIndexK, recordLookupK
+    } kind;
     union {
-        struct { char* id; } idD;
-        struct { struct Variable *var; struct Expression *idx; } arrayIndexD;
-        struct { struct Variable *var; char *id; } recordLookupD;
+        struct {
+            char *id;
+        } idD;
+        struct {
+            struct Variable *var;
+            struct Expression *idx;
+        } arrayIndexD;
+        struct {
+            struct Variable *var;
+            char *id;
+        } recordLookupD;
     } val;
 } Variable;
+
+typedef enum {
+    variableK,
+    functionCallK,
+    parenthesesK,
+    negateK,
+    absK,
+    numK,
+    trueK,
+    falseK,
+    nullK,
+    lambdaK,
+    classDowncastk,
+    shorthandCallK
+} TermKind;
+
 
 typedef struct Term {
     int lineno;
     Location location;
-    enum { variableK, functionCallK, parenthesesK, negateK, absK, numK, trueK, falseK, nullK, lambdaK, classDowncastk, shorthandCallK } kind;
+    TermKind kind;
     union {
-        struct { struct Variable *var; } variableD;
-        struct { char *functionId; ExpressionList *expressionList; } functionCallD;
-        struct { Expression *expression; } parenthesesD;
-        struct { Term* term; } negateD;
-        struct { Expression* expression; } absD;
-        struct { int num; } numD;
-        struct { Lambda *lambda; } lambdaD;
-        struct { Variable* var; Type *toCastTo; } classDowncastD;
-        struct { struct Variable *var; ExpressionList *expressionList; } shorthandCallD;
+        struct {
+            struct Variable *var;
+        } variableD;
+        struct {
+            char *functionId;
+            ExpressionList *expressionList;
+        } functionCallD;
+        struct {
+            Expression *expression;
+        } parenthesesD;
+        struct {
+            Term *term;
+        } negateD;
+        struct {
+            Expression *expression;
+        } absD;
+        struct {
+            int num;
+        } numD;
+        struct {
+            Lambda *lambda;
+        } lambdaD;
+        struct {
+            Variable *var;
+            Type *toCastTo;
+        } classDowncastD;
+        struct {
+            struct Variable *var;
+            ExpressionList *expressionList;
+        } shorthandCallD;
     } val;
 } Term;
 
@@ -214,9 +348,9 @@ typedef struct VarType {
     Location location;
 } VarType;
 
-TypeList *makeTypeList(TypeList* next, Type *elem, Location location);
+TypeList *makeTypeList(TypeList *next, Type *elem, Location location);
 
-TypeList *makeGenericTypeList(TypeList* next, char* id, char* subType, Location location);
+TypeList *makeGenericTypeList(TypeList *next, char *id, char *subType, Location location);
 
 Expression *makeEXPFromTerm(Term *term, Location location);
 
@@ -224,7 +358,7 @@ Variable *makeVariable(char *id, Location location);
 
 Variable *makeArraySubscript(Variable *variable, Expression *expression, Location location);
 
-Variable *makeRecordSubscript(Variable* variable, char *id, Location location);
+Variable *makeRecordSubscript(Variable *variable, char *id, Location location);
 
 Term *makeTermFromVariable(Variable *variable, Location location);
 
@@ -286,15 +420,17 @@ Constructor *makeClassConstructor(VarDelList *vdl, Body *body, Location location
 
 DeclarationList *makeDeclarationList(Declaration *declaration, DeclarationList *next, Location location);
 
-Declaration *makeDeclaration(char* id, Type* type, Location location);
+Declaration *makeDeclaration(char *id, Type *type, Location location);
 
-Declaration *makeTypeDeclaration(char* id, Type* type, Location location);
+Declaration *makeTypeDeclaration(char *id, Type *type, Location location);
 
-Declaration *makeVarDeclarations(VarDelList* vars, Location location);
+Declaration *makeVarDeclarations(VarDelList *vars, Location location);
 
-Declaration *makeValDeclaration(char* id, Expression *rhs, Location location);
+Declaration *makeValDeclaration(char *id, Expression *rhs, Location location);
 
-Declaration *makeClassDeclaration(char* id, DeclarationList *declarationList, TypeList *typeList, TypeList* extensionList, Constructor* constructor, Location location);
+Declaration *
+makeClassDeclaration(char *id, DeclarationList *declarationList, TypeList *typeList, TypeList *extensionList,
+                     Constructor *constructor, Location location);
 
 StatementList *makeStatementList(Statement *statement, StatementList *next, Location location);
 
@@ -304,7 +440,7 @@ Statement *makeIfStatement(Expression *exp, Statement *statement, Location locat
 
 Statement *makeIfElseStatement(Expression *exp, Statement *statement, Statement *elseStatement, Location location);
 
-Statement *makeAssignment(Variable* variable, Expression *exp, Location location);
+Statement *makeAssignment(Variable *variable, Expression *exp, Location location);
 
 Statement *makeAllocateStatement(Variable *var, Location location);
 
@@ -320,9 +456,9 @@ Statement *makeEmptyExpression(Expression *expression, Location location);
 
 Statement *makeGCStatement(Location location);
 
-Type *makeIdType(char* id, Location location);
+Type *makeIdType(char *id, Location location);
 
-Type *makeClassType(char* id, TypeList *genericBoundTypes, Location location);
+Type *makeClassType(char *id, TypeList *genericBoundTypes, Location location);
 
 Type *makeIntType(Location location);
 
@@ -342,7 +478,7 @@ VarDelList *makeVarDelList(VarType *varType, VarDelList *next, Location location
 
 Function *makeFunction(FunctionHead *head, Body *body, FunctionTail *tail, Location location);
 
-Lambda *makeLambda(VarDelList* varDelList, Type *returnType, Body *body, Location location);
+Lambda *makeLambda(VarDelList *varDelList, Type *returnType, Body *body, Location location);
 
 FunctionHead *makeFunctionHead(char *identifier, VarDelList *declerationList, Type *type, Location location);
 
@@ -352,7 +488,7 @@ Body *makeBody(DeclarationList *declarationList, StatementList *statementList, L
 
 Declaration *makeFunctionDecleration(Function *function, Location location);
 
-TypeList *makeExtensionList(TypeList *next, char* class, TypeList *boundTypes, Location location);
+TypeList *makeExtensionList(TypeList *next, char *class, TypeList *boundTypes, Location location);
 
 VarType *makeVarType(char *id, Type *type, Location location);
 
