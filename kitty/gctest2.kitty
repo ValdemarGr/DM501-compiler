@@ -41,18 +41,10 @@ allocate c.refToA.refToB;
 
 a.deepSet(434);
 
-gcdebug;
-
 gc;
-gc;
-gc;
-gc;
-
-gcdebug;
-writeany a.refToB;
 
 allocate c;
+allocate c.refToA;
 
-gcdebug;
-writeany c;
-
+c.refToA = a;
+c.refToA.deepPrint();

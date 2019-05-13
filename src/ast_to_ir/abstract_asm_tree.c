@@ -451,6 +451,15 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
     switch (term->kind) {
+        case charK: {
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = (int)(*term->val.charD.c);
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+            return currentTemporary - 1;
+        } break;
         case variableK: {
             return generateInstructionsForVariableAccess(term->val.variableD.var, symbolTable);
         } break;
@@ -1334,10 +1343,17 @@ void generateInstructionTreeForStatement(Statement *statement) {
         } break;
         case writeAny:
         case statWriteK: {
-            Instructions *instructions = newInstruction();
-            instructions->kind = INSTRUCTION_WRITE;
-            instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
-            appendInstructions(instructions);
+            if (evaluateExpressionType(statement->val.writeD.exp, statement->symbolTable)->kind == typeCharK) {
+                Instructions *instructions = newInstruction();
+                instructions->kind = INSTRUCTION_WRITE_CHAR;
+                instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+                appendInstructions(instructions);
+            } else {
+                Instructions *instructions = newInstruction();
+                instructions->kind = INSTRUCTION_WRITE;
+                instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+                appendInstructions(instructions);
+            }
         }
             break;
         case statAllocateK: {

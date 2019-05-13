@@ -815,3 +815,21 @@ Statement *makeWriteAnyStatement(Expression *exp, Location location) {
     returning->val.writeD.exp = exp;
     return returning;
 }
+
+Type *makeCharType(Location location) {
+    Type *result = NEW(Type);
+    result->kind = typeCharK;
+    result->location = location;
+    return result;
+}
+
+Term *makeCharTerm(char *c, Location location) {
+    Term* term = NEW(Term);
+
+    term->lineno = lineno;
+    term->val.charD.c = c;
+    term->kind = charK;
+    term->location = location;
+
+    return term;
+}

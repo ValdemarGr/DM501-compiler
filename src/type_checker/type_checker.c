@@ -16,6 +16,7 @@ int constructorReachLevel = 0;
 
 struct Type booleanStaticType = {.kind = typeBoolK};
 struct Type intStaticType = {.kind = typeIntK};
+struct Type charStaticType = {.kind = typeCharK};
 //This is a hack, it is very hacky. Do not do this at home.
 Error *traverseClassExtensionsAndInsertGenerics(ConstMap *constMap, char *classId, SymbolTable *symbolTable);
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
@@ -212,6 +213,9 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
         case falseK:
             return &booleanStaticType;
             break;
+        case charK:
+            return &charStaticType;
+            break;
         case nullK:
             return NULL_KITTY_VALUE_INDICATOR;
             break;
@@ -335,7 +339,7 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
     }
 
     if (first->kind == second->kind) {
-        if (first->kind == typeIntK || first->kind == typeBoolK) {
+        if (first->kind == typeIntK || first->kind == typeBoolK || first->kind == typeCharK) {
             return true;
         } else if (first->kind == typeArrayK) {
             return areTypesEqual(first->val.arrayType.type, second->val.arrayType.type, symbolTable);
@@ -708,6 +712,8 @@ Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *sy
             break;
         case typeBoolK:
             return typeToBindOn;
+        case typeCharK:
+            return typeToBindOn;
             break;
         case typeArrayK:
             //Create new array type with bounded type
@@ -810,7 +816,7 @@ Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, Sy
     TypeList *genericIter = generic;
 
     while (boundIter != NULL && genericIter != NULL) {
-        if (boundIter->type->kind == typeIntK || boundIter->type->kind == typeBoolK) {
+        if (boundIter->type->kind == typeIntK || boundIter->type->kind == typeBoolK || boundIter->type->kind == typeCharK) {
             Error *e = NEW(Error);
 
             e->error = NO_PRIMITIVE_GENERICS;
@@ -1681,6 +1687,16 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 return e;
             }
             break;
+        case charK:
+            if (areTypesEqual(&charStaticType, expectedType, symbolTable) == false) {
+                e = NEW(Error);
+
+                e->error = TYPE_TERM_NOT_INTEGER;
+                e->location = term->location;
+
+                return e;
+            }
+            break;
         case trueK:
             if (areTypesEqual(&booleanStaticType, expectedType, symbolTable) == false) {
                 e = NEW(Error);
@@ -2086,13 +2102,20 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                                     &booleanStaticType,
                                     statement->symbolTable);
 
+            Error *e3 = typeCheckExpression(statement->val.writeD.exp,
+                                     &charStaticType,
+                                     statement->symbolTable);
+
             e2 = typeCheckExpression(statement->val.writeD.exp,
                                     &intStaticType,
                                     statement->symbolTable);
 
-            if (e != NULL && e2 != NULL) {
+
+
+            if (e != NULL && e2 != NULL && e3 != NULL) {
                 if (e2 != NULL) return e2;
                 if (e != NULL) return e;
+                if (e3 != NULL) return e3;
             }
 
             return NULL;
@@ -2297,7 +2320,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
 
             if (e == NULL_KITTY_VALUE_INDICATOR &&
                     (lhsType->kind == typeIntK ||
-            lhsType->kind == typeBoolK)) {
+            lhsType->kind == typeBoolK || lhsType->kind == typeCharK)) {
                 e = NEW(Error);
 
                 e->error = INVALID_ASSIGMENT_TO_NULL;
@@ -2523,7 +2546,7 @@ Error *checkNestedGenericBoundType(TypeList *bound, TypeList *generic, SymbolTab
     TypeList *genericCounter = generic;
 
     while (boundCounter != NULL && genericCounter != NULL) {
-        if (boundCounter->type->kind == typeIntK || boundCounter->type->kind == typeBoolK) {
+        if (boundCounter->type->kind == typeIntK || boundCounter->type->kind == typeBoolK || boundCounter->type->kind == typeCharK) {
             Error *e = NEW(Error);
 
             e->error = NO_PRIMITIVE_GENERICS;

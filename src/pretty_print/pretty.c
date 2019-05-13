@@ -110,6 +110,9 @@ void prettyVariable(Variable* variable, SymbolTable *symbolTable) {
 void prettyType(Type *type);
 void prettyTerm(Term *term, SymbolTable *symbolTable) {
     switch(term->kind) {
+        case charK:
+            printf("'\033[0;32m%s\033[0m'", term->val.charD.c);
+            break;
         case variableK:
             prettyVariable(term->val.variableD.var, symbolTable);
             break;
@@ -169,6 +172,9 @@ void prettyType(Type *type) {
     }
 
     switch(type->kind) {
+        case typeCharK: {
+            printf("\033[0;36mchar\033[0m");
+        } break;
         case typeVoidK: {
             printf("\033[0;36mvoid\033[0m");
         } break;

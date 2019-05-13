@@ -22,7 +22,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK, typeCharK
 } TypeKind;
 
 typedef struct Type {
@@ -296,7 +296,8 @@ typedef enum {
     nullK,
     lambdaK,
     classDowncastk,
-    shorthandCallK
+    shorthandCallK,
+    charK
 } TermKind;
 
 
@@ -324,6 +325,9 @@ typedef struct Term {
         struct {
             int num;
         } numD;
+        struct {
+            char *c;
+        } charD;
         struct {
             Lambda *lambda;
         } lambdaD;
@@ -388,6 +392,10 @@ Term *makeLambdaTerm(Lambda *lambda, Location location);
 Term *makeDowncastTerm(Variable *var, Type *toCastTo, Location location);
 
 Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList, Location location);
+
+Term *makeCharTerm(char *c, Location location);
+
+Type *makeCharType(Location location);
 
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs, Location location);
 

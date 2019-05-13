@@ -66,6 +66,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 %union {
    int intconst;
    char *stringconst;
+   char *charconst;
    struct Expression *expression;
    struct Body *body;
    struct DeclarationList *declarationList;
@@ -88,6 +89,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 
 %token <intconst> tINTCONST
 %token <stringconst> tIDENTIFIER
+%token <charconst> tCHAR
 %token tFUNC
 %token tEND
 %token tTYPE
@@ -125,6 +127,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 %token tGC
 %token tGCDEBUG
 %token tWRITEANY
+%token tCHARTYPE
 
 %type <expression> expression
 %type <lambda> lambda
@@ -287,6 +290,8 @@ type :  tIDENTIFIER
         {$$ = makeLambdaType($2, $5, @$);}
         | '(' type_list ')' tLAMBDA_ARROW voidType
         {$$ = makeLambdaType($2, $5, @$);}
+        | tCHARTYPE
+        {$$ = makeCharType(@$);}
 ;
 
 voidType :  tVOID
@@ -386,6 +391,8 @@ term : variable
         {$$ = makeAbsTerm($2, @$);}
         | tINTCONST
         {$$ = makeNumTerm($1, @$);}
+        | tCHAR
+        {$$ = makeCharTerm($1, @$);}
         | tTRUE
         {$$ = makeTrueTerm(@$);}
         | tFALSE
