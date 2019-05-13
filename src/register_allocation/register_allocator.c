@@ -466,18 +466,22 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                         getReadTemporary(colors, state->current->val.tempToConstrain, state);
             break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK:
+                /*
                 insert(state->stackLocation,
                        makeIntKey(state->current->val.tempIntoStack.tempToMove),
                        makeVariableLocation(state->current->val.tempIntoStack.offset));
+               */
 
                 state->current->val.tempIntoStack.tempToMove =
                         getReadTemporary(colors, state->current->val.tempIntoStack.tempToMove, state);
                 break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE:
+                /*
                 insert(state->stackLocation,
                        makeIntKey(state->current->val.tempIntoStackScope.tempToMove),
                        makeVariableLocationInScope(state->current->val.tempIntoStackScope.offset,
                                                    state->current->val.tempIntoStackScope.scopeToFindFrame));
+                */
 
                 temporaries = makeTemporary(state->current->val.tempIntoStackScope.intermediate, RaIntermidiate);
                 temporaries->next = makeTemporary(state->current->val.tempIntoStackScope.intermediate2, RaIntermidiate);
@@ -507,14 +511,12 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 state->current->val.tempFromStackScope.intermediate2 = temporaries->next->next->reg;
                 break;
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:
-                temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaRead);
+                temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaReadWrite);
                 temporaries->next = makeTemporary(state->current->val.dereferenceOffset.offsetTemp, RaRead);
-                temporaries->next->next = makeTemporary(state->current->val.dereferenceOffset.returnTemp, RaWrite);
                 getTemporaries(colors, temporaries, state);
 
                 state->current->val.dereferenceOffset.ptrTemp = temporaries->reg;
                 state->current->val.dereferenceOffset.offsetTemp = temporaries->next->reg;
-                state->current->val.dereferenceOffset.returnTemp = temporaries->next->next->reg;
                 break;
             case COMPLEX_SAVE_STATIC_LINK:
                 state->current->val.pushPopStaticLink.temporary =

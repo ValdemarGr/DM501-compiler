@@ -425,7 +425,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
                 dataFlowEntry = initDataFlowEntry();
                 
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.dereferenceOffset.returnTemp);
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.dereferenceOffset.ptrTemp);
 
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.dereferenceOffset.ptrTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.dereferenceOffset.offsetTemp);
