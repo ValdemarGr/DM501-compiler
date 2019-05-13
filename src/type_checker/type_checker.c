@@ -559,7 +559,7 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds
         } break;
         case typeRecordK: {
             //Bind the field types
-            VarDelList *iter = type->val.recordType.types;
+            /*VarDelList *iter = type->val.recordType.types;
 
             while (iter != NULL) {
                 Type *toSet = unwrapTypedef(iter->type, symbolTable, accumulatedIds);
@@ -567,7 +567,7 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds
                 iter->type = toSet;
 
                 iter = iter->next;
-            }
+            }*/
 
             return type;
         } break;
