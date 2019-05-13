@@ -814,7 +814,9 @@ void constantFoldDeclaration(Declaration *declaration) {
                 iter = iter->next;
             }
 
-            constantFoldBody(declaration->val.classD.constructor->body);
+            if (declaration->val.classD.constructor != NULL) {
+                constantFoldBody(declaration->val.classD.constructor->body);
+            }
         } break;
         case nodecl: break;
     }
