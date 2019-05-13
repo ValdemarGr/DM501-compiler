@@ -183,7 +183,8 @@ typedef struct Statement {
         stmListK,
         assignmentK,
         emptyK,
-        gcK
+        gcK,
+        noop
     } kind;
     SymbolTable *symbolTable;
     union {

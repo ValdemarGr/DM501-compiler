@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 16
+	.space 8
 intprint:
 	.asciz "%i\n"
 gcHeapOne:
@@ -511,9 +511,6 @@ garbageCollectAllocate:
     pop %rbp
     ret
 # METADATA_BEGIN_BODY_BLOCK
-# VAR arr
-# VAR counter
-# VAR dummy
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -528,10 +525,10 @@ push %rax
     #move heap into one
     leaq gcHeapOne, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $1048576000, 16(%r15)
     movq $0, 8(%r15)
     movq $1, 0(%r15)
-    addq $2097152000, %rax
+    addq $1048576000, %rax
     push %rax
     movq %rax, %rdi
     mov $12, %rax
@@ -543,37 +540,55 @@ push %rax
 
     leaq gcHeapTwo, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $1048576000, 16(%r15)
     movq $0, 8(%r15)
     movq $0, 0(%r15)
 
-    addq $2097152000, %rax
+    addq $1048576000, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $72, %rsp
+	subq $32, %rsp
 	popq %rax
 	movq %rax, -8(%rbp)
-	movq $1, -16(%rbp)
-	movq $1, -24(%rbp)
-	movq $0, -40(%rbp)
+	movq $0, -16(%rbp)
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $0, %rbx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rbx, -48(%rbp)
-# COMPLEX_SAVE_ALL
-# INSTRUCTION_FUNCTION_CALL
-		call outOfMem__0
-# INSTRUCTION_ADD_STACK_PTR
-		addq $0, %rsp
-# COMPLEX_RESTORE_ALL
-# COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rsi
-movq %rbp, 0(%rsi)
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rax, -56(%rbp)
+		mov $5, %rcx
+# INSTRUCTION_WRITE
+		movq %rcx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# INSTRUCTION_CONST
+		mov $-5, %rdx
+# INSTRUCTION_WRITE
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# INSTRUCTION_CONST
+		mov $1, %rbx
+# INSTRUCTION_WRITE
+		movq %rbx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# INSTRUCTION_CONST
+		mov $1, %rsi
+# INSTRUCTION_WRITE
+		movq %rsi, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# INSTRUCTION_CONST
+		mov $42, %rdi
+# INSTRUCTION_WRITE
+		movq %rdi, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
 # METADATA_END_BODY_BLOCK
 mov %rbp,%rsp
 pop %rbp
@@ -581,108 +596,3 @@ ret
 mov $60, %rax
 mov $0, %rdi
 syscall
-# INSTRUCTION_FUNCTION_LABEL
-.type outOfMem__0, @function
-outOfMem__0:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-push %rax
-	subq $48, %rsp
-	popq %rax
-	movq %rax, -8(%rbp)
-	movq $1, -16(%rbp)
-	movq $0, -24(%rbp)
-	movq $0, -24(%rbp)
-	leaq staticLink, %rcx
-	movq %rbp, 8(%rcx)
-# VAR subArr
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %rsi
-		mov 0(%rsi), %rsi
-		movq -16(%rsi), %rdi
-		addq $1, %rdi
-		imul $-1, %rdi
-		mov -32(%rsi, %rdi, 8), %rbx
-# INSTRUCTION_WRITE
-		movq %rbx, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
-		leaq staticLink, %r9
-		mov 0(%r9), %r9
-		movq -16(%r9), %r10
-		addq $1, %r10
-		imul $-1, %r10
-		mov -32(%r9, %r10, 8), %r8
-# INSTRUCTION_CONST
-		mov $1, %r11
-# INSTRUCTION_ADD
-		add %r8, %r11
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-		leaq staticLink, %r12
-		mov 0(%r12), %r12
-		movq -16(%r12), %r13
-		addq $1, %r13
-		imul $-1, %r13
-		mov %r11, -32(%r12, %r13, 8)
-# INSTRUCTION_CONST
-		mov $2000, %r14
-# COMPLEX_ALLOCATE
-		movq $8, %r15
-		imulq %r14, %r15
-# ALLOC_ARR_OF_PRIM
-		addq $16, %r15
-		pushq %r15
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %r14, 0(%rax)
-		subq $8, %r15
-		movq $0, (%rax, %r15, 1)
-		popq %r15
-		popq %r15
-		addq $8, %rax
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
-		leaq staticLink, %rcx
-		mov 0(%rcx), %rcx
-		movq -16(%rcx), %rdx
-		addq $1, %rdx
-		imul $-1, %rdx
-		mov %rax, -24(%rcx, %rdx, 8)
-# INSTRUCTION_CONST
-		mov $2000, %rbx
-# COMPLEX_ALLOCATE
-		movq $8, %rsi
-		imulq %rbx, %rsi
-# ALLOC_ARR_OF_PRIM
-		addq $16, %rsi
-		pushq %rsi
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %rbx, 0(%rax)
-		subq $8, %rsi
-		movq $0, (%rax, %rsi, 1)
-		popq %rsi
-		popq %rsi
-		addq $8, %rax
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rax, -32(%rbp)
-# COMPLEX_SAVE_ALL
-# INSTRUCTION_FUNCTION_CALL
-		call outOfMem__0
-# INSTRUCTION_ADD_STACK_PTR
-		addq $0, %rsp
-# COMPLEX_RESTORE_ALL
-# COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rdi
-movq %rbp, 8(%rdi)
-# INSTRUCTION_RETURN
-		mov %rax, %rax
-		mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
