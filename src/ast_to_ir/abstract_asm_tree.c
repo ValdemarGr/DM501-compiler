@@ -569,7 +569,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 int extra = 16;
                 char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
 
-                sprintf(buf, "%s%i", baseName, (int)symbol->distanceFromRoot);
+                sprintf(buf, "%s__%i", baseName, (int)symbol->distanceFromRoot);
 
                 Instructions *call = newInstruction();
                 call->kind = INSTRUCTION_FUNCTION_CALL;
@@ -1822,7 +1822,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             int extra = 16;
             char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
 
-            sprintf(buf, "%s%i", baseName, (int)symbol->distanceFromRoot);
+            sprintf(buf, "%s__%i", baseName, (int)symbol->distanceFromRoot);
 
 
             Instructions *label = newInstruction();

@@ -543,9 +543,64 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds
                     iter->next = newEle;
                 }
 
+                //make sure we pass on the symbol table of the same level as the symbol we've found
+                while (symbolTable->distanceFromRoot != symbol->distanceFromRoot) {
+                    symbolTable = symbolTable->next;
+                }
+
                 return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, accumulatedIds);
             break;
+        case typeArrayK: {
+            Type *internalTpe = unwrapTypedef(type->val.arrayType.type, symbolTable, accumulatedIds);
+            if (internalTpe == NULL) return NULL;
+            //Bind the id type
+            type->val.arrayType.type = internalTpe;
+            return type;
+        } break;
+        case typeRecordK: {
+            //Bind the field types
+            VarDelList *iter = type->val.recordType.types;
+
+            while (iter != NULL) {
+                Type *toSet = unwrapTypedef(iter->type, symbolTable, accumulatedIds);
+                if (toSet == NULL) return NULL;
+                iter->type = toSet;
+
+                iter = iter->next;
+            }
+
+            return type;
+        } break;
+        case typeLambdaK: {
+            Type *newRet = unwrapTypedef(type->val.typeLambdaK.returnType, symbolTable, accumulatedIds);
+            if (newRet == NULL) return NULL;
+            type->val.typeLambdaK.returnType = newRet;
+
+            TypeList *iter = type->val.typeLambdaK.typeList;
+            while (iter != NULL) {
+                Type *toSet = unwrapTypedef(iter->type, symbolTable, accumulatedIds);
+                if (toSet == NULL) return NULL;
+                iter->type = toSet;
+
+                iter = iter->next;
+            }
+
+        } break;
+        case typeClassK: {
+            TypeList *iter = type->val.typeClass.genericBoundValues;
+            while (iter != NULL) {
+                Type *toSet = unwrapTypedef(iter->type, symbolTable, accumulatedIds);
+                if (toSet == NULL) return NULL;
+                iter->type = toSet;
+
+                iter = iter->next;
+            }
+        } break;
         default:
+            return type;
+            break;
+        case typeGenericK:
+            //We have other code handling this
             return type;
             break;
     }
@@ -832,6 +887,11 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
                         return NULL;
                     }
                 }
+            }
+
+            //make sure we pass on the symbol table of the same level as the symbol we've found
+            while (symbolTable->distanceFromRoot != symbol->distanceFromRoot) {
+                symbolTable = symbolTable->next;
             }
 
             return unwrapTypedef(symbol->value->val.typeD.tpe, symbolTable, NULL);
@@ -1551,7 +1611,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 return e;
             }
 
-            e = typeCheck(term->val.lambdaD.lambda->body, term->val.lambdaD.lambda->returnType);
+            e = typeCheck(term->val.lambdaD.lambda->body, unwrapTypedef(term->val.lambdaD.lambda->returnType, symbolTable, NULL));
             if (e != NULL) return e;
             workingInLambda = false;
 
@@ -2753,7 +2813,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
     switch (declaration->kind)  {
         case declFuncK:
             e = typeCheck(declaration->val.functionD.function->body,
-                          declaration->val.functionD.function->head->returnType);
+                          unwrapTypedef(declaration->val.functionD.function->head->returnType, declaration->symbolTable, NULL));
             if (e != NULL) return e;
             break;
         case declValK:
@@ -2769,7 +2829,7 @@ Error *typeCheckDeclaration(Declaration *declaration) {
                     Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
                     workingInLambda = true;
                     lambdaLevel = (int)declaration->symbolTable->distanceFromRoot;
-                    e = typeCheck(lambda->body, lambda->returnType);
+                    e = typeCheck(lambda->body, unwrapTypedef(lambda->returnType, declaration->symbolTable, NULL));
                     workingInLambda = false;
                     if (e != NULL) return e;
                 }
