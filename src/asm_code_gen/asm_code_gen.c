@@ -87,7 +87,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             break;
         case METADATA_END_BODY_BLOCK:
             fprintf(out, "# METADATA_END_BODY_BLOCK\n");
-            fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
+            fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nxorq %%rax,%%rax\nret\n");
             currentIndendation--;
             //SKIP
             break;
@@ -674,6 +674,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "xor %%%s, %%%s\n",
                     getNextRegister(instruction->val.arithmetic2.source),
                     getNextRegister(instruction->val.arithmetic2.dest));
+        } break;
+        case INSTRUCTION_SET_ZERO: {
+            fprintf(out, "# INSTRUCTION_SET_ZERO\n");
+            printIndentation(out);
+            fprintf(out, "xorq %%%s, %%%s\n",
+                    getNextRegister(instruction->val.tempToSetZero),
+                    getNextRegister(instruction->val.tempToSetZero));
+
         } break;
         case INSTRUCTION_COPY: {
             fprintf(out, "# INSTRUCTION_COPY\n");

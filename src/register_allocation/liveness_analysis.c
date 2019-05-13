@@ -169,6 +169,12 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
+            case INSTRUCTION_SET_ZERO:
+                dataFlowEntry = initDataFlowEntry();
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToSetZero);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
             case INSTRUCTION_FUNCTION_LABEL: {
                 dataFlowEntry = initDataFlowEntry();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.functionHead.temporary);
@@ -278,15 +284,28 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
-                int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.label))->v)->value;
-                dataFlowEntry->successors->next = makeLineList(targetLine);
+
+                Pair *target = get(labels, makeCharKey(iter->val.label));
+
+                if (target != NULL) {
+                    int targetLine = ((IntBox *) target->v)->value;
+                    dataFlowEntry->successors->next = makeLineList(targetLine);
+                } else {
+
+                }
             }
                 break;
             case INSTRUCTION_JMP: {
                 dataFlowEntry = initDataFlowEntry();
 
-                int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.function))->v)->value;
-                dataFlowEntry->successors = makeLineList(targetLine);
+                Pair *target = get(labels, makeCharKey(iter->val.function));
+
+                if (target != NULL) {
+                    int targetLine = ((IntBox *) target->v)->value;
+                    dataFlowEntry->successors = makeLineList(targetLine);
+                }else {
+
+                }
             }
                 break;
             case COMPLEX_ALLOCATE: {

@@ -375,6 +375,9 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 state->current->val.constant.temp =
                         getWriteTemporary(colors, state->current->val.constant.temp, state);
                 break;
+            case INSTRUCTION_SET_ZERO:
+                state->current->val.tempToSetZero =
+                        getWriteTemporary(colors, state->current->val.tempToSetZero, state);
             case INSTRUCTION_PROGRAM_BEGIN:break;
             case INSTRUCTION_FUNCTION_LABEL:
                 currentSymbolTable = state->current->val.functionHead.tableForFunction;

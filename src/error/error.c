@@ -26,8 +26,7 @@ int writeError(Error *e) {
             fprintf(stderr, "Could not scope table\n");
             break;
         case TYPE_EXPRESSION_IS_NOT_AS_EXPECTED:
-            fprintf(stderr, "Type error at %i, expected type is %s, expression: ",
-                    e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.lineno,
+            fprintf(stderr, "Type error, expected type %s, expression: ",
                     typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expectedType));
             prettyEXP(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expThatCausedError, NULL);
             fprintf(stderr, " is of type %s", typeEnumToString(e->val.TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S.expressionType));
@@ -35,19 +34,18 @@ int writeError(Error *e) {
 
             break;
         case TYPE_TERM_FUNCTION_NOT_FOUND:
-            fprintf(stderr, "Function could not be found %s, at line number %i\n",
-                    e->val.TYPE_TERM_FUNCTION_NOT_FOUND_S.fid,
-                   e->val.TYPE_TERM_FUNCTION_NOT_FOUND_S.lineno);
+            fprintf(stderr, "Function could not be found %s\n",
+                    e->val.TYPE_TERM_FUNCTION_NOT_FOUND_S.fid);
             break;
         case TYPE_TERM_IS_NOT_FUNCTION:
-            fprintf(stderr, "Term is not function %s, at line number %i\n",
-                   e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid,
-                   e->val.TYPE_TERM_IS_NOT_FUNCTION_S.lineno);
+            fprintf(stderr, "'%s' is not a function\n",
+                   e->val.TYPE_TERM_IS_NOT_FUNCTION_S.fid);
             break;
         case TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE:
-            fprintf(stderr, "Function call %s returns the incorrect type, at line number %i\n",
+            fprintf(stderr, "Function call %s returns type %s, type %s expected\n",
                    e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.fid,
-                   e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.lineno);
+                   typeToString(e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.foundType),
+                   typeToString(e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.expectedType));
             break;
         case TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE:
             fprintf(stderr, "Function call %s does not match its signature, at line number %i\nArgument number %i. Expected type %s, found %s\n",
@@ -58,64 +56,58 @@ int writeError(Error *e) {
                    typeEnumToString(e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.foundType));
             break;
         case TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH:
-            fprintf(stderr, "Function call %s does not have the correct number of arguments. Expected %i found %i, at line number %i\n",
+            fprintf(stderr, "Function call %s does not have the correct number of arguments. Expected %i found %i\n",
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid,
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount,
-                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount,
-                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno);
+                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount);
             break;
         case TYPE_TERM_NOT_BOOLEAN:
-            fprintf(stderr, "Type error at %i, expected boolean, term: ",
-                   e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno);
-            prettyTerm(e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError, NULL);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "Type error, expected %s got boolean",
+                   typeToString(e->val.TYPE_TERM_NOT_BOOLEAN_S.expectedType));
             break;
         case TYPE_TERM_NOT_INTEGER:
-            fprintf(stderr, "Type error at %i, expected int, term: ",
-                   e->val.TYPE_TERM_NOT_INTEGER_S.lineno);
-            prettyTerm(e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError, NULL);
-            fprintf(stderr, "\n");
+            fprintf(stderr, "Type error, expected %s got int",
+                    typeToString(e->val.TYPE_TERM_NOT_INTEGER_S.expectedType));
             break;
         case SYMBOL_NOT_FOUND:
-            fprintf(stderr, "Symbol not found %s, at line number %i\n",
-                   e->val.SYMBOL_NOT_FOUND_S.id,
-                   e->val.SYMBOL_NOT_FOUND_S.lineno);
+            fprintf(stderr, "Symbol not found %s\n",
+                   e->val.SYMBOL_NOT_FOUND_S.id);
             break;
         case VARIABLE_UNEXPECTED_TYPE:
-            fprintf(stderr, "Variable %s unexpected type at line number %i. Expected type %s, found type %s\n",
+            fprintf(stderr, "Variable %s unexpected type. Expected type %s, found type %s\n",
                    e->val.VARIABLE_UNEXPECTED_TYPE_S.id,
-                   e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno,
-                   typeEnumToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType),
-                   typeEnumToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType));
+                   typeToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType),
+                    typeToString(e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType));
             break;
         case VARIABLE_COULD_NOT_FIND_RECORD_ITEM:
-            fprintf(stderr, "Record item could not be found at line %i\n",
-                   e->val.VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S.lineno);
+            fprintf(stderr, "Record item could not be found\n");
             break;
         case VARIABLE_UNEXPECTED_CLASS: {
-            fprintf(stderr, "Error: VARIABLE_UNEXPECTED_CLASS\n");
+            fprintf(stderr, "Unexpected class\n");
         } break;
         case ILLEGAL_DOWNCAST: {
-            fprintf(stderr, "Error: ILLEGAL_DOWNCAST\n");
+            fprintf(stderr, "Illegal downcast\n");
         } break;
         case VALUE_IS_NULL: {
-            fprintf(stderr, "Variable %%s is null at line number %i.\n",
-                    e->val.VALUE_IS_NULL.lineno);
+            fprintf(stderr, "Expression is null\n");
         } break;
         case NULL_COMPARISON: {
-            fprintf(stderr, "Error: NULL_COMPARISON\n");
+            fprintf(stderr, "Invalid null comparison\n");
         } break;
         case CONST_REASSIGNMENT: {
-            fprintf(stderr, "error: Reassignment of const %s\n", e->val.CONST_REASSIGNMENT.id);
+            fprintf(stderr, "Reassignment of immutable variable %s\n", e->val.CONST_REASSIGNMENT.id);
         } break;
         case INVALID_ASSIGMENT_TO_TYPE: {
-            fprintf(stderr, "Error: INVALID_ASSIGMENT_TO_TYPE\n");
+            fprintf(stderr, "Invalid assignment of value to type\n");
         } break;
         case INVALID_ASSIGMENT_TO_NULL: {
-            fprintf(stderr, "Error: INVALID_ASSIGMENT_TO_NULL\n");
+            fprintf(stderr, "Variable %s of type %s cannot be assigned to null\n",
+                    e->val.INVALID_ASSIGMENT_TO_NULL.id,
+                    typeEnumToString(e->val.INVALID_ASSIGMENT_TO_NULL.typeKind));
         } break;
         case INVALID_TYPE: {
-            fprintf(stderr, "Error: INVALID_TYPE\n");
+            fprintf(stderr, "Type %s is invalid\n",
+                    e->val.INVALID_TYPE.id);
         } break;
         case NOT_CLASS: {
             fprintf(stderr, "Error: NOT_CLASS\n");
@@ -148,17 +140,16 @@ int writeError(Error *e) {
             fprintf(stderr, "INVALID_GENERIC_HAS_TYPE_CONSTRAINT\n");
         } break;
         case INVALID_ALLOCATE_TARGET: {
-            fprintf(stderr, "Variable %%s is not an valid allocate target at line %i\n",
-                    e->location.first_line);
+            fprintf(stderr, "Variable %%s is not an valid allocate target\n");
         } break;
         case NO_PRIMITIVE_GENERICS : {
             fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");
         } break;
         case RECURSIVE_TYPEDEF: {
-            fprintf(stderr, "RECURSIVE_TYPEDEF\n");
+            fprintf(stderr, "Recursive type definition\n");
         } break;
         case RETURN_IN_MAIN: {
-            fprintf(stderr, "RETURN_IN_MAIN\n");
+            fprintf(stderr, "Return statement is not allowed in main body\n");
         }
         default:
             break;

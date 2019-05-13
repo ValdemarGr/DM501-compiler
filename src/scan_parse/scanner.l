@@ -91,5 +91,5 @@ int yycolumn = 1;
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char *)malloc(strlen(yytext)+1);
                          sprintf(yylval.stringconst,"%s",yytext);
                          return tIDENTIFIER; }
-.                       { yyerror("unexpected character"); }/* ignore */;
+.                       { yyerror("Unexpected character"); }/* ignore */;
 %%

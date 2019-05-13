@@ -27,6 +27,7 @@ typedef struct Error {
         TYPE_TERM_NOT_INTEGER,
         SYMBOL_NOT_FOUND,
         VARIABLE_UNEXPECTED_TYPE,
+        VARIABLE_NOT_ARRAY,
         VARIABLE_UNEXPECTED_CLASS,
         RETURN_IN_MAIN,
         VARIABLE_COULD_NOT_FIND_RECORD_ITEM,
@@ -62,13 +63,13 @@ typedef struct Error {
         struct { struct Expression *expThatCausedError; int lineno; TypeKind expectedType; TypeKind expressionType; } TYPE_EXPRESSION_IS_NOT_AS_EXPECTED_S;
         struct { char* fid; int lineno;} TYPE_TERM_FUNCTION_NOT_FOUND_S;
         struct { char* fid; int lineno;} TYPE_TERM_IS_NOT_FUNCTION_S;
-        struct { char* fid; int lineno;} TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;
+        struct { char* fid; int lineno; Type *expectedType; struct Type *foundType; } TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S;
         struct { char* fid; int lineno; TypeKind expectedType; TypeKind foundType; int argNumber;} TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S;
         struct { char* fid; int lineno; int foundCount; int expectedCount;} TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S;
-        struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_BOOLEAN_S;
-        struct { struct Term *termThatCausedError; int lineno; } TYPE_TERM_NOT_INTEGER_S;
+        struct { struct Term *termThatCausedError; int lineno; Type *expectedType; } TYPE_TERM_NOT_BOOLEAN_S;
+        struct { struct Term *termThatCausedError; int lineno; Type *expectedType; } TYPE_TERM_NOT_INTEGER_S;
         struct { char *id; int lineno; } SYMBOL_NOT_FOUND_S;
-        struct { char *id; int lineno; TypeKind expectedType; TypeKind foundType;} VARIABLE_UNEXPECTED_TYPE_S;
+        struct { char *id; int lineno; Type* expectedType; Type* foundType;} VARIABLE_UNEXPECTED_TYPE_S;
         struct { char *id; int lineno; char *expectedClass; char *foundClass;} VARIABLE_UNEXPECTED_CLASS_S;
         struct { int lineno; } VARIABLE_COULD_NOT_FIND_RECORD_ITEM_S;
         struct { char *idTo; char *idFrom; int lineno; } ILLEGAL_DOWNCAST;
@@ -77,7 +78,9 @@ typedef struct Error {
         struct { int lineno; } NULL_COMPARISON;
         struct { char *id; int lineno; } CONST_REASSIGNMENT;
         struct { char *id; int lineno; } INVALID_ASSIGMENT_TO_TYPE;
-        struct { char *id; int lineno; } INVALID_ASSIGMENT_TO_NULL;
+        struct { char *id; int lineno;
+            TypeKind typeKind;
+        } INVALID_ASSIGMENT_TO_NULL;
         struct { char *id; int lineno; } INVALID_TYPE;
         struct { char *id; int lineno; } NOT_CLASS;
         struct { char *id; int lineno; } TOO_MANY_GENERICS;
@@ -87,6 +90,7 @@ typedef struct Error {
         struct { char *classId; int lineno; } DECLARATIONS_IN_CLASS;
         struct { TypeKind foundReturnType; int lineno; } RETURN_IN_VOID_LAMBDA;
         struct { int lineno; } INVALID_ALLOCATE_TARGET;
+        struct { char *id; Type* foundType; } VARIABLE_UNEXPECTED_TYPE_STATIC_S;
     } val;
 } Error;
 

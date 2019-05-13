@@ -60,6 +60,7 @@ typedef enum {
     INSTRUCTION_LEA_TO_OFFSET,
     INSTRUCTION_REGISTER_CALL,
     INSTRUCTION_ADD_STACK_PTR,
+    INSTRUCTION_SET_ZERO,
 
     COMPLEX_ALLOCATE,
     COMPLEX_ALLOCATE_END,
@@ -119,6 +120,7 @@ typedef struct Instructions {
         size_t tempToPopInto;
         size_t tempToNegate;
         size_t tempToAbs;
+        size_t tempToSetZero;
         struct {SymbolTable *tableForFunction; SortedSet *pointerSet;} mainHeader;
         char* label;
         char* debugInfo;

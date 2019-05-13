@@ -28,7 +28,8 @@ typedef struct SimpleInstruction {
 typedef enum {
     REMOVE_CONST_REGISTER_ADD,
     REMOVE_CONST_REGISTER_MUL,
-    REMOVE_PUSH_POP
+    REMOVE_PUSH_POP,
+    CONST_ZERO_TO_SET_ZERO
 } PeepholeApplyType;
 
 typedef struct PeepholeTemplates {

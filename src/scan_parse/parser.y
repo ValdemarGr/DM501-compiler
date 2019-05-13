@@ -32,6 +32,8 @@ extern char *yytext;
 extern int yylex();
 extern Body *theexpression;
 extern int lineno;
+extern int numberErrors;
+extern void YYABORT;
 
 
 void yyerror(char const *s) {
@@ -40,6 +42,10 @@ void yyerror(char const *s) {
             yylloc.first_line, yylloc.first_column, yylloc.last_line, yylloc.last_column,
             yytext, s);
     }
+    numberErrors++;
+    if (numberErrors >= 10) {
+        YYABORT;
+    }
 }
 
 
@@ -47,6 +53,10 @@ void lyyerror(YYLTYPE t, char const *s) {
     if (t.first_line > 0) {
         fprintf(stderr, "%s:%d.%d-%d.%d: error at %s: %s\n", t.filename,
             t.first_line, t.first_column, t.last_line, t.last_column, yytext, s);
+    }
+    numberErrors++;
+    if (numberErrors >= 10) {
+        YYABORT;
     }
 }
 
@@ -203,7 +213,6 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeClassDeclaration($2, $9, $4, $7, NULL, @$);}
               | tCLASS tIDENTIFIER tWITH class_extension_list '{' decl_list '}' ';'
               {$$ = makeClassDeclaration($2, $6, NULL, $4, NULL, @$);}
-
               | tCLASS tIDENTIFIER '{' constructor decl_list '}' ';'
               {$$ = makeClassDeclaration($2, $5, NULL, NULL, $4, @$);}
               | tCLASS tIDENTIFIER '[' generic_type_list ']' '{' constructor decl_list '}' ';'
@@ -212,6 +221,8 @@ declaration : tVAR var_decl_list ';'
               {$$ = makeClassDeclaration($2, $10, $4, $7, $9, @$);}
               | tCLASS tIDENTIFIER tWITH class_extension_list '{' constructor decl_list '}' ';'
               {$$ = makeClassDeclaration($2, $7, NULL, $4, $6, @$);}
+              | error ';'
+              {};
 ;
 
 statement : tRETURN expression ';'
@@ -238,6 +249,10 @@ statement : tRETURN expression ';'
         {$$ = makeEmptyExpression($1, @$);}
         | tGC ';'
         {$$ = makeGCStatement(@$);}
+        | error ';'
+        {};
+        | error '}'
+        {};
 ;
 
 type_list : type ',' type_list
@@ -377,6 +392,8 @@ term : variable
         {$$ = makeDowncastTerm($1, $3, @$);}
         | variable '(' act_list ')'
         {$$ = makeShorthandLambdaCall($1, $3, @$);}
+        | tOR
+        { lyyerror(@1, "Nested absolute and length terms need spaces between bars."); YYERROR; }
 ;
 
 %%
