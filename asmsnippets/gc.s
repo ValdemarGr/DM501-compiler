@@ -475,6 +475,7 @@ garbageCollectAllocate:
     movq %rsp, %rbp
     subq $32, %rsp
 
+    push %rsi
     push %r15
     push %r14
 
@@ -504,8 +505,19 @@ garbageCollectAllocate:
     movq 24(%r15), %rax
     addq %r14, %rax
 
+    movq $0, %rsi
+    # set all fields to 0
+    zeroSetterCmp:
+    cmp %rsi, -8(%rbp)
+    je zeroSetterEnd
+    movq $0, (%rax, %rsi, 1)
+    addq $8, %rsi
+    jmp zeroSetterCmp
+    zeroSetterEnd:
+
     pop %r14
     pop %r15
+    pop %rsi
 
     mov %rbp,%rsp
     pop %rbp

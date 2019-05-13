@@ -54,6 +54,7 @@ allocate opt(boxedInteger);
 opt.forEach((value: IntBox): void -> {
     write value.constValue;
 });
+gc;
 opt.forEach((value: IntBox): void -> {
     write value.constValue;
 });
@@ -62,7 +63,6 @@ opt.map((value: IntBox): IntBox -> {
     allocate new(value.constValue * 2);
     return new;
 });
-gc;
 opt.forEach((value: IntBox): void -> {
     write value.constValue;
 });

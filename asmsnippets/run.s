@@ -475,6 +475,7 @@ garbageCollectAllocate:
     movq %rsp, %rbp
     subq $32, %rsp
 
+    push %rsi
     push %r15
     push %r14
 
@@ -504,13 +505,23 @@ garbageCollectAllocate:
     movq 24(%r15), %rax
     addq %r14, %rax
 
+    movq $0, %rsi
+    # set all fields to 0
+    zeroSetterCmp:
+    cmp %rsi, -8(%rbp)
+    je zeroSetterEnd
+    movq $0, (%rax, %rsi, 1)
+    addq $8, %rsi
+    jmp zeroSetterCmp
+    zeroSetterEnd:
+
     pop %r14
     pop %r15
+    pop %rsi
 
     mov %rbp,%rsp
     pop %rbp
-    ret
-# METADATA_BEGIN_BODY_BLOCK
+    ret# METADATA_BEGIN_BODY_BLOCK
 # VAR opt
 # VAR boxedInteger
 # METADATA_CREATE_MAIN
@@ -801,6 +812,10 @@ movq %rbp, 0(%r13)
 # COMPLEX_RESTORE_STATIC_LINK
 		leaq staticLink, %rcx
 movq %rbp, 0(%rcx)
+# COMPLEX_GARBAGE_COLLECT
+		pushq %rbp
+		call garbageCollect
+		popq %rbp
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 		mov -56(%rbp), %rdx
 # INSTRUCTION_CONST
@@ -919,10 +934,6 @@ movq %rbp, 0(%rdx)
 # COMPLEX_RESTORE_STATIC_LINK
 		leaq staticLink, %rbx
 movq %rbp, 0(%rbx)
-# COMPLEX_GARBAGE_COLLECT
-		pushq %rbp
-		call garbageCollect
-		popq %rbp
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 		mov -56(%rbp), %rsi
 # INSTRUCTION_CONST
