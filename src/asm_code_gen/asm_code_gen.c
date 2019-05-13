@@ -775,7 +775,8 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "mov (%%%s, %%%s,1), %%%s\n",
                     getNextRegister(instruction->val.dereferenceOffset.ptrTemp),
                     getNextRegister(instruction->val.dereferenceOffset.offsetTemp),
-                    getNextRegister(instruction->val.dereferenceOffset.returnTemp));
+                    //getNextRegister(instruction->val.dereferenceOffset.returnTemp));
+                    getNextRegister(instruction->val.dereferenceOffset.ptrTemp));
         } break;
         case INSTRUCTION_MOVE_TO_OFFSET: {
             fprintf(out, "# INSTRUCTION_MOVE_TO_OFFSET\n");

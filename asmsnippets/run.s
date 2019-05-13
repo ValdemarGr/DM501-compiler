@@ -941,21 +941,21 @@ ret
 # INSTRUCTION_CONST
 		mov $0, %rcx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r15, %rcx,1), %rdx
+		mov (%r15, %rcx,1), %r15
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -32(%rbp), %rbx
+		mov -32(%rbp), %rdx
 # INSTRUCTION_MINUS
-		sub %rbx, %rdx
+		sub %rdx, %r15
 # COMPLEX_CONSTRAIN_BOOLEAN
 		push %rdx
-		cmp $0, %rdx
+		cmp $0, %r15
 		setg %dl
-		movsx %dl, %rdx
+		movsx %dl, %r15
 		pop %rdx
 # INSTRUCTION_CONST
-		mov $1, %rsi
+		mov $1, %rbx
 # INSTRUCTION_CMP
-		cmp %rdx, %rsi
+		cmp %r15, %rbx
 # INSTRUCTION_JE
 		je if_1_begin
 # INSTRUCTION_JMP
@@ -964,55 +964,55 @@ ret
 		if_1_begin:
 # COMPLEX_SAVE_ALL
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %rdi
+		mov -24(%rbp), %rsi
 # INSTRUCTION_CONST
-		mov $8, %r8
+		mov $8, %rdi
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %r8,1), %r9
+		mov (%rsi, %rdi,1), %rsi
 # INSTRUCTION_PUSH
-		push %r9
+		push %rsi
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -32(%rbp), %r10
+		mov -32(%rbp), %r8
 # INSTRUCTION_PUSH
-		push %r10
+		push %r8
 # INSTRUCTION_FUNCTION_CALL
 		call insert__0
 # INSTRUCTION_ADD_STACK_PTR
 		addq $16, %rsp
 # COMPLEX_RESTORE_ALL
 # COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %r11
-movq %rbp, 8(%r11)
+		leaq staticLink, %r9
+movq %rbp, 8(%r9)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %r12
+		mov -24(%rbp), %r10
 # INSTRUCTION_CONST
-		mov $8, %r13
+		mov $8, %r11
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%r12, %r13,1)
+		mov %rax, (%r10, %r11,1)
 # INSTRUCTION_JMP
 		jmp ifel_1_end
 # INSTRUCTION_LABEL
 		el_1_begin:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %r14
+		mov -24(%rbp), %r12
 # INSTRUCTION_CONST
-		mov $0, %r15
+		mov $0, %r13
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r14, %r15,1), %rcx
+		mov (%r12, %r13,1), %r12
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -32(%rbp), %rdx
+		mov -32(%rbp), %r14
 # INSTRUCTION_MINUS
-		sub %rcx, %rdx
+		sub %r12, %r14
 # COMPLEX_CONSTRAIN_BOOLEAN
 		push %rdx
-		cmp $0, %rdx
+		cmp $0, %r14
 		setg %dl
-		movsx %dl, %rdx
+		movsx %dl, %r14
 		pop %rdx
 # INSTRUCTION_CONST
-		mov $1, %rbx
+		mov $1, %r15
 # INSTRUCTION_CMP
-		cmp %rdx, %rbx
+		cmp %r14, %r15
 # INSTRUCTION_JE
 		je if_2_begin
 # INSTRUCTION_JMP
@@ -1021,39 +1021,39 @@ movq %rbp, 8(%r11)
 		if_2_begin:
 # COMPLEX_SAVE_ALL
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %rsi
+		mov -24(%rbp), %rcx
 # INSTRUCTION_CONST
-		mov $16, %rdi
+		mov $16, %rdx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rsi, %rdi,1), %r8
+		mov (%rcx, %rdx,1), %rcx
 # INSTRUCTION_PUSH
-		push %r8
+		push %rcx
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -32(%rbp), %r9
+		mov -32(%rbp), %rbx
 # INSTRUCTION_PUSH
-		push %r9
+		push %rbx
 # INSTRUCTION_FUNCTION_CALL
 		call insert__0
 # INSTRUCTION_ADD_STACK_PTR
 		addq $16, %rsp
 # COMPLEX_RESTORE_ALL
 # COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %r10
-movq %rbp, 8(%r10)
+		leaq staticLink, %rsi
+movq %rbp, 8(%rsi)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %r11
+		mov -24(%rbp), %rdi
 # INSTRUCTION_CONST
-		mov $16, %r12
+		mov $16, %r8
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%r11, %r12,1)
+		mov %rax, (%rdi, %r8,1)
 # INSTRUCTION_LABEL
 		if_2_end:
 # INSTRUCTION_LABEL
 		ifel_1_end:
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %r13
+		mov -24(%rbp), %r9
 # INSTRUCTION_RETURN
-		mov %r13, %rax
+		mov %r9, %rax
 		mov %rbp,%rsp
 pop %rbp
 ret
@@ -1122,53 +1122,53 @@ ret
 # INSTRUCTION_CONST
 		mov $8, %rdx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rcx, %rdx,1), %rbx
+		mov (%rcx, %rdx,1), %rcx
 # INSTRUCTION_PUSH
-		push %rbx
+		push %rcx
 # INSTRUCTION_FUNCTION_CALL
 		call print__0
 # INSTRUCTION_ADD_STACK_PTR
 		addq $8, %rsp
 # COMPLEX_RESTORE_ALL
 # COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rsi
-movq %rbp, 8(%rsi)
+		leaq staticLink, %rbx
+movq %rbp, 8(%rbx)
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 		mov %rax, -32(%rbp)
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %rdi
+		mov -24(%rbp), %rsi
 # INSTRUCTION_CONST
-		mov $0, %r8
+		mov $0, %rdi
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %r8,1), %r9
+		mov (%rsi, %rdi,1), %rsi
 # INSTRUCTION_WRITE
-		movq %r9, %rsi
+		movq %rsi, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
 # COMPLEX_SAVE_ALL
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -24(%rbp), %r10
+		mov -24(%rbp), %r8
 # INSTRUCTION_CONST
-		mov $16, %r11
+		mov $16, %r9
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r10, %r11,1), %r12
+		mov (%r8, %r9,1), %r8
 # INSTRUCTION_PUSH
-		push %r12
+		push %r8
 # INSTRUCTION_FUNCTION_CALL
 		call print__0
 # INSTRUCTION_ADD_STACK_PTR
 		addq $8, %rsp
 # COMPLEX_RESTORE_ALL
 # COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %r13
-movq %rbp, 8(%r13)
+		leaq staticLink, %r10
+movq %rbp, 8(%r10)
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 		mov %rax, -32(%rbp)
 # INSTRUCTION_CONST
-		mov $1, %r14
+		mov $1, %r11
 # INSTRUCTION_RETURN
-		mov %r14, %rax
+		mov %r11, %rax
 		mov %rbp,%rsp
 pop %rbp
 ret
