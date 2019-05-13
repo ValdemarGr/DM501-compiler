@@ -513,13 +513,56 @@ void constantFoldStatement(Statement *statement) {
         case statAllocateK:break;
         case statAllocateLenK:
             constantFoldExpression(statement->val.allocateLenD.len, statement->symbolTable); break;
-        case statIfK:
-            constantFoldExpression(statement->val.ifD.exp, statement->symbolTable);  break;
-        case statIfElK:
-            constantFoldExpression(statement->val.ifElD.exp, statement->symbolTable); break;
-        case statWhileK:
-            constantFoldExpression(statement->val.whileD.exp, statement->symbolTable); break;
-        case stmListK:break;
+        case statIfK: {
+            constantFoldExpression(statement->val.ifD.exp, statement->symbolTable);
+            //If condition has been constant folded to true/false we can just execute the statements or not
+            if (expressionEvaluatesToConstant(statement->val.ifD.exp)) {
+                TermKind expConst = evaluateExpressionBoolConstant(statement->val.ifElD.exp, statement->symbolTable);
+                if (expConst == trueK) {
+                    statement->kind = statement->val.ifD.statement->kind;
+                    statement->symbolTable = statement->val.ifD.statement->symbolTable;
+                    statement->val = statement->val.ifD.statement->val;
+                } else if (statement->val.ifD.exp->val.termD.term->kind == falseK) {
+                    statement->kind = noop;
+                }
+            }
+        } break;
+        case statIfElK: {
+            constantFoldExpression(statement->val.ifElD.exp, statement->symbolTable);
+            //If condition has been constant folded to true/false we can just execute the statements or not
+            if (expressionEvaluatesToConstant(statement->val.ifElD.exp)) {
+                TermKind expConst = evaluateExpressionBoolConstant(statement->val.ifElD.exp, statement->symbolTable);
+
+                if (expConst == trueK) {
+                    statement->kind =           statement->val.ifElD.statement->kind;
+                    statement->symbolTable =    statement->val.ifElD.statement->symbolTable;
+                    statement->val =            statement->val.ifElD.statement->val;
+                } else if (expConst == falseK) {
+                    statement->kind =           statement->val.ifElD.elseStatement->kind;
+                    statement->symbolTable =    statement->val.ifElD.elseStatement->symbolTable;
+                    statement->val =            statement->val.ifElD.elseStatement->val;
+                }
+            }
+        } break;
+        case statWhileK: {
+            constantFoldExpression(statement->val.whileD.exp, statement->symbolTable);
+
+            //If eval to false no need
+            if (expressionEvaluatesToConstant(statement->val.ifElD.exp)) {
+                TermKind expConst = evaluateExpressionBoolConstant(statement->val.ifElD.exp, statement->symbolTable);
+                if (expConst == falseK) {
+                    statement->kind = noop;
+                }
+            }
+        }break;
+        case stmListK: {
+            StatementList *iter = statement->val.stmListD.statementList;
+
+            while (iter != NULL) {
+                constantFoldStatement(iter->statement);
+                iter = iter->next;
+            }
+        } break;
         case assignmentK:
             constantFoldExpression(statement->val.assignmentD.exp, statement->symbolTable); break;
         case emptyK:break;
