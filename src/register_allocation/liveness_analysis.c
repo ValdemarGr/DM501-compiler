@@ -11,9 +11,8 @@ int line = 0;
 DataFlowEntry **dataFlow;
 
 void dataFlowEntryFromArithmetic2(DataFlowEntry *dataFlowEntry, Arithmetic2 arithmetic2) {
-    dataFlowEntry->defines = initHeadedSortedSet();
     insertSortedSet(dataFlowEntry->defines, (int) arithmetic2.dest);
-    dataFlowEntry->uses = initHeadedSortedSet();
+
     insertSortedSet(dataFlowEntry->uses, (int) arithmetic2.source);
     insertSortedSet(dataFlowEntry->uses, (int) arithmetic2.dest);
 }
@@ -46,6 +45,7 @@ void freeDataFlowEntry(DataFlowEntry *entry) {
     freeSortedSet(entry->in);
     freeSortedSet(entry->defines);
     freeSortedSet(entry->uses);
+    freeSortedSet(entry->intermediates);
 
     freeLineList(entry->successors);
 
@@ -59,6 +59,12 @@ DataFlowEntry *initDataFlowEntry() {
     dataFlowEntry->instruction = iter;
     dataFlowEntry->successors = NULL;
     dataFlowEntry->function = NULL;
+    dataFlowEntry->out = NULL;
+    dataFlowEntry->in = NULL;
+
+    dataFlowEntry->uses = initHeadedSortedSet();
+    dataFlowEntry->defines = initHeadedSortedSet();
+    dataFlowEntry->intermediates = initHeadedSortedSet();
     line++;
     dataFlow[line] = dataFlowEntry;
     return dataFlowEntry;
@@ -128,9 +134,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_LABEL: break;
             case METADATA_FUNCTION_ARGUMENT:
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.args.moveReg);
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
@@ -160,36 +164,26 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_CONST: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.constant.temp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case INSTRUCTION_FUNCTION_LABEL: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.functionHead.temporary);
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case INSTRUCTION_RETURN: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToReturn);
             }
                 break;
             case INSTRUCTION_WRITE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToReturn);
 
@@ -210,9 +204,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_PUSH: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToPush);
 
@@ -221,20 +212,17 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_POP: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToPopInto);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case INSTRUCTION_NEGATE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToNegate);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToNegate);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -242,10 +230,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_ABS: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToAbs);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToAbs);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -253,10 +240,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_RIGHT_SHIFT: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.rightShift.temp);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.rightShift.temp);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -282,18 +268,14 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_FUNCTION_CALL: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                dataFlowEntry->uses = initHeadedSortedSet();
-                dataFlowEntry->successors = makeLineList(line + 1);
 
+                dataFlowEntry->successors = makeLineList(line + 1);
                 int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.function))->v)->value;
                 dataFlowEntry->function = makeIntBox(targetLine);
             }
                 break;
             case INSTRUCTION_JE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.label))->v)->value;
@@ -302,8 +284,6 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_JMP: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.function))->v)->value;
                 dataFlowEntry->successors = makeLineList(targetLine);
@@ -311,22 +291,19 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case COMPLEX_ALLOCATE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.allocate.intermediate);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.allocate.timesTemp);
+
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.allocate.intermediate);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case COMPLEX_CONSTRAIN_BOOLEAN: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToConstrain);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempToConstrain);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -334,30 +311,25 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case COMPLEX_SAVE_STATIC_LINK: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.pushPopStaticLink.temporary);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case COMPLEX_RESTORE_STATIC_LINK: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.pushPopStaticLink.temporary);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case INSTRUCTION_ADD_CONST: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.art2const.temp);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.art2const.temp);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -365,10 +337,9 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_MUL_CONST: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.art2const.temp);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.art2const.temp);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -376,9 +347,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_MOVE_TO_OFFSET: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.ptrTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.offsetTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.tempToMove);
@@ -388,9 +357,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_LEA_TO_OFFSET: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.ptrTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.offsetTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.moveToOffset.tempToMove);
@@ -400,9 +367,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempIntoStack.tempToMove);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
@@ -410,44 +375,39 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate);
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempIntoStackScope.intermediate2);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.tempIntoStackScope.tempToMove);
+
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.tempIntoStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.tempIntoStackScope.intermediate2);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStack.inputTemp);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.inputTemp);
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate);
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempFromStackScope.intermediate2);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.tempFromStackScope.intermediate);
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.tempFromStackScope.intermediate2);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.dereferenceOffset.ptrTemp);
+                
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.dereferenceOffset.returnTemp);
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.dereferenceOffset.ptrTemp);
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.dereferenceOffset.offsetTemp);
 
@@ -456,20 +416,40 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case COMPLEX_RIP_LAMBDA_LOAD:
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
+                
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.lambdaLoad.temporary);
-
-                dataFlowEntry->uses = initHeadedSortedSet();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
             case INSTRUCTION_REGISTER_CALL:
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntry->defines = initHeadedSortedSet();
 
-                dataFlowEntry->uses = initHeadedSortedSet();
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.callRegister);
 
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case INSTRUCTION_PUSH_STACK:break;
+            case INSTRUCTION_POP_STACK:break;
+            case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+            case COMPLEX_GARBAGE_COLLECT:break;
+            case COMPLEX_ABS_VALUE:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case METADATA_BEGIN_GLOBAL_BLOCK:break;
+            case METADATA_END_GLOBAL_BLOCK:break;
+            case METADATA_DEBUG_INFO:break;
+            case INSTRUCTION_ADD_STACK_PTR:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case COMPLEX_SAVE_ALL:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case COMPLEX_RESTORE_ALL:
+                dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
         }
@@ -478,35 +458,55 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     }
 
     LineList *successor;
+    bool dataFlowChanged = false;
+    int lastSize = 0;
 
-    for (int i = dataFlowSize - 1; i >= 0; i--) {
-        dataFlowEntry = dataFlow[i];
+    do {
+        dataFlowChanged = false;
+        for (int i = dataFlowSize - 1; i >= 0; i--) {
+            dataFlowEntry = dataFlow[i];
 
-        dataFlowEntry->out = initHeadedSortedSet();
-
-        successor = dataFlowEntry->successors;
-        while (successor != NULL) {
-            if (successor->line < dataFlowSize) {
-                dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
-                                                    dataFlow[successor->line]->in);
+            if (dataFlowEntry->out == NULL) {
+                dataFlowEntry->out = initHeadedSortedSet();
             }
-            successor = successor->next;
-        }
 
-        if (dataFlowEntry->function != NULL) {
-            dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
-                                                dataFlow[dataFlowEntry->function->value]->in);
-        }
+            successor = dataFlowEntry->successors;
+            while (successor != NULL) {
+                if (successor->line < dataFlowSize) {
+                    lastSize = length(dataFlowEntry->out);
+                    dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
+                                                        dataFlow[successor->line]->in);
+                    if (length(dataFlowEntry->out) != lastSize) {
+                        dataFlowChanged = true;
+                    }
+                }
+                successor = successor->next;
+            }
 
-        dataFlowEntry->in = sortedSetUnion(dataFlowEntry->uses,
-                                           sortedSetDiff(dataFlowEntry->out, dataFlowEntry->defines));
-    }
+            if (dataFlowEntry->function != NULL) {
+                lastSize = length(dataFlowEntry->out);
+                dataFlowEntry->out = sortedSetUnion(dataFlowEntry->out,
+                                                    dataFlow[dataFlowEntry->function->value]->in);
+                if (length(dataFlowEntry->out) != lastSize) {
+                    dataFlowChanged = true;
+                }
+            }
+
+            lastSize = length(dataFlowEntry->in);
+            dataFlowEntry->in = sortedSetUnion(dataFlowEntry->uses,
+                                               sortedSetDiff(dataFlowEntry->out, dataFlowEntry->defines));
+            if (length(dataFlowEntry->in) != lastSize) {
+                dataFlowChanged = true;
+            }
+        }
+    } while (dataFlowChanged);
+
 
     LivenessAnalysisResult *result = NEW(LivenessAnalysisResult);
     result->numberSets = dataFlowSize;
     result->sets = malloc(sizeof(SortedSet) * dataFlowSize);
     for (int i = 0; i < dataFlowSize; ++i) {
-        result->sets[i] = sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out);
+        result->sets[i] = sortedSetUnion(sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out), dataFlow[i]->intermediates);
         freeDataFlowEntry(dataFlow[i]);
     }
 

@@ -584,7 +584,7 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds
 
                 iter = iter->next;
             }
-
+            return type;
         } break;
         case typeClassK: {
             TypeList *iter = type->val.typeClass.genericBoundValues;
@@ -595,6 +595,7 @@ Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds
 
                 iter = iter->next;
             }
+            return type;
         } break;
         default:
             return type;

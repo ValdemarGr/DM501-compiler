@@ -131,7 +131,7 @@ typedef struct Instructions {
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToMove; } moveToOffset;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
-        struct { size_t offsetTemp; size_t ptrTemp;  } dereferenceOffset;
+        struct { size_t offsetTemp; size_t ptrTemp; size_t returnTemp; } dereferenceOffset;
         struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
     } val;
 } Instructions;

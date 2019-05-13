@@ -187,6 +187,9 @@ void getTemporaries(int *colors, struct RaTemporaries *temporaries, RaState *sta
     while (temporary != NULL) {
         assigned = getAssigned(colors, temporary->id);
         if (assigned != -1) {
+            if (exists(state->regsInUse, assigned)) {
+                // Something has gone wrong in liveness analysis
+            }
             temporary->reg = assigned;
             temporary->assigned = true;
             insertSortedSet(state->regsInUse, temporary->reg);
@@ -447,8 +450,12 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 break;
             case INSTRUCTION_LEA_TO_OFFSET:break;
             case COMPLEX_ALLOCATE:
-                state->current->val.allocate.timesTemp =
-                        getReadTemporary(colors, state->current->val.allocate.timesTemp, state);
+                temporaries = makeTemporary(state->current->val.allocate.timesTemp, RaRead);
+                temporaries->next = makeTemporary(state->current->val.allocate.intermediate, RaIntermidiate);
+
+                getTemporaries(colors, temporaries, state);
+                state->current->val.allocate.timesTemp = temporaries->reg;
+                state->current->val.allocate.intermediate = temporaries->next->reg;
                 break;
             case COMPLEX_ALLOCATE_END:break;
             case COMPLEX_CONSTRAIN_BOOLEAN:
@@ -497,12 +504,14 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 state->current->val.tempFromStackScope.intermediate2 = temporaries->next->next->reg;
                 break;
             case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET:
-                temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaReadWrite);
+                temporaries = makeTemporary(state->current->val.dereferenceOffset.ptrTemp, RaRead);
                 temporaries->next = makeTemporary(state->current->val.dereferenceOffset.offsetTemp, RaRead);
+                temporaries->next->next = makeTemporary(state->current->val.dereferenceOffset.returnTemp, RaWrite);
                 getTemporaries(colors, temporaries, state);
 
                 state->current->val.dereferenceOffset.ptrTemp = temporaries->reg;
                 state->current->val.dereferenceOffset.offsetTemp = temporaries->next->reg;
+                state->current->val.dereferenceOffset.returnTemp = temporaries->next->next->reg;
                 break;
             case COMPLEX_SAVE_STATIC_LINK:
                 state->current->val.pushPopStaticLink.temporary =
