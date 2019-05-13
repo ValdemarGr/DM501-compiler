@@ -181,7 +181,7 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
         putSymbol(child,
                   vdl->identifier,
                   value, stmDeclNum,
-                  true);
+                  false);
 
         vdl = vdl->next;
     }

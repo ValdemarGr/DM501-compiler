@@ -923,6 +923,73 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.arithmetic2.dest));
             fprintf(out, "popq %%rbp\n");
         } break;
+        case COMPLEX_SAVE_ALL: {
+            fprintf(out, "# COMPLEX_SAVE_ALL\n");
+
+            /*printIndentation(out);
+            fprintf(out, "pushq %%rcx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rbx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r8\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r9\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r10\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r11\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r12\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r13\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r14\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r15\n");*/
+
+        } break;
+        case COMPLEX_RESTORE_ALL: {
+            fprintf(out, "# COMPLEX_RESTORE_ALL\n");
+
+            /*printIndentation(out);
+            fprintf(out, "popq %%r15\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r14\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r13\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r12\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r11\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r10\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r9\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r8\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rbx\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdx\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rcx\n");*/
+
+        } break;
+        case INSTRUCTION_ADD_STACK_PTR: {
+            fprintf(out, "# INSTRUCTION_ADD_STACK_PTR\n");
+            printIndentation(out);
+            fprintf(out, "addq $%zu, %%rsp\n", instruction->val.toAddStackPtr);
+        } break;
     }
 }
 
@@ -966,6 +1033,41 @@ void generateInstructionLLForGlobals(Instructions *afterBegin) {
 
 }*/
 
+void generateForNestedGlobalBlocks(FILE *file, Instructions *iter) {
+    if (iter == NULL) {
+        return;
+    }
+
+    int level = -1;
+    Instructions *toContinueFrom = NULL;
+
+    while (iter != NULL) {
+        if (iter->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
+            generateInstruction(file, iter);
+            level++;
+            if (toContinueFrom == NULL) {
+                toContinueFrom = iter->next;
+            }
+        }
+
+        if (iter->kind == METADATA_END_GLOBAL_BLOCK) {
+            generateInstruction(file, iter);
+            if (level == 0) {
+                break;
+            }
+            level--;
+        }
+
+        if (level == 0) {
+            generateInstruction(file, iter);
+        }
+
+        iter = iter->next;
+    }
+
+    generateForNestedGlobalBlocks(file, toContinueFrom);
+}
+
 void generate(FILE *file, Instructions* instructions) {
     generateScopeFrames(file);
 
@@ -997,28 +1099,6 @@ void generate(FILE *file, Instructions* instructions) {
     fprintf(file, ASM_TAIL);
 
     current_instruction = instructions;
-    while (current_instruction != NULL) {
-
-        int globalCounter = 0;
-
-        if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
-            globalCounter++;
-        }
-
-        while (globalCounter != 0) {
-            current_instruction = current_instruction->next;
-
-            if (current_instruction->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
-                globalCounter++;
-            }
-
-            generateInstruction(file, current_instruction);
-
-            if (current_instruction->kind == METADATA_END_GLOBAL_BLOCK) {
-                globalCounter--;
-            }
-        }
-        current_instruction = current_instruction->next;
-    }
+    generateForNestedGlobalBlocks(file, current_instruction);
 
 }
