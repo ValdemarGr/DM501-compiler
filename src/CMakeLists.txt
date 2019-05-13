@@ -12,6 +12,6 @@ add_subdirectory(register_allocation)
 add_subdirectory(peephole)
 add_subdirectory(constant_fold)
 
-add_executable(compiler main.c ${SOURCES})
+add_executable(compiler main.c sandboxer.c ${SOURCES})
 
 target_link_libraries(compiler PrettyPrint ScanParsePrint AbstractSyntaxTree Weeder Symbol TypeChecker AsmCodeGen AstToIR RegisterAllocation Peephole ConstantFold)

@@ -4,6 +4,13 @@
 
 #include "constant_fold.h"
 #include "../ast/tree.h"
+#include "../symbol/symbol.h"
+#include "../sandboxer.h"
+
+ConstMap *constantFunctionEvalutationMap = NULL;
+bool inClosedContext = false;
+bool hasAffectedOutside = false;
+bool isAffectedByParameters = false;
 
 void constantFoldExpression(Expression *expression, SymbolTable *symbolTable);
 bool termEvaluatesToConstant(Term *term);
@@ -13,6 +20,7 @@ int evaluateExpressionIntConstant(Expression *expression, SymbolTable *symbolTab
 int evaluateTermIntConstant(Term *expression, SymbolTable *symbolTable);
 TermKind evaluateExpressionBoolConstant(Expression *expression, SymbolTable *symbolTable) ;
 TermKind evaluateTermBoolConstant(Term *expression, SymbolTable *symbolTable);
+bool doesBodyAffectOutside(Body *body, int evaluationLevel);
 
 TermKind evaluateExpressionBoolConstant(Expression *expression, SymbolTable *symbolTable) {
     switch (expression->kind) {
@@ -259,11 +267,36 @@ bool termEvaluatesToConstant(Term *term) {
 void constantFoldTerm(Term *term, SymbolTable *symbolTable) {
     switch (term->kind) {
         case functionCallK: {
-            ExpressionList *iter = term->val.functionCallD.expressionList;
+            char *baseName = term->val.functionCallD.functionId;
+            int extra = 16;
+            char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
 
-            while (iter != NULL) {
-                constantFoldExpression(iter->expression, symbolTable);
-                iter = iter->next;
+            SYMBOL *symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
+
+            sprintf(buf, "%s__%i", baseName, (int)(symbol->distanceFromRoot));
+
+            Pair *constantEvaluatedFunction = get(constantFunctionEvalutationMap, makeCharKey(buf));
+
+            if (constantEvaluatedFunction != NULL) {
+                Type *unwrappedReturn = unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable, NULL);
+                if (unwrappedReturn->kind == typeIntK) {
+                    term->kind = numK;
+                    term->val.numD.num = *((int*)constantEvaluatedFunction->v);
+                } else {
+                    int asBool = *((int*)constantEvaluatedFunction->v);
+                    if (asBool) {
+                        term->kind = trueK;
+                    } else {
+                        term->kind = falseK;
+                    }
+                }
+            } else {
+                ExpressionList *iter = term->val.functionCallD.expressionList;
+
+                while (iter != NULL) {
+                    constantFoldExpression(iter->expression, symbolTable);
+                    iter = iter->next;
+                }
             }
         }break;
         case parenthesesK: {
@@ -288,6 +321,155 @@ void constantFoldTerm(Term *term, SymbolTable *symbolTable) {
         } break;
         default: break;
     }
+}
+bool doesVariableAffectOutside(Variable *variable, SymbolTable *symbolTable, int evaluationLevel, bool isLhs);
+bool doesExpressionAffectOutside(Expression *expression, SymbolTable *symbolTable, int evaluationLevel);
+
+bool doesTermAffectOutside(Term *term, SymbolTable *symbolTable, int evaluationLevel) {
+    switch (term->kind) {
+        case variableK: return doesVariableAffectOutside(term->val.variableD.var, symbolTable, evaluationLevel, false); break;
+        case functionCallK: {
+            SYMBOL *symbol = getSymbol(symbolTable, term->val.functionCallD.functionId);
+            if (symbol->distanceFromRoot > evaluationLevel) {
+                return true;
+            }
+            //If not the decl is inside and the recursive decl checker will get it
+        } break;
+        case parenthesesK: {
+            return doesExpressionAffectOutside(term->val.parenthesesD.expression, symbolTable, evaluationLevel);
+        } break;
+        case negateK: {
+            return doesTermAffectOutside(term->val.negateD.term, symbolTable, evaluationLevel);
+        } break;
+        case absK: {
+            return doesExpressionAffectOutside(term->val.absD.expression, symbolTable, evaluationLevel);
+        } break;
+        case lambdaK: {
+            return doesBodyAffectOutside(term->val.lambdaD.lambda->body, evaluationLevel);
+        }break;
+        case shorthandCallK: {
+            return true;
+        } break;
+    }
+
+    return false;
+}
+
+bool doesExpressionAffectOutside(Expression *expression, SymbolTable *symbolTable, int evaluationLevel) {
+    switch (expression->kind) {
+        case opK: {
+            bool r1 = doesExpressionAffectOutside(expression->val.op.left, symbolTable, evaluationLevel);
+            bool r2= doesExpressionAffectOutside(expression->val.op.right, symbolTable, evaluationLevel);
+
+            if (r1 == true) return true;
+            if (r2 == true) return true;
+        } break;
+        case termK: {
+            return doesTermAffectOutside(expression->val.termD.term, symbolTable, evaluationLevel);
+        } break;
+    }
+
+    return false;
+}
+
+bool doesVariableAffectOutside(Variable *variable, SymbolTable *symbolTable, int evaluationLevel, bool isLhs) {
+    switch (variable->kind) {
+        case varIdK: {
+            SYMBOL *sym = getSymbol(symbolTable, variable->val.idD.id);
+            if ((sym->distanceFromRoot > evaluationLevel && isLhs) || sym->isArgument) {
+                return true;
+            }
+        } break;
+        case arrayIndexK: {
+            return doesVariableAffectOutside(variable->val.arrayIndexD.var, symbolTable, evaluationLevel, isLhs);
+        } break;
+        case recordLookupK: {
+            return doesVariableAffectOutside(variable->val.recordLookupD.var, symbolTable, evaluationLevel, isLhs);
+        } break;
+    }
+
+    return false;
+}
+
+bool doesStatementAffectOutside(Statement *statement, int evaluationLevel) {
+    switch (statement->kind) {
+        case statReturnK: {
+            return doesExpressionAffectOutside(statement->val.returnD.exp, statement->symbolTable, evaluationLevel);
+        } break;
+        case statWriteK: {
+            return true;
+        } break;
+        case statAllocateK: {
+            return doesVariableAffectOutside(statement->val.allocateD.var, statement->symbolTable, evaluationLevel, true);
+        } break;
+        case statAllocateLenK: {
+            return doesVariableAffectOutside(statement->val.allocateLenD.var, statement->symbolTable, evaluationLevel, true);
+        } break;
+        case statIfK: {
+            return doesStatementAffectOutside(statement->val.ifD.statement, evaluationLevel);
+        } break;
+        case statIfElK: {
+            bool r1 = doesStatementAffectOutside(statement->val.ifElD.statement, evaluationLevel);
+            bool r2 = doesStatementAffectOutside(statement->val.ifElD.elseStatement, evaluationLevel);
+
+            if (r1 == true) return true;
+            if (r2 == true) return true;
+        } break;
+        case statWhileK: {
+            return doesStatementAffectOutside(statement->val.whileD.statement, evaluationLevel);
+        } break;
+        case stmListK: {
+            StatementList *iter = statement->val.stmListD.statementList;
+
+            while (iter != NULL) {
+                bool r = doesStatementAffectOutside(iter->statement, evaluationLevel);
+                if (r == true) return true;
+                iter = iter->next;
+            }
+        } break;
+        case assignmentK: {
+            return doesVariableAffectOutside(statement->val.assignmentD.var, statement->symbolTable, evaluationLevel, true);
+        } break;
+        case emptyK: {
+            return doesExpressionAffectOutside(statement->val.empty.exp, statement->symbolTable, evaluationLevel);
+        } break;
+    }
+
+    return false;
+}
+
+bool doesDeclarationAffectOutside(Declaration *declaration, int evaluationLevel) {
+    switch (declaration->kind) {
+        case declFuncK: {
+            return doesBodyAffectOutside(declaration->val.functionD.function->body, evaluationLevel);
+        } break;
+        case declValK: {
+            return doesExpressionAffectOutside(declaration->val.valD.rhs, declaration->symbolTable, evaluationLevel);
+        } break;
+        case declClassK: {
+            return true;
+        } break;
+        default: break;
+    }
+
+    return false;
+}
+
+bool doesBodyAffectOutside(Body *body, int evaluationLevel) {
+    DeclarationList *declIter = body->declarationList;
+    while (declIter != NULL) {
+        bool r = doesDeclarationAffectOutside(declIter->declaration, evaluationLevel);
+        if (r == true) return true;
+        declIter = declIter->next;
+    }
+
+    StatementList *stmIter = body->statementList;
+    while (stmIter != NULL) {
+        bool r = doesStatementAffectOutside(stmIter->statement, evaluationLevel);
+        if (r == true) return true;
+        stmIter = stmIter->next;
+    }
+
 }
 
 void constantFoldExpression(Expression *expression, SymbolTable *symbolTable) {
@@ -578,6 +760,48 @@ void constantFoldDeclaration(Declaration *declaration) {
         case declTypeK:break;
         case declFuncK: {
             constantFoldBody(declaration->val.functionD.function->body);
+
+            Type *unwrappedReturn = unwrapTypedef(declaration->val.functionD.function->head->returnType, declaration->symbolTable, NULL);
+
+            if (unwrappedReturn->kind == typeIntK || unwrappedReturn->kind == typeBoolK) {
+                if (doesBodyAffectOutside(declaration->val.functionD.function->body, declaration->symbolTable->distanceFromRoot + 1) == false) {
+                    //Constant evaluate function
+                    Body *dummyBody = NEW(Body);
+                    DeclarationList *dummyDeclList = NEW(DeclarationList);
+                    dummyDeclList->next = NULL;
+                    dummyDeclList->declaration = declaration;
+                    Term *writeTerm = NEW(Term);
+                    writeTerm->kind = functionCallK;
+                    writeTerm->val.functionCallD.functionId = declaration->val.functionD.function->head->indentifier;
+                    writeTerm->val.functionCallD.expressionList = NULL;
+                    Expression *writeExpr = NEW(Expression);
+                    writeExpr->kind = termK;
+                    writeExpr->val.termD.term = writeTerm;
+                    Statement *dummyWrite = NEW(Statement);
+                    dummyWrite->kind = statWriteK;
+                    dummyWrite->val.writeD.exp = writeExpr;
+                    dummyWrite->symbolTable = declaration->symbolTable;
+                    StatementList *dummyStatementList = NEW(StatementList);
+                    dummyStatementList->statement = dummyWrite;
+
+                    dummyBody->declarationList = dummyDeclList;
+                    dummyBody->statementList = dummyStatementList;
+
+                    int r = sandboxBody(dummyBody);
+                    int *mr = malloc(sizeof(int));
+                    *mr = r;
+
+                    char *baseName = declaration->val.functionD.function->head->indentifier;
+                    int extra = 16;
+                    char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+                    sprintf(buf, "%s__%i", baseName, (int)(getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier)->distanceFromRoot));
+
+                    insert(constantFunctionEvalutationMap, makeCharKey(buf), mr);
+
+                    declaration->kind = nodecl;
+                }
+            }
         } break;
         case declValK: {
             constantFoldExpression(declaration->val.valD.rhs, declaration->symbolTable);
@@ -589,12 +813,19 @@ void constantFoldDeclaration(Declaration *declaration) {
                 constantFoldDeclaration(iter->declaration);
                 iter = iter->next;
             }
+
+            constantFoldBody(declaration->val.classD.constructor->body);
         } break;
+        case nodecl: break;
     }
 
 }
 
 void constantFoldBody(Body *body) {
+    if (constantFunctionEvalutationMap == NULL) {
+        constantFunctionEvalutationMap = initMap(50);
+    }
+
     DeclarationList *declIter = body->declarationList;
     while (declIter != NULL) {
         constantFoldDeclaration(declIter->declaration);

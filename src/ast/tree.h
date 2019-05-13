@@ -105,7 +105,7 @@ typedef struct Declaration {
 
     int lineno;
     enum {
-        declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK
+        declVarK, declVarsK, declTypeK, declFuncK, declValK, declClassK, nodecl
     } kind;
     union {
         struct {

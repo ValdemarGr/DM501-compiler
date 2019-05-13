@@ -1,0 +1,11 @@
+
+
+func f(): int
+    var a: int;
+    a = 22;
+    return a;
+end f
+
+
+write 55;
+write f();

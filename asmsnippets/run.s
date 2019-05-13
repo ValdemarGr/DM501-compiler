@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 8
+	.space 16
 intprint:
 	.asciz "%i\n"
 gcHeapOne:
@@ -512,12 +512,12 @@ garbageCollectAllocate:
     ret
 # METADATA_BEGIN_BODY_BLOCK
 # METADATA_CREATE_MAIN
-	main:
+			main:
 	push %rbp
 mov %rbp, %rax
 	movq %rsp, %rbp
 push %rax
-		# 20 mb
+				# 20 mb
 
     mov $0, %rdi
     mov $12, %rax
@@ -548,47 +548,26 @@ push %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $32, %rsp
-	popq %rax
-	movq %rax, -8(%rbp)
-	movq $0, -16(%rbp)
-	leaq staticLink, %rax
+			subq $32, %rsp
+			popq %rax
+			movq %rax, -8(%rbp)
+			movq $0, -16(%rbp)
+			leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $5, %rcx
+				mov $55, %rcx
 # INSTRUCTION_WRITE
-		movq %rcx, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
+				movq %rcx, %rsi
+				movq $intprint, %rdi
+				movq $0, %rax
+				call printf
 # INSTRUCTION_CONST
-		mov $-5, %rdx
+				mov $22, %rdx
 # INSTRUCTION_WRITE
-		movq %rdx, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# INSTRUCTION_WRITE
-		movq %rbx, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
-# INSTRUCTION_CONST
-		mov $1, %rsi
-# INSTRUCTION_WRITE
-		movq %rsi, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
-# INSTRUCTION_CONST
-		mov $42, %rdi
-# INSTRUCTION_WRITE
-		movq %rdi, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
+				movq %rdx, %rsi
+				movq $intprint, %rdi
+				movq $0, %rax
+				call printf
 # METADATA_END_BODY_BLOCK
 mov %rbp,%rsp
 pop %rbp
