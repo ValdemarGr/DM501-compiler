@@ -186,7 +186,8 @@ typedef struct Statement {
         gcK,
         gcDebugK,
         noop,
-        writeAny
+        writeAny,
+        writeNL
     } kind;
     SymbolTable *symbolTable;
     union {
@@ -460,6 +461,8 @@ Statement *makeAllocateOfLenStatement(Variable *var, Expression *len, Location l
 Statement *makeWriteStatement(Expression *exp, Location location);
 
 Statement *makeWriteAnyStatement(Expression *exp, Location location);
+
+Statement *makeWriteNlStatement(Location location);
 
 Statement *makeWhileStatement(Expression *exp, Statement *stm, Location location);
 

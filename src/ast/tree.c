@@ -816,6 +816,16 @@ Statement *makeWriteAnyStatement(Expression *exp, Location location) {
     return returning;
 }
 
+Statement *makeWriteNlStatement(Location location) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+    returning->lineno = lineno;
+    returning->kind = writeNL;
+    returning->location = location;
+    return returning;
+}
+
 Type *makeCharType(Location location) {
     Type *result = NEW(Type);
     result->kind = typeCharK;

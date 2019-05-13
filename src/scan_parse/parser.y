@@ -128,6 +128,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 %token tGCDEBUG
 %token tWRITEANY
 %token tCHARTYPE
+%token tWRITENL
 
 %type <expression> expression
 %type <lambda> lambda
@@ -254,6 +255,8 @@ statement : tRETURN expression ';'
         {$$ = makeStatementFromList($2, @$);}
         | expression ';'
         {$$ = makeEmptyExpression($1, @$);}
+        | tWRITENL ';'
+        {$$ = makeWriteNlStatement(@$);}
         | tGC ';'
         {$$ = makeGCStatement(@$);}
         | tGCDEBUG ';'

@@ -88,6 +88,7 @@ int yycolumn = 1;
 "gcdebug"       return tGCDEBUG;
 "writeany"      return tWRITEANY;
 "char"          return tCHARTYPE;
+"write nl"      return tWRITENL;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }

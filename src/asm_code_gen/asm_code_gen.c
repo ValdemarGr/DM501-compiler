@@ -232,6 +232,15 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "call printf\n");
         } break;
+        case INSTRUCTION_WRITE_NL: {
+            fprintf(out, "# INSTRUCTION_WRITE_NL\n");
+            printIndentation(out);
+            fprintf(out, "movq $nlprint, %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "movq $0, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "call printf\n");
+        } break;
         case INSTRUCTION_AND: {
             fprintf(out, "# INSTRUCTION_AND\n");
             printIndentation(out);
@@ -1004,7 +1013,8 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, "staticLink:\n");
     fprintf(file, "\t.space %zu\n", (maxDistFromRoot + 1) * POINTER_SIZE);
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
-    fprintf(file, "charprint:\n\t.asciz \"%%c\\n\"\n");
+    fprintf(file, "charprint:\n\t.asciz \"%%c\"\n");
+    fprintf(file, "nlprint:\n\t.asciz \"\\n\"\n");
     if (debugMode) {
         fprintf(file, GARBAGE_COLLECTOR_CHUNK_DEBUG);
     } else {

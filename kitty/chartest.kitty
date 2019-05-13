@@ -1,5 +1,33 @@
-var a : char;
+class String {
+    constructor (initialSize: int) {
+        stringSize = 0;
+        allocate internal of length initialSize;
+    };
+    var stringSize: int;
+    var internal: array of char;
+    val print = (): void -> {
+        var i: int;
+        i = 0;
 
-a = 'h';
+        while i < |internal| do {
+            write internal[i];
+            i = i + 1;
+        }
+    };
 
-write a;
+    val append = (c : char): void -> {
+        internal[stringSize] = c;
+        stringSize = stringSize + 1;
+    };
+};
+
+var s: class String;
+allocate s(20);
+s.append('h');
+s.append('e');
+s.append('l');
+s.append('l');
+s.append('o');
+
+s.print();
+write nl;

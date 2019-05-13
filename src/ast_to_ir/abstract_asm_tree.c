@@ -1341,6 +1341,11 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             currentTemporary++;
         } break;
+        case writeNL: {
+            Instructions *instructions = newInstruction();
+            instructions->kind = INSTRUCTION_WRITE_NL;
+            appendInstructions(instructions);
+        } break;
         case writeAny:
         case statWriteK: {
             if (evaluateExpressionType(statement->val.writeD.exp, statement->symbolTable)->kind == typeCharK) {
@@ -1354,8 +1359,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
                 appendInstructions(instructions);
             }
-        }
-            break;
+        } break;
         case statAllocateK: {
             Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
 
