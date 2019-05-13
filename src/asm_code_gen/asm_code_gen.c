@@ -1041,27 +1041,18 @@ void generateForNestedGlobalBlocks(FILE *file, Instructions *iter) {
 
     while (iter != NULL) {
         if (iter->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
-            generateInstruction(file, iter);
             level++;
-            if (toContinueFrom == NULL) {
-                if (level == 0) {
-                    toContinueFrom = iter->next;
-                } else {
-                    toContinueFrom = iter;
-                }
+            if (toContinueFrom == NULL && level > 0) {
+                toContinueFrom = iter;
             }
-        }
-
-        if (iter->kind == METADATA_END_GLOBAL_BLOCK) {
-            generateInstruction(file, iter);
-            if (level == 0) {
-                break;
-            }
-            level--;
         }
 
         if (level == 0) {
             generateInstruction(file, iter);
+        }
+
+        if (iter->kind == METADATA_END_GLOBAL_BLOCK) {
+            level--;
         }
 
         iter = iter->next;
