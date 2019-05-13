@@ -453,7 +453,12 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_GARBAGE_COLLECT:break;
             case COMPLEX_ABS_VALUE:
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
+
+                insertSortedSet(dataFlowEntry->defines, iter->val.arithmetic2.source);
+                insertSortedSet(dataFlowEntry->defines, iter->val.arithmetic2.dest);
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.arithmetic2.source);
+
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
             case METADATA_BEGIN_GLOBAL_BLOCK:break;

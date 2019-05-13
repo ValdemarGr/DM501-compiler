@@ -551,6 +551,17 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case METADATA_DEBUG_INFO:break;
             case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
             case COMPLEX_GARBAGE_COLLECT:break;
+            case INSTRUCTION_ADD_STACK_PTR:break;
+            case COMPLEX_ABS_VALUE:
+                temporaries = makeTemporary(state->current->val.arithmetic2.source, RaReadWrite);
+                temporaries->next = makeTemporary(state->current->val.arithmetic2.dest, RaReadWrite);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.arithmetic2.source = temporaries->reg;
+                state->current->val.arithmetic2.dest = temporaries->next->reg;
+                break;
+            case COMPLEX_SAVE_ALL:break;
+            case COMPLEX_RESTORE_ALL:break;
         }
 
         freeSortedSet(state->regsInUse);
