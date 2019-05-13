@@ -24,6 +24,7 @@ bool printWithTypes = false;
 bool prettyPrint = false;
 bool verbose = false;
 bool registerAllocation = false;
+bool dePeephole = true;
 size_t maxDistFromRoot = 0;
 int initialGcSizeMB = 10;
 extern char *filename;
@@ -100,9 +101,17 @@ int compile_file(FILE *file) {
 
     Instructions *instructions = generateInstructionTree(theexpression);
 
-    //simpleRegisterAllocation(instructions, 13);
+    if (dePeephole) {
+        peephole(instructions);
+    }
 
-    //peephole(instructions);
+    if (dePeephole) {
+        simpleRegisterAllocation(instructions, 13);
+    }
+
+    if (dePeephole) {
+        peephole(instructions);
+    }
 
     generate(stdout, instructions);
 
@@ -128,7 +137,7 @@ int main(int argc, char *argv[]) {
                     verbose = true;
                     break;
                 case 'l':
-                    registerAllocation = true;
+                    dePeephole = false;
                     break;
                 default:
                     if (strstr(arg, "mem=")) {

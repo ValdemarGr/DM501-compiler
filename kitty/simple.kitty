@@ -40,4 +40,5 @@ gc;
 a.ifield = 42;
 gc;
 
+write 10;
 a.printer();
