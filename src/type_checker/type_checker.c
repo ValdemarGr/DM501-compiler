@@ -10,7 +10,9 @@
 bool workingInClass = false;
 char *className;
 bool workingInLambda = false;
+bool workingInNestedLambda = false;
 int lambdaLevel = 0;
+int nestedLambdaLevel = 0;
 bool workingInConstructor = false;
 int constructorReachLevel = 0;
 
@@ -253,6 +255,9 @@ Type *evaluateTermType(Term *term, SymbolTable *symbolTable) {
             //SYMBOL *sym = getSymbol(symbolTable, term->val.classDowncastD.downcastId);
 
             return type;
+        } break;
+        case shorthandCallK: {
+            return unwrapVariable(term->val.shorthandCallD.var, symbolTable)->val.typeLambdaK.returnType;
         } break;
     }
 
@@ -883,7 +888,11 @@ Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable) {
             }
 
             if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
-                if (workingInClass) {
+                if (workingInNestedLambda) {
+                    if (nestedLambdaLevel > symbol->distanceFromRoot) {
+                        return NULL;
+                    }
+                } else if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
                         return NULL;
@@ -1132,7 +1141,11 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             }
 
             if ((workingInConstructor || workingInLambda) && symbol->distanceFromRoot != 0) {
-                if (workingInClass) {
+                if (workingInNestedLambda) {
+                    if (nestedLambdaLevel > symbol->distanceFromRoot) {
+                        return NULL;
+                    }
+                } else if (workingInClass) {
                     //We may look on same level as lambdaLevel since we can capture class fields
                     if (lambdaLevel > symbol->distanceFromRoot) {
                         e = NEW(Error);
@@ -1577,13 +1590,18 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
             break;
         case lambdaK:
+            if (workingInLambda) {
+                workingInNestedLambda = true;
+                nestedLambdaLevel = (int)symbolTable->distanceFromRoot + 1;
+            } else {
+                lambdaLevel = (int)symbolTable->distanceFromRoot;
+            }
             workingInLambda = true;
             typeMatch = NEW(Type);
 
             typeMatch->kind = typeLambdaK;
             typeMatch->val.typeLambdaK.returnType = term->val.lambdaD.lambda->returnType;
             typeMatch->val.typeLambdaK.typeList = NULL;
-            lambdaLevel = (int)symbolTable->distanceFromRoot;
 
             //Now for converting the "advanced" type list
             VarDelList *vdl = term->val.lambdaD.lambda->declarationList;
@@ -1628,7 +1646,11 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
 
             e = typeCheck(term->val.lambdaD.lambda->body, unwrapTypedef(term->val.lambdaD.lambda->returnType, symbolTable, NULL));
             if (e != NULL) return e;
-            workingInLambda = false;
+            if (workingInNestedLambda) {
+                workingInNestedLambda = false;
+            } else {
+                workingInLambda = false;
+            }
 
             break;
         case parenthesesK:
@@ -2866,10 +2888,19 @@ Error *typeCheckDeclaration(Declaration *declaration) {
                     //Actually, if the lambda has already been bound, no reason to type check its body.
                 } else {
                     Lambda *lambda = declaration->val.valD.rhs->val.termD.term->val.lambdaD.lambda;
+                    if (workingInLambda) {
+                        workingInNestedLambda = true;
+                        nestedLambdaLevel = (int)declaration->symbolTable->distanceFromRoot + 1;
+                    } else {
+                        lambdaLevel = (int)declaration->symbolTable->distanceFromRoot;
+                    }
                     workingInLambda = true;
-                    lambdaLevel = (int)declaration->symbolTable->distanceFromRoot;
                     e = typeCheck(lambda->body, unwrapTypedef(lambda->returnType, declaration->symbolTable, NULL));
-                    workingInLambda = false;
+                    if (workingInNestedLambda) {
+                        workingInNestedLambda = false;
+                    } else {
+                        workingInLambda = false;
+                    }
                     if (e != NULL) return e;
                 }
             } else {

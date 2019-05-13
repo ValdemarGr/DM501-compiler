@@ -96,9 +96,7 @@ int compile_file(FILE *file) {
         prettyBody(theexpression);
     }
 
-    //This must be done twice because of limitations
-    //constantFoldBody(theexpression);
-    //constantFoldBody(theexpression);
+    constantFoldBody(theexpression);
 
     resetAbstractGenGlobals();
 
