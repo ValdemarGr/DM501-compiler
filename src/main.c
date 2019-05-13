@@ -16,6 +16,7 @@
 #include "constant_fold/constant_fold.h"
 
 int lineno;
+int numberErrors = 0;
 int stmDeclNum;
 Body *theexpression;
 size_t currentTemporary = 1;
@@ -42,9 +43,10 @@ int compile_file(FILE *file) {
     Error *e;
 
     lineno = 1;
+    numberErrors = 0;
     yyparse();
 
-    if (theexpression == NULL) {
+    if (theexpression == NULL || numberErrors > 0) {
         fprintf(stderr, "Failed to parse.");
         return 1;
     }

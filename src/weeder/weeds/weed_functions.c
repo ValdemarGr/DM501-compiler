@@ -187,7 +187,7 @@ Error *weedReturnsForStatementList(StatementList *sl, char* fid) {
     e = NEW(Error);
     e->error = WEED_FUNC_HAS_NO_RETURN;
     e->val.WEED_FUNC_HAS_NO_RETURN_S.fid = fid;
-    e->location = statementList->location;
+    e->location = sl->location;
 
     return e;
 }
@@ -218,6 +218,7 @@ Error *weedMainReturn(Body *body) {
         if (iter->statement->kind == statReturnK) {
             Error *e = NEW(Error);
             e->error = RETURN_IN_MAIN;
+            e->location = iter->location;
             return e;
         }
         iter = iter->next;

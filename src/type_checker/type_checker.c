@@ -1192,8 +1192,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                     e->error = VARIABLE_UNEXPECTED_TYPE;
                     e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.idD.id;
                     e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                    e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                    e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType->kind;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                    e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symAsType;
                     e->location = variable->location;
 
 
@@ -1215,8 +1215,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                             e->error = VARIABLE_UNEXPECTED_TYPE;
                             e->val.VARIABLE_UNEXPECTED_TYPE_S.id = "FIX ME 1";
                             e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                            e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                            e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = returnType->kind;
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                            e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = returnType;
                             e->location = varDelList->location;
 
 
@@ -1259,11 +1259,9 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
             if (unwrapTypedef(toCompare, symbolTable, NULL)->kind != typeArrayK) {
                 e = NEW(Error);
 
-                e->error = VARIABLE_UNEXPECTED_TYPE;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.recordLookupD.id;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = typeArrayK;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = toCompare->kind;
+                e->error = VARIABLE_NOT_ARRAY;
+                e->val.VARIABLE_UNEXPECTED_TYPE_STATIC_S.id = variable->val.recordLookupD.id;
+                e->val.VARIABLE_UNEXPECTED_TYPE_STATIC_S.foundType = toCompare;
                 e->location = variable->location;
 
                 return e;
@@ -1277,8 +1275,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->error = VARIABLE_UNEXPECTED_TYPE;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.recordLookupD.id;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = toCompare->val.arrayType.type->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = toCompare->val.arrayType.type;
                 e->location = variable->location;
 
                 return e;
@@ -1375,8 +1373,8 @@ Error *typeCheckVariable(Variable* variable, Type *expectedType, SymbolTable *sy
                 e->error = VARIABLE_UNEXPECTED_TYPE;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.id = variable->val.recordLookupD.id;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno = variable->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symbol->value->val.typeD.tpe->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = symbol->value->val.typeD.tpe;
 
                 return e;
             }
@@ -1448,15 +1446,22 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                  areTypesEqual(unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable, NULL),
                                unwrapTypedef(expectedType, symbolTable, NULL), symbolTable) == false) ||
                 (symbol->value->kind == typeK &&
-               symbol->value->val.typeD.tpe->kind == typeLambdaK &&
-                areTypesEqual(unwrapTypedef(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, symbolTable,
-                                            NULL),
-                              unwrapTypedef(expectedType, symbolTable, NULL), symbolTable) == false)) {
-                e = NEW(Error);
+                 symbol->value->val.typeD.tpe->kind == typeLambdaK &&
+                 areTypesEqual(unwrapTypedef(symbol->value->val.typeD.tpe->val.typeLambdaK.returnType, symbolTable,
+                                             NULL),
+                               unwrapTypedef(expectedType, symbolTable, NULL), symbolTable) == false)) {
 
+                e = NEW(Error);
                 e->error = TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE;
                 e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.lineno = term->lineno;
                 e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.fid = term->val.functionCallD.functionId;
+                e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.expectedType = expectedType;
+
+                if (symbol->value->kind == typeFunctionK) {
+                    e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.foundType = symbol->value->val.typeFunctionD.returnType;
+                } else {
+                    e->val.TYPE_TERM_INVALID_FUNCTION_CALL_RETURN_TYPE_S.foundType = symbol->value->val.typeD.tpe->val.typeLambdaK.returnType;
+                }
                 e->location = term->location;
 
                 return e;
@@ -1604,8 +1609,8 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = VARIABLE_UNEXPECTED_TYPE;
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.id = "lambda";
                 e->val.VARIABLE_UNEXPECTED_TYPE_S.lineno =  term->lineno;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType->kind;
-                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = term->val.lambdaD.lambda->returnType->kind;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.expectedType = expectedType;
+                e->val.VARIABLE_UNEXPECTED_TYPE_S.foundType = term->val.lambdaD.lambda->returnType;
                 e->location = term->val.lambdaD.lambda->returnType->location;
 
 
@@ -1628,6 +1633,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->val.TYPE_TERM_NOT_BOOLEAN_S.expectedType = expectedType;
                 e->location = term->location;
 
                 return e;
@@ -1644,6 +1650,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_INTEGER;
                 e->val.TYPE_TERM_NOT_INTEGER_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
+                e->val.TYPE_TERM_NOT_INTEGER_S.expectedType = expectedType;
                 e->location = term->location;
 
                 return e;
@@ -1665,6 +1672,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_INTEGER;
                 e->val.TYPE_TERM_NOT_INTEGER_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_INTEGER_S.termThatCausedError = term;
+                e->val.TYPE_TERM_NOT_INTEGER_S.expectedType = expectedType;
                 e->location = term->location;
 
                 return e;
@@ -1677,6 +1685,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->val.TYPE_TERM_NOT_BOOLEAN_S.expectedType = expectedType;
                 e->location = term->location;
 
                 return e;
@@ -1689,6 +1698,7 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
                 e->error = TYPE_TERM_NOT_BOOLEAN;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.lineno = term->lineno;
                 e->val.TYPE_TERM_NOT_BOOLEAN_S.termThatCausedError = term;
+                e->val.TYPE_TERM_NOT_BOOLEAN_S.expectedType = expectedType;
                 e->location = term->location;
 
                 return e;
@@ -2290,6 +2300,7 @@ Error *typeCheckStatement(Statement *statement, Type *functionReturnType) {
                 e->error = INVALID_ASSIGMENT_TO_NULL;
                 e->val.INVALID_ASSIGMENT_TO_NULL.id = statement->val.assignmentD.var->val.idD.id;
                 e->val.INVALID_ASSIGMENT_TO_NULL.lineno = statement->lineno;
+                e->val.INVALID_ASSIGMENT_TO_NULL.typeKind = lhsType->kind;
                 e->location = statement->location;
 
                 return e;
@@ -2326,6 +2337,7 @@ Error *checkTypeExist(Type *type, SymbolTable *symbolTable, int lineno, CharLL *
                         e = NEW(Error);
 
                         e->error = RECURSIVE_TYPEDEF;
+                        e->location = type->location;
 
                         return e;
                     } else {
