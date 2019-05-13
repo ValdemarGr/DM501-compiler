@@ -1015,11 +1015,7 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
     fprintf(file, "charprint:\n\t.asciz \"%%c\"\n");
     fprintf(file, "nlprint:\n\t.asciz \"\\n\"\n");
-    if (debugMode) {
-        fprintf(file, GARBAGE_COLLECTOR_CHUNK_DEBUG);
-    } else {
-        fprintf(file, GARBAGE_COLLECTOR_CHUNK);
-    }
+    fprintf(file, GARBAGE_COLLECTOR_CHUNK);
 }
 /*
 void generateInstructionLLForGlobals(Instructions *afterBegin) {

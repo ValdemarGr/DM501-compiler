@@ -1386,7 +1386,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
                     Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable, NULL);
-                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK && unwrapped->kind != typeCharK) {
                         insertSortedSet(bodySet, (int)fieldCount);
                     }
 
@@ -1584,7 +1584,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.eleSize = POINTER_SIZE;
             ret->val.allocate.intermediate = currentTemporary++;
-            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK) {
+            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK || type->val.arrayType.type->kind == typeCharK) {
                 ret->val.allocate.allocationType = ALLOC_ARR_OF_PRIM;
             } else {
                 ret->val.allocate.allocationType = ALLOC_ARR_OF_PTR;
@@ -2075,7 +2075,7 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
         return;
     }
 
-    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK && unwrapped->kind != typeCharK) {
         insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
     }
 }

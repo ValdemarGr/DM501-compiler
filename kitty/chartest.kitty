@@ -31,3 +31,28 @@ s.append('o');
 
 s.print();
 write nl;
+
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+allocate s(20);
+
+gcdebug;
+gc;
+gcdebug;
+
+s.print();
+write nl;

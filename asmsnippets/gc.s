@@ -68,7 +68,7 @@ gcPrintDebug:
     # for gc two
     leaq gcHeapTwo, %r15
 
-    movq $gconeprint, %rdi
+    movq $gctwoprint, %rdi
     movq $0, %rax
     call printf
 
@@ -580,6 +580,30 @@ garbageCollectAllocate:
     movq 24(%rbp), %rax
     movq %rax, -8(%rbp)
 
+    # check if we need to gc
+    leaq gcHeapOne, %r15
+    cmp $1, 0(%r15)
+    je heapSelectorEndAlloc1
+    leaq gcHeapTwo, %r15
+    heapSelectorEndAlloc1:
+
+    # current heap position
+    movq 8(%r15), %r14
+    # add new size
+    movq -8(%rbp), %rax
+    addq %r14, %rax
+    # buffer
+    addq $40, %rax
+    cmp 16(%r15), %rax
+    #if we are in the safe zone
+    jl continueTheAlloc
+        pushq -16(%rbp)
+        call garbageCollect
+        addq $8, %rsp
+    continueTheAlloc:
+
+
+    # do the alloc
     leaq gcHeapOne, %r15
     cmp $1, 0(%r15)
     je heapSelectorEndAlloc
