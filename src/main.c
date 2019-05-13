@@ -45,7 +45,7 @@ int compile_file(FILE *file) {
     yyparse();
 
     if (theexpression == NULL) {
-        perror("Failed to parse.");
+        fprintf(stderr, "Failed to parse.");
         return 1;
     }
 
