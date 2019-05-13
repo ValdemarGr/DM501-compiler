@@ -56,11 +56,10 @@ int writeError(Error *e) {
                    typeEnumToString(e->val.TYPE_TERM_FUNCTION_CALL_EXPRESSION_NOT_MATCH_SIGNATURE_S.foundType));
             break;
         case TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH:
-            fprintf(stderr, "Function call %s does not have the correct number of arguments. Expected %i found %i, at line number %i\n",
+            fprintf(stderr, "Function call %s does not have the correct number of arguments. Expected %i found %i\n",
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.fid,
                    e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.foundCount,
-                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount,
-                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.lineno);
+                   e->val.TYPE_TERM_FUNCTION_CALL_ARGUMENT_COUNT_NOT_MATCH_S.expectedCount);
             break;
         case TYPE_TERM_NOT_BOOLEAN:
             fprintf(stderr, "Type error, expected %s got boolean",
@@ -141,8 +140,7 @@ int writeError(Error *e) {
             fprintf(stderr, "INVALID_GENERIC_HAS_TYPE_CONSTRAINT\n");
         } break;
         case INVALID_ALLOCATE_TARGET: {
-            fprintf(stderr, "Variable %%s is not an valid allocate target at line %i\n",
-                    e->location.first_line);
+            fprintf(stderr, "Variable %%s is not an valid allocate target\n");
         } break;
         case NO_PRIMITIVE_GENERICS : {
             fprintf(stderr, "NO_PRIMITIVE_GENERICS\n");
