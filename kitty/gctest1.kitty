@@ -1,0 +1,115 @@
+# This should be moved in phase 2 of gc
+class B {
+    var mutableField: int;
+    val set = (newValue: int): void -> {
+        mutableField = newValue;
+    };
+    val get = (): int -> {
+        return mutableField;
+    };
+    val print = (): void -> {
+        write mutableField;
+    };
+};
+
+# This should be moved in phase 1 of gc since its binded by the stack
+class A {
+    var refToB: class B;
+    val deepSet = (newValue: int): void -> {
+        refToB.mutableField = newValue;
+    };
+    val deepGet = (): int -> {
+        return refToB.mutableField;
+    };
+    val deepPrint = (): void -> {
+        write refToB.mutableField;
+    };
+};
+
+class C {
+    var refToA: class A;
+};
+
+var a: class A;
+var c: class C;
+allocate a;
+allocate a.refToB;
+
+allocate c;
+allocate c.refToA;
+allocate c.refToA.refToB;
+
+# should print 0
+a.deepPrint();
+
+# set value to 24
+a.deepSet(24);
+
+# should print 24 three times
+a.deepPrint();
+a.refToB.print();
+write a.refToB.mutableField;
+
+gc;
+gc;
+gc;
+gc;
+gc;
+gc;
+
+# should print 24 three times
+a.deepPrint();
+a.refToB.print();
+write a.refToB.mutableField;
+
+# set value to 33
+a.deepSet(33);
+
+# should print 33 three times
+a.deepPrint();
+a.refToB.print();
+write a.refToB.mutableField;
+
+gc;
+
+# should print 33 three times
+a.deepPrint();
+a.refToB.print();
+write a.refToB.mutableField;
+
+a.refToB.mutableField = 99;
+
+gc;
+
+# should print 99 three times
+a.deepPrint();
+gc;
+a.refToB.print();
+gc;
+write a.refToB.mutableField;
+
+gc;
+
+c.refToA.deepSet(55);
+
+# should print 55 three times
+c.refToA.deepPrint();
+c.refToA.refToB.print();
+write c.refToA.refToB.mutableField;
+
+gc;
+
+c.refToA.refToB.mutableField = 66;
+# should print 55 three times
+c.refToA.deepPrint();
+c.refToA.refToB.print();
+write c.refToA.refToB.mutableField;
+
+gc;
+
+# should be equal
+a.refToB.mutableField = 77;
+a.deepPrint();
+c.refToA = a;
+c.refToA.deepPrint();
+

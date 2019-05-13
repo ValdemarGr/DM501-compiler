@@ -993,12 +993,18 @@ void generateInstruction(FILE *out, Instructions* instruction) {
     }
 }
 
+extern bool debugMode;
+
 void generateScopeFrames(FILE *file) {
     fprintf(file, ".section .data\n");
     fprintf(file, "staticLink:\n");
     fprintf(file, "\t.space %zu\n", (maxDistFromRoot + 1) * POINTER_SIZE);
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
-    fprintf(file, GARBAGE_COLLECTOR_CHUNK);
+    if (debugMode) {
+        fprintf(file, GARBAGE_COLLECTOR_CHUNK_DEBUG);
+    } else {
+        fprintf(file, GARBAGE_COLLECTOR_CHUNK);
+    }
 }
 /*
 void generateInstructionLLForGlobals(Instructions *afterBegin) {

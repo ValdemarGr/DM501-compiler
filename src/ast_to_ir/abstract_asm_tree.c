@@ -1332,6 +1332,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             currentTemporary++;
         } break;
+        case writeAny:
         case statWriteK: {
             Instructions *instructions = newInstruction();
             instructions->kind = INSTRUCTION_WRITE;
@@ -1343,6 +1344,18 @@ void generateInstructionTreeForStatement(Statement *statement) {
             Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
 
             size_t fieldCount = 0;
+
+            SYMBOL *baseSym = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
+            Instructions *allocdebug = newInstruction();
+            allocdebug->kind = METADATA_DEBUG_INFO;
+            allocdebug->val.debugInfo = "ALLOC";
+            appendInstructions(allocdebug);
+
+            Instructions *debug = newInstruction();
+            debug->kind = METADATA_DEBUG_INFO;
+            debug->val.debugInfo = variableToString(statement->val.allocateD.var);
+            appendInstructions(debug);
 
             SortedSet *bodySet;
 
@@ -1801,6 +1814,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
             gc->kind = COMPLEX_GARBAGE_COLLECT;
             appendInstructions(gc);
         } break ;
+        case gcDebugK : {
+            Instructions *gcdebug = newInstruction();
+            gcdebug->kind = INSTRUCTION_FUNCTION_CALL;
+            gcdebug->val.function = "gcPrintDebug";
+            appendInstructions(gcdebug);
+        } break;
     }
 }
 
@@ -2022,9 +2041,11 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
     if (symbol->value->kind == typeFunctionK && !symbol->value->val.typeFunctionD.isLambda) {
         return;
     }
+
     Type* typeToUnwrap = symbol->value->val.typeD.tpe;
     if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
-        typeToUnwrap = symbol->value->val.typeFunctionD.returnType;
+        insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
+        return;
     }
 
     Type *unwrapped = unwrapTypedef(typeToUnwrap, symbolTable, NULL);

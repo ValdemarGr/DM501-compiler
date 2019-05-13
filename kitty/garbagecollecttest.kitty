@@ -9,6 +9,9 @@ class A {
 class B {
     var refToA: class A;
     val v = 20;
+    val setter = (allocater: () -> class A): void -> {
+        refToA = allocater();
+    };
 };
 
 class C {

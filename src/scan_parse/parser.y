@@ -123,6 +123,8 @@ void lyyerror(YYLTYPE t, char const *s) {
 %token tVOID
 %token tCONSTRUCTOR
 %token tGC
+%token tGCDEBUG
+%token tWRITEANY
 
 %type <expression> expression
 %type <lambda> lambda
@@ -241,6 +243,8 @@ statement : tRETURN expression ';'
         {$$ = makeAssignment($1, $3, @$);}
         | tWRITE expression ';'
         {$$ = makeWriteStatement($2, @$);}
+        | tWRITEANY expression ';'
+        {$$ = makeWriteAnyStatement($2, @$);}
         | tWHILE expression tDO statement
         {$$ = makeWhileStatement($2, $4, @$);}
         | '{' stm_list '}'
@@ -249,6 +253,8 @@ statement : tRETURN expression ';'
         {$$ = makeEmptyExpression($1, @$);}
         | tGC ';'
         {$$ = makeGCStatement(@$);}
+        | tGCDEBUG ';'
+        {$$ = makeGCDebugStatement(@$);}
         | error ';'
         {};
         | error '}'
