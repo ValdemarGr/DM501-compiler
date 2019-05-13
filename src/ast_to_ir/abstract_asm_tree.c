@@ -839,6 +839,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //CREATE THE LAMBDA IN GLOBAL SCOPE
                 Instructions *beginGlobalBLock = newInstruction();
                 beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+                beginGlobalBLock->val.function = buf;
                 appendInstructions(beginGlobalBLock);
 
                 Instructions *label = newInstruction();
@@ -1835,18 +1836,20 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
             break;
         case declFuncK: {
             //For function label
+
             SYMBOL *symbol = getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier);
-
-            Instructions *beginGlobalBLock = newInstruction();
-            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-            appendInstructions(beginGlobalBLock);
-
             //Append depdth to name
             char *baseName = declaration->val.functionD.function->head->indentifier;
             int extra = 16;
             char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
 
             sprintf(buf, "%s__%i", baseName, (int)symbol->distanceFromRoot);
+
+            Instructions *beginGlobalBLock = newInstruction();
+            beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+            beginGlobalBLock->val.function = buf;
+            appendInstructions(beginGlobalBLock);
+
 
 
             Instructions *label = newInstruction();
@@ -1935,6 +1938,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
                 //Create constructor
                 Instructions *beginGlobalBLock = newInstruction();
                 beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
+                beginGlobalBLock->val.function = buf;
                 appendInstructions(beginGlobalBLock);
 
                 Instructions *label = newInstruction();

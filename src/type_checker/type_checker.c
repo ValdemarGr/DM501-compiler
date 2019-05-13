@@ -1597,7 +1597,10 @@ Error *typeCheckTerm(Term *term, Type *expectedType, SymbolTable *symbolTable) {
             }
 
             //Check if lhs and rhs are same type
-            if (areTypesEqual(expectedType, typeMatch, symbolTable) == false) {
+            Type *unwrappedExpected = unwrapTypedef(expectedType, symbolTable, NULL);
+            Type *typeMatchUnwrapped = unwrapTypedef(typeMatch, symbolTable, NULL);
+
+            if (areTypesEqual(unwrappedExpected, typeMatchUnwrapped, symbolTable) == false) {
                 //Better error please
                 e = NEW(Error);
 

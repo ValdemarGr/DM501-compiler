@@ -787,9 +787,9 @@ void constantFoldDeclaration(Declaration *declaration) {
                     dummyBody->declarationList = dummyDeclList;
                     dummyBody->statementList = dummyStatementList;
 
-                    int r = sandboxBody(dummyBody);
+                    //int r = sandboxBody(dummyBody);
                     int *mr = malloc(sizeof(int));
-                    *mr = r;
+                    //*mr = r;
 
                     char *baseName = declaration->val.functionD.function->head->indentifier;
                     int extra = 16;
@@ -797,9 +797,9 @@ void constantFoldDeclaration(Declaration *declaration) {
 
                     sprintf(buf, "%s__%i", baseName, (int)(getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier)->distanceFromRoot));
 
-                    insert(constantFunctionEvalutationMap, makeCharKey(buf), mr);
+                    //insert(constantFunctionEvalutationMap, makeCharKey(buf), mr);
 
-                    declaration->kind = nodecl;
+                    //declaration->kind = nodecl;
                 }
             }
         } break;
