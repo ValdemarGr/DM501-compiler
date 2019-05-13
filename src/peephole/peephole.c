@@ -37,90 +37,60 @@ void appendTemplates(PeepholeTemplates *peepholeTemplates, PeepholeTemplates *ne
     peepholeTemplates->next = new;
 }
 
-PeepholeTemplates *generateRulesetsForSize(int n) {
+PeepholeTemplates *generateRulesetsForSize() {
     PeepholeTemplates *peepholeTemplates = NEW(PeepholeTemplates);
     peepholeTemplates->last = NULL;
 
-    switch (n) {
-        case 1: {
+    {
+        size_t registerTrackerForBlock = ANY + 1;
 
+        SimpleInstruction *movConst = NEW(SimpleInstruction);
+        movConst->kind = INSTRUCTION_CONST;
+        registerTrackerForBlock++;
 
-        } break;
-        case 2: {
-            {
-                size_t registerTrackerForBlock = ANY + 1;
+        SimpleInstruction *simpleAdd = NEW(SimpleInstruction);
+        simpleAdd->kind = INSTRUCTION_ADD;
+        registerTrackerForBlock++;
+        appendInstruction(movConst, simpleAdd);
+        addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_ADD, 2);
+    }
 
-                SimpleInstruction *movConst = NEW(SimpleInstruction);
-                movConst->kind = INSTRUCTION_CONST;
-                registerTrackerForBlock++;
+    {
+        size_t registerTrackerForBlock = ANY + 1;
 
-                SimpleInstruction *simpleAdd = NEW(SimpleInstruction);
-                simpleAdd->kind = INSTRUCTION_ADD;
-                registerTrackerForBlock++;
-                appendInstruction(movConst, simpleAdd);
-                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_ADD, 2);
-            }
+        SimpleInstruction *movConst = NEW(SimpleInstruction);
+        movConst->kind = INSTRUCTION_CONST;
+        registerTrackerForBlock++;
 
-            {
-                size_t registerTrackerForBlock = ANY + 1;
+        SimpleInstruction *simpleMul = NEW(SimpleInstruction);
+        simpleMul->kind = INSTRUCTION_MUL;
+        registerTrackerForBlock++;
+        appendInstruction(movConst, simpleMul);
+        addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_MUL, 2);
+    }
 
-                SimpleInstruction *movConst = NEW(SimpleInstruction);
-                movConst->kind = INSTRUCTION_CONST;
-                registerTrackerForBlock++;
+    {
+        size_t registerTrackerForBlock = ANY + 1;
 
-                SimpleInstruction *simpleMul = NEW(SimpleInstruction);
-                simpleMul->kind = INSTRUCTION_MUL;
-                registerTrackerForBlock++;
-                appendInstruction(movConst, simpleMul);
-                addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_MUL, 2);
-            }
+        SimpleInstruction *push = NEW(SimpleInstruction);
+        push->kind = INSTRUCTION_PUSH;
+        registerTrackerForBlock++;
 
-            {
-                size_t registerTrackerForBlock = ANY + 1;
+        SimpleInstruction *pop = NEW(SimpleInstruction);
+        pop->kind = INSTRUCTION_POP;
+        registerTrackerForBlock++;
+        appendInstruction(push, pop);
+        addInstructionTemplate(peepholeTemplates, push, REMOVE_PUSH_POP, 2);
+    }
 
-                SimpleInstruction *push = NEW(SimpleInstruction);
-                push->kind = INSTRUCTION_PUSH;
-                registerTrackerForBlock++;
+    {
+        size_t registerTrackerForBlock = ANY + 1;
 
-                SimpleInstruction *pop = NEW(SimpleInstruction);
-                pop->kind = INSTRUCTION_POP;
-                registerTrackerForBlock++;
-                appendInstruction(push, pop);
-                addInstructionTemplate(peepholeTemplates, push, REMOVE_PUSH_POP, 2);
-            }
+        SimpleInstruction *move = NEW(SimpleInstruction);
+        move->kind = INSTRUCTION_CONST;
+        registerTrackerForBlock++;
 
-        } break;
-        case 3: {
-
-        } break;
-        case 4: {
-
-        } break;
-        case 5: {
-
-        } break;
-        case 6: {
-
-        } break;
-        case 7: {
-
-        } break;
-        case 8: {
-
-        } break;
-        case 9: {
-
-        } break;
-        case 10: {
-
-        } break;
-        case 11: {
-
-        } break;
-        case 12: {
-
-        } break;
-        default:break;
+        addInstructionTemplate(peepholeTemplates, move, CONST_ZERO_TO_SET_ZERO, 1);
     }
 
     return peepholeTemplates;
@@ -221,7 +191,16 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
-        }
+        } break;
+        case CONST_ZERO_TO_SET_ZERO: {
+            if (instructionsIter->val.constant.value == 0) {
+                instructionHead = newInstruction();
+                instructionHead->kind = INSTRUCTION_SET_ZERO;
+                instructionHead->val.tempToSetZero = instructionsIter->val.constant.temp;
+                currentInstruction = instructionHead;
+                templateApplied = true;
+            }
+        } break;
         default: break;
     }
 
@@ -305,13 +284,16 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case METADATA_END_GLOBAL_BLOCK: { return instructions; } break;
         case METADATA_DEBUG_INFO: { return skipToNextImportantInstruction(instructions->next); } break;
         case COMPLEX_GARBAGE_COLLECT: { return instructions; } break;
+        case INSTRUCTION_ADD_STACK_PTR: { return instructions; } break;
+        case INSTRUCTION_SET_ZERO: { return instructions; } break;
+        case COMPLEX_ABS_VALUE: { return instructions; } break;
+        case COMPLEX_SAVE_ALL: { return instructions; } break;
+        case COMPLEX_RESTORE_ALL: { return instructions; } break;
     }
 }
 
 void peephole(Instructions *instructions) {
-    int n = 2;
-
-    PeepholeTemplates *peepholeTemplates = generateRulesetsForSize(n);
+    PeepholeTemplates *peepholeTemplates = generateRulesetsForSize();
 
     Instructions *iter = instructions;
     bool notEqual;

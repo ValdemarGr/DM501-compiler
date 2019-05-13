@@ -169,6 +169,12 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
+            case INSTRUCTION_SET_ZERO:
+                dataFlowEntry = initDataFlowEntry();
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.tempToSetZero);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
             case INSTRUCTION_FUNCTION_LABEL: {
                 dataFlowEntry = initDataFlowEntry();
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.functionHead.temporary);
