@@ -4,7 +4,6 @@
 #include "ast/tree.h"
 #include "pretty_print/pretty.h"
 #include "error/error.h"
-#include "ast/tree.h"
 #include "weeder/weeds/weed_functions.h"
 #include "symbol/symbol.h"
 #include "symbol/decorate_ast.h"
@@ -32,6 +31,36 @@ int initialGcSizeMB = 10;
 extern char *filename;
 
 extern void yyparse();
+
+extern Instructions *instructionHead;
+extern Instructions *currentInstruction;
+extern bool mainCreated;
+extern size_t ifCounter;
+extern size_t whileCounter;
+extern size_t returnReg;
+extern bool inClassContextCurrent;
+extern int classGenericCount;
+extern bool inLambdaContext;
+extern bool currentlyInConstructorContext;
+extern int lambdaDefineScope;
+extern int lambdaArgCount;
+extern int staticLinkDepth;
+
+void resetAbstractGenGlobals() {
+    instructionHead = NULL;
+    currentInstruction = NULL;
+    mainCreated = false;
+    ifCounter = 0;
+    whileCounter = 0;
+    returnReg = 0;
+    inClassContextCurrent = false;
+    classGenericCount = 0;
+    inLambdaContext = false;
+    currentlyInConstructorContext = false;
+    lambdaDefineScope = 0;
+    lambdaArgCount = 0;
+    staticLinkDepth = -1;
+}
 
 int compile_file(FILE *file) {
     SymbolTable *globalScope = initSymbolTable();
@@ -66,7 +95,11 @@ int compile_file(FILE *file) {
         prettyBody(theexpression);
     }
 
+    //This must be done twice because of limitations
     constantFoldBody(theexpression);
+    constantFoldBody(theexpression);
+
+    resetAbstractGenGlobals();
 
     Instructions *instructions = generateInstructionTree(theexpression);
 

@@ -32,6 +32,7 @@ typedef struct Value {
 
 typedef struct SYMBOL {
     char *name;
+    bool isArgument;
     size_t distanceFromRoot;
     size_t uniqueIdForScope;
     bool isConst;
@@ -54,7 +55,7 @@ SymbolTable *initSymbolTable();
 SymbolTable *scopeSymbolTable(SymbolTable *t);
 
 //SYMBOL *putSymbol(SymbolTable *t, char *name, int value);
-SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum, bool isConst);
+SYMBOL *putSymbol(SymbolTable *t, char *name, struct Value *value, int symbol_stmDeclNum, bool isConst, bool isArgument);
 
 SYMBOL *getSymbol(SymbolTable *t, char *name);
 

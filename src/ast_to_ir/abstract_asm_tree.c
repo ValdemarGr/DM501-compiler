@@ -3,11 +3,11 @@
 #include "../ast/tree.h"
 #include "../symbol/symbol.h"
 
-static Instructions *instructionHead = NULL;
-static Instructions *currentInstruction = NULL;
-static bool mainCreated = false;
-static size_t ifCounter = 0;
-static size_t whileCounter = 0;
+Instructions *instructionHead = NULL;
+Instructions *currentInstruction = NULL;
+bool mainCreated = false;
+size_t ifCounter = 0;
+size_t whileCounter = 0;
 size_t returnReg = 0;
 bool inClassContextCurrent = false;
 int classGenericCount = 0;

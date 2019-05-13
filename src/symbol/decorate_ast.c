@@ -165,7 +165,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                   id,
                   value,
                   stmDeclNum,
-                  isConst);
+                  isConst,
+                  false);
     }
 
     //Put the parameters in the child scope
@@ -181,7 +182,8 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
         putSymbol(child,
                   vdl->identifier,
                   value, stmDeclNum,
-                  false);
+                  false,
+                  true);
 
         vdl = vdl->next;
     }
@@ -429,6 +431,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                       declaration->val.varD.id,
                       value,
                       declaration->internal_stmDeclNum,
+                      false,
                       false);
             break;
         case declVarsK:
@@ -461,7 +464,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                       declaration->val.typeD.id,
                       value,
                       declaration->internal_stmDeclNum,
-                      true);
+                      true,
+                      false);
             break;
             //This can never happen in non-global scope, weeder will catch this
         case declFuncK:
@@ -560,7 +564,8 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                           declaration->val.valD.id,
                           value,
                           declaration->internal_stmDeclNum,
-                          true);
+                          true,
+                          false);
             }
 
             break;
@@ -681,6 +686,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                       declaration->val.classD.id,
                       value,
                       declaration->internal_stmDeclNum,
+                      false,
                       false);
 
             //Also remember the generic type parameters
@@ -698,6 +704,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                           generics->type->val.typeGeneric.genericName,
                           value,
                           declaration->internal_stmDeclNum,
+                          false,
                           false);
 
                 generics = generics->next;
@@ -756,6 +763,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
                     putSymbol(scoped,
                               vdl->identifier,
                               value, 0,
+                              true,
                               true);
 
                     vdl = vdl->next;
