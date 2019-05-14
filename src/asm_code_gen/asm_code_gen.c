@@ -297,18 +297,18 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_CONSTRAIN_BOOLEAN: {
             fprintf(out, "# COMPLEX_CONSTRAIN_BOOLEAN\n");
             printIndentation(out);
-            fprintf(out, "push %%rdx\n");
+            fprintf(out, "push %%rax\n");
             printIndentation(out);
             fprintf(out, "cmp $0, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
             printIndentation(out);
-            fprintf(out, "setg %%dl\n");
+            fprintf(out, "setg %%al\n");
             printIndentation(out);
-            fprintf(out, "movsx %%dl, %%%s\n",
+            fprintf(out, "movsx %%al, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
 
             printIndentation(out);
-            fprintf(out, "pop %%rdx\n");
+            fprintf(out, "pop %%rax\n");
         } break;
             /*case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
                 fprintf(out, "# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE\n");
