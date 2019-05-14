@@ -476,6 +476,14 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
+            case INSTRUCTION_WRITE_CHAR:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case INSTRUCTION_WRITE_NL:
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
         }
 
         iter = iter->next;

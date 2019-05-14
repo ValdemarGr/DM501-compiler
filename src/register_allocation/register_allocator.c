@@ -608,6 +608,11 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 break;
             case COMPLEX_SAVE_ALL:break;
             case COMPLEX_RESTORE_ALL:break;
+            case INSTRUCTION_WRITE_CHAR:
+                state->current->val.tempToWrite =
+                        getReadTemporary(colors, state->current->val.tempToWrite, state);
+                break;
+            case INSTRUCTION_WRITE_NL:break;
         }
 
         freeSortedSet(state->regsInUse);

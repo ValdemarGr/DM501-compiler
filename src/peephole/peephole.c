@@ -289,6 +289,8 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case COMPLEX_ABS_VALUE: { return instructions; } break;
         case COMPLEX_SAVE_ALL: { return instructions; } break;
         case COMPLEX_RESTORE_ALL: { return instructions; } break;
+        case INSTRUCTION_WRITE_CHAR: { return instructions; } break;
+        case INSTRUCTION_WRITE_NL: { return instructions; } break;
     }
 }
 
