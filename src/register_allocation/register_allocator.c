@@ -338,6 +338,7 @@ void handlePushInstruction(int *colors, RaState *state) {
     state->current->val.popPushStack.offset = location->offset;
 }
 
+extern size_t maxTemporary;
 /*
  * When we spill we put intermediate products on the stack
  * The position will be the context pointer: rbp + sizeof(var) * varsInContext
@@ -345,6 +346,12 @@ void handlePushInstruction(int *colors, RaState *state) {
 Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
     LivenessAnalysisResult *livenessAnalysisResult = livenessAnalysis(head);
     int *colors = colorGraph(livenessAnalysisResult->sets, livenessAnalysisResult->numberSets, numberRegisters + 1);
+
+    for (int i = 0; i < (int)maxTemporary; i++) {
+        if (colors[i] < 0) {
+            fprintf(stderr, "Temporary %d is spill\n", i);
+        }
+    }
 
     RaState *state = NEW(RaState);
     state->current = head;

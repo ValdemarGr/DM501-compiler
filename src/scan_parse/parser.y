@@ -26,6 +26,7 @@
 
 %code {
 #include <stdio.h>
+#include <string.h>
 #include "scan_parse.h"
 
 extern char *yytext;

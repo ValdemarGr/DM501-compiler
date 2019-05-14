@@ -24,7 +24,7 @@ import time
 import getopt
 
 # ProgAndSolDir = "/home/IMADA/courses/cc/"
-ProgAndSolDir = "/home/valde/Git/DM501-compiler/Tests/"
+ProgAndSolDir = "/code/Tests/"
 
 def fileempty(filename):
    file = open(filename, "r")
