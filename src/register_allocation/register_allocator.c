@@ -13,6 +13,16 @@ size_t timestamp = 0;
 
 SymbolTable *currentSymbolTable = NULL;
 
+Instructions *makeDebugInstructions(char *text) {
+    Instructions *instructions = NEW(Instructions);
+    instructions->kind = METADATA_DEBUG_INFO;
+    instructions->val.debugInfo = text;
+    instructions->previous = NULL;
+    instructions->next = NULL;
+
+    return instructions;
+}
+
 int getAssigned(int *colors, int temporary) {
     if (temporary == 0) {
         return 0;
@@ -25,6 +35,20 @@ int getAssigned(int *colors, int temporary) {
     }
 
     return -1;
+}
+
+void appendToInstruction(Instructions* i1, Instructions *i2) {
+    i1->next->previous = i2;
+    i2->next = i1->next;
+    i2->previous = i1;
+    i1->next = i2;
+}
+
+void prependToInstruction(Instructions* i1, Instructions *i2) {
+    i1->previous->next = i2;
+    i2->previous = i1->previous;
+    i2->next = i1;
+    i1->previous = i2;
 }
 
 RaTemporaries *makeTemporary(int id, RaTemporariesKind kind) {
@@ -49,15 +73,12 @@ int getTemporary(int *colors, int temporary, RaState *state) {
     Instructions *pushInstruction = NEW(Instructions);
     pushInstruction->kind = INSTRUCTION_PUSH;
     pushInstruction->val.tempToPush = reg;
-    state->previous->next = pushInstruction;
-    pushInstruction->next = state->current;
-    state->previous = pushInstruction;
+    appendToInstruction(state->previous, pushInstruction);
 
     Instructions *popInstruction = NEW(Instructions);
     popInstruction->kind = INSTRUCTION_POP;
     popInstruction->val.tempToPopInto = reg;
-    popInstruction->next = state->current->next;
-    state->current->next = popInstruction;
+    appendToInstruction(state->current, popInstruction);
 
     if (!state->hasAddedPop) {
         state->latest = popInstruction;
@@ -69,15 +90,26 @@ int getTemporary(int *colors, int temporary, RaState *state) {
 }
 
 void readFromStack(int* colors, int temporary, int reg, RaState *state) {
-    Pair *pair = get(state->stackLocation, makeIntKey(temporary));
+    Pair *pair = get(state->stackLocation, makeIntKey((int) currentSymbolTable));
+
+    ConstMap *map;
+    if (pair == NULL) {
+        map = initMap(128);
+        insert(state->stackLocation, makeIntKey((int) currentSymbolTable), map);
+    } else {
+        map = pair->v;
+    }
+
+    pair = get(map, makeIntKey(temporary));
 
     RaVariableLocation *location;
     if (pair == NULL) {
         location = NEW(RaVariableLocation);
         location->useScope = false;
         location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+        location->scope = currentSymbolTable->distanceFromRoot;
 
-        insert(state->stackLocation, makeIntKey(temporary), location);
+        insert(map, makeIntKey(temporary), location);
         currentSymbolTable->nextSymbolId++;
     } else {
         location = pair->v;
@@ -104,21 +136,33 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
 }
 
 void writeToStack(int* colors, int temporary, int reg, RaState *state) {
-    Pair *pair = get(state->stackLocation, makeIntKey(temporary));
+    Pair *pair = get(state->stackLocation, makeIntKey((int)currentSymbolTable));
+
+    ConstMap *map;
+    if (pair == NULL) {
+        map = initMap(128);
+        insert(state->stackLocation, makeIntKey((int)currentSymbolTable), map);
+    } else {
+        map = pair->v;
+    }
+
+    pair = get(map, makeIntKey(temporary));
 
     RaVariableLocation *location;
     if (pair == NULL) {
         location = NEW(RaVariableLocation);
         location->useScope = false;
         location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
+        location->scope = currentSymbolTable->distanceFromRoot;
 
-        insert(state->stackLocation, makeIntKey(temporary), location);
+        insert(map, makeIntKey(temporary), location);
         currentSymbolTable->nextSymbolId++;
     } else {
         location = pair->v;
     }
 
     Instructions *write = NEW(Instructions);
+    write;
 
     if (location->useScope) {
         write->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE;
@@ -133,8 +177,11 @@ void writeToStack(int* colors, int temporary, int reg, RaState *state) {
         write->val.tempIntoStack.offset = location->offset;
     }
 
-    write->next = state->current->next;
-    state->current->next = write;
+    appendToInstruction(state->current, write);
+
+    char *buffer = malloc(sizeof(char) * 128);
+    sprintf(buffer, "Write %d to stack for %d", reg, temporary);
+    prependToInstruction(write, makeDebugInstructions(buffer));
 }
 
 int getReadTemporary(int *colors, size_t temporary, RaState *state) {
@@ -151,12 +198,9 @@ int getReadTemporary(int *colors, size_t temporary, RaState *state) {
 }
 
 int getWriteTemporary(int *colors, size_t temporary, RaState *state) {
-    if (temporary == 0) {
-        return 0;
-    }
-
-    if (colors[temporary] != -1) {
-        return colors[temporary] + 1;
+    int assigned = getAssigned(colors, temporary);
+    if (assigned != -1) {
+        return assigned;
     }
 
     int reg = getTemporary(colors, temporary, state);
@@ -239,16 +283,16 @@ int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
     pushInstruction->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
     pushInstruction->val.tempIntoStack.tempToMove = reg;
     pushInstruction->val.tempIntoStack.offset = offset;
-    state->previous->next = pushInstruction;
-    pushInstruction->next = state->current;
-    state->previous = pushInstruction;
+
+    appendToInstruction(state->current, pushInstruction);
 
     Instructions *popInstruction = NEW(Instructions);
     popInstruction->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
     popInstruction->val.tempFromStack.inputTemp = reg;
     popInstruction->val.tempFromStack.offset = offset;
-    popInstruction->next = state->current->next;
-    state->current->next = popInstruction;
+
+
+    appendToInstruction(state->current, popInstruction);
 
     if (!state->hasAddedPop) {
         state->latest = popInstruction;
@@ -463,7 +507,7 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case COMPLEX_ALLOCATE_END:break;
             case COMPLEX_CONSTRAIN_BOOLEAN:
                 state->current->val.tempToConstrain =
-                        getReadTemporary(colors, state->current->val.tempToConstrain, state);
+                        getReadWriteTemporary(colors, state->current->val.tempToConstrain, state);
             break;
             case COMPLEX_MOVE_TEMPORARY_INTO_STACK:
                 /*
