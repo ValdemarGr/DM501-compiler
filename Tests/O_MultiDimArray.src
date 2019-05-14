@@ -17,7 +17,7 @@ while (i < |a|) do
     j = j+1;
   } 
   i = i+1;
-}
+} 
 
 sum = 0;
 i = 0;

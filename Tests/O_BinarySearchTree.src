@@ -1,5 +1,5 @@
 # Code generation, realistic example of code
-type node = record of {value : int, left : node, right : node};
+type node = record of {val : int, left : node, right : node};
 
 var root : node,t : bool;
 
@@ -9,7 +9,7 @@ var temp : node;
   allocate temp;
   temp.left = null;
   temp.right = null;
-  temp.value = a;
+  temp.val = a;
   return temp;
 }
 end initNode
@@ -18,9 +18,9 @@ func insert(root : node, key : int) : node
 {
   if root == null then
     return initNode(key);
-  if root.value > key then
+  if root.val > key then
     root.left = insert(root.left, key);
-  else if root.value < key then
+  else if root.val < key then
     root.right = insert(root.right, key);
   return root;
 }
@@ -32,7 +32,7 @@ var t : bool;
   if root == null then
     return true;
   t = print(root.left);
-  write root.value;
+  write root.val;
   t = print(root.right);
   return true;
 }

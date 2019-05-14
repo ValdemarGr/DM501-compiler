@@ -2186,9 +2186,11 @@ Instructions* generateInstructionTree(Body *body) {
         statementList = statementList->next;
     }
 
-    currentInstruction->next = newInstruction();
-    currentInstruction = currentInstruction->next;
-    currentInstruction->kind = METADATA_END_BODY_BLOCK;
+    if (!createMain) {
+        currentInstruction->next = newInstruction();
+        currentInstruction = currentInstruction->next;
+        currentInstruction->kind = METADATA_END_BODY_BLOCK;
+    }
 
     if (currentTemporary > maxTemporary) {
         maxTemporary = currentTemporary;

@@ -1,4 +1,4 @@
-# Test of lazy AND operator
+# test of lazy and operator
 # If the AND operator is lazy, the test will terminate
 var b : bool;
 
