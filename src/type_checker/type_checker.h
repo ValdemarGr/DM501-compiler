@@ -21,7 +21,7 @@ typedef struct CharLL {
     struct CharLL *next;
 } CharLL;
 
-Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds);
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds, bool acceptTypeWraps);
 SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable);
 Type *unwrapVariable(Variable *variable, SymbolTable *symbolTable);
 Error *typeCheck(Body *body, Type *functionReturnType);

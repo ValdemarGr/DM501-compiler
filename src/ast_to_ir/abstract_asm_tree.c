@@ -41,17 +41,6 @@ void appendInstructions(Instructions *new) {
     currentInstruction = iter;
 }
 
-Instructions *getLast(Instructions *current) {
-    Instructions *iter = current;
-
-    while (iter->next != NULL) {
-        iter = iter->next;
-    }
-
-    return iter;
-}
-
-
 typedef struct VDLResult {
     VarDelList *head;
     VarDelList *tail;
@@ -229,7 +218,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
-            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL);
+            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL, false);
 
             VarDelList *varDelList = NULL;
             size_t sizeAccumulator = 0;
@@ -383,7 +372,7 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
 
-            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL);
+            Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL, true);
 
             VarDelList *varDelList = NULL;
 
@@ -648,7 +637,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //TODO DO this manually or MMX SSSE3 PABSD OR USE PROVIDED METHOD
             // mask = n >> (sizeof(int) * bitsof(char) - 1)
             // (mask + n)^mask
-            Type *e = unwrapTypedef(evaluateExpressionType(term->val.absD.expression, symbolTable), symbolTable, NULL);
+            Type *e = unwrapTypedef(evaluateExpressionType(term->val.absD.expression, symbolTable), symbolTable, NULL, true);
             size_t tempToAbsOn = generateInstructionsForExpression(term->val.absD.expression, symbolTable);
 
             if (e->kind == typeArrayK) {
@@ -1361,7 +1350,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             }
         } break;
         case statAllocateK: {
-            Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
+            Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL, true);
 
             size_t fieldCount = 0;
 
@@ -1385,7 +1374,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
                 bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
-                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable, NULL);
+                    Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable, NULL, true);
                     if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK && unwrapped->kind != typeCharK) {
                         insertSortedSet(bodySet, (int)fieldCount);
                     }
@@ -1578,7 +1567,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
-            Type *type = unwrapTypedef(unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable), statement->symbolTable, NULL);
+            Type *type = unwrapTypedef(unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable), statement->symbolTable, NULL, true);
             Instructions *ret = newInstruction();
             ret->kind = COMPLEX_ALLOCATE;
             ret->val.allocate.timesTemp = lenExp;
@@ -1802,7 +1791,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             if (unwrapVariable(statement->val.assignmentD.var, statement->symbolTable)->kind == typeLambdaK) {
                 if (unwrapTypedef(
                         symbol->value->val.typeD.tpe,
-                        statement->symbolTable, NULL)->kind == typeClassK) {
+                        statement->symbolTable, NULL, true)->kind == typeClassK) {
                     //We need to bind class to second slot offset POINTER_SIZE
                     //expressionTemp holds our 2 arr
 
@@ -2068,7 +2057,7 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
         return;
     }
 
-    Type *unwrapped = unwrapTypedef(typeToUnwrap, symbolTable, NULL);
+    Type *unwrapped = unwrapTypedef(typeToUnwrap, symbolTable, NULL, true);
 
     if (unwrapped == NULL) {
         //We handle this later

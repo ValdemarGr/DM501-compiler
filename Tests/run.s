@@ -656,10 +656,10 @@ mov %rbp, %rax
     #move heap into one
     leaq gcHeapOne, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $10485760, 16(%r15)
     movq $0, 8(%r15)
     movq $1, 0(%r15)
-    addq $2097152000, %rax
+    addq $10485760, %rax
     push %rax
     movq %rax, %rdi
     mov $12, %rax
@@ -671,11 +671,11 @@ mov %rbp, %rax
 
     leaq gcHeapTwo, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $10485760, 16(%r15)
     movq $0, 8(%r15)
     movq $0, 0(%r15)
 
-    addq $2097152000, %rax
+    addq $10485760, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
@@ -686,19 +686,6 @@ mov %rbp, %rax
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
 # INSTRUCTION_CONST
 		mov $5, %rbx
 # INSTRUCTION_PUSH
@@ -708,19 +695,6 @@ mov %rbp, %rax
 # INSTRUCTION_ADD_STACK_PTR
 		addq $8, %rsp
 # COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
 # COMPLEX_RESTORE_STATIC_LINK
 		leaq staticLink, %rsi
 movq %rbp, 0(%rsi)
@@ -814,19 +788,6 @@ ret
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rcx
 # COMPLEX_SAVE_ALL
-			pushq %rcx
-			pushq %rdx
-			pushq %rbx
-			pushq %rsi
-			pushq %rdi
-			pushq %r8
-			pushq %r9
-			pushq %r10
-			pushq %r11
-			pushq %r12
-			pushq %r13
-			pushq %r14
-			pushq %r15
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rdx
 # INSTRUCTION_CONST
@@ -840,19 +801,6 @@ ret
 # INSTRUCTION_ADD_STACK_PTR
 			addq $8, %rsp
 # COMPLEX_RESTORE_ALL
-			popq %r15
-			popq %r14
-			popq %r13
-			popq %r12
-			popq %r11
-			popq %r10
-			popq %r9
-			popq %r8
-			popq %rdi
-			popq %rsi
-			popq %rbx
-			popq %rdx
-			popq %rcx
 # COMPLEX_RESTORE_STATIC_LINK
 			leaq staticLink, %rsi
 movq %rbp, 8(%rsi)

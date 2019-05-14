@@ -13,7 +13,7 @@ bool inLambdaContextCurrently = false;
 bool inConstructorContext = false;
 
 void findAndDecorateFunctionCall(Expression *expression, SymbolTable *symbolTable);
-Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds);
+Type *unwrapTypedef(Type *type, SymbolTable *symbolTable, CharLL *accumulatedIds, bool acceptTypeWraps);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
 void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
                      VarDelList *params, Body *body, int stmDeclNum, bool isConst, bool isLambda, int lambdaId);
@@ -508,7 +508,7 @@ Error *decorateDeclaration(Declaration *declaration, SymbolTable *symbolTable) {
             break;
         case declValK:
             //Determine the type by the rhs type
-            valType = unwrapTypedef(evaluateExpressionType(declaration->val.valD.rhs, symbolTable), symbolTable, NULL);
+            valType = unwrapTypedef(evaluateExpressionType(declaration->val.valD.rhs, symbolTable), symbolTable, NULL, false);
 
             alterIdTypesToGenerics(valType, symbolTable);
 
