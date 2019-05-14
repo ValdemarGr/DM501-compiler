@@ -85,9 +85,16 @@ int yycolumn = 1;
 "void"          return tVOID;
 "constructor"   return tCONSTRUCTOR;
 "gc"            return tGC;
+"gcdebug"       return tGCDEBUG;
+"writeany"      return tWRITEANY;
+"char"          return tCHARTYPE;
+"write nl"      return tWRITENL;
 
 0|([1-9][0-9]*)        { yylval.intconst = atoi(yytext);
                        return tINTCONST; }
+'.' { yylval.stringconst = (char *)malloc(strlen(yytext)+1);
+                         sprintf(yylval.stringconst,"%c",yytext[1]);
+                         return tCHAR; }
 [a-zA-Z_][a-zA-Z0-9_]* { yylval.stringconst = (char *)malloc(strlen(yytext)+1);
                          sprintf(yylval.stringconst,"%s",yytext);
                          return tIDENTIFIER; }

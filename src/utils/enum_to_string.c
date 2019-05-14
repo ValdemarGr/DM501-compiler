@@ -47,3 +47,29 @@ char *typeEnumToString(TypeKind typeKind) {
 
     return "unknown";
 }
+
+char *variableToString(Variable *variable) {
+    switch (variable->kind) {
+        case varIdK: {
+            return variable->val.idD.id;
+        } break;
+        case arrayIndexK: {
+            char *basename = variableToString(variable->val.arrayIndexD.var);
+
+            char *newName = malloc(sizeof(char) * (4 + strlen(basename)));
+
+            sprintf(newName, "::%s::", basename);
+
+            return newName;
+        } break;
+        case recordLookupK: {
+            char *basename = variableToString(variable->val.recordLookupD.var);
+
+            char *newName = malloc(sizeof(char) * (1 + strlen(basename) + strlen(variable->val.recordLookupD.id)));
+
+            sprintf(newName, "%s.%s", basename, variable->val.recordLookupD.id);
+
+            return newName;
+        } break;
+    }
+}

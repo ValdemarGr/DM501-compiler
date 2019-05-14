@@ -26,6 +26,7 @@ bool prettyPrint = false;
 bool verbose = false;
 bool registerAllocation = false;
 bool dePeephole = true;
+bool debugMode = false;
 size_t maxDistFromRoot = 0;
 int initialGcSizeMB = 10;
 extern char *filename;
@@ -95,9 +96,7 @@ int compile_file(FILE *file) {
         prettyBody(theexpression);
     }
 
-    //This must be done twice because of limitations
-    //constantFoldBody(theexpression);
-    //constantFoldBody(theexpression);
+    constantFoldBody(theexpression);
 
     resetAbstractGenGlobals();
 
@@ -137,6 +136,9 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'v':
                     verbose = true;
+                    break;
+                case 'd':
+                    debugMode = true;
                     break;
                 case 'l':
                     dePeephole = false;

@@ -217,16 +217,29 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+        } break;
+        case INSTRUCTION_WRITE_CHAR: {
+            fprintf(out, "# INSTRUCTION_WRITE_CHAR\n");
 
 
-            /*printIndentation(out);
-            fprintf(out, "push %%%s\n",
+            printIndentation(out);
+            fprintf(out, "movq %%%s, %%rsi\n",
                     getNextRegister(instruction->val.tempToWrite));
             printIndentation(out);
-            fprintf(out, "#call print_number\n");
+            fprintf(out, "movq $charprint, %%rdi\n");
             printIndentation(out);
-            fprintf(out, "pop %%%s\n",
-                    getNextRegister(instruction->val.tempToWrite));*/
+            fprintf(out, "movq $0, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "call printf\n");
+        } break;
+        case INSTRUCTION_WRITE_NL: {
+            fprintf(out, "# INSTRUCTION_WRITE_NL\n");
+            printIndentation(out);
+            fprintf(out, "movq $nlprint, %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "movq $0, %%rax\n");
+            printIndentation(out);
+            fprintf(out, "call printf\n");
         } break;
         case INSTRUCTION_AND: {
             fprintf(out, "# INSTRUCTION_AND\n");
@@ -993,11 +1006,15 @@ void generateInstruction(FILE *out, Instructions* instruction) {
     }
 }
 
+extern bool debugMode;
+
 void generateScopeFrames(FILE *file) {
     fprintf(file, ".section .data\n");
     fprintf(file, "staticLink:\n");
     fprintf(file, "\t.space %zu\n", (maxDistFromRoot + 1) * POINTER_SIZE);
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
+    fprintf(file, "charprint:\n\t.asciz \"%%c\"\n");
+    fprintf(file, "nlprint:\n\t.asciz \"\\n\"\n");
     fprintf(file, GARBAGE_COLLECTOR_CHUNK);
 }
 /*

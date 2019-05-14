@@ -787,10 +787,59 @@ Statement *makeGCStatement(Location location) {
     return returning;
 }
 
+Statement *makeGCDebugStatement(Location location) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+    returning->lineno = lineno;
+    returning->kind = gcDebugK;
+    returning->location = location;
+    return returning;
+}
+
 VarType *makeVarType(char *id, Type *type, Location location) {
     VarType *varType = NEW(VarType);
     varType->type = type;
     varType->identifier = id;
     varType->location = location;
     return varType;
+}
+
+Statement *makeWriteAnyStatement(Expression *exp, Location location) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+    returning->lineno = lineno;
+    returning->kind = writeAny;
+    returning->location = location;
+    returning->val.writeD.exp = exp;
+    return returning;
+}
+
+Statement *makeWriteNlStatement(Location location) {
+    Statement *returning = NEW(Statement);
+    stmDeclNum++;
+    returning->internal_stmDeclNum = stmDeclNum;
+    returning->lineno = lineno;
+    returning->kind = writeNL;
+    returning->location = location;
+    return returning;
+}
+
+Type *makeCharType(Location location) {
+    Type *result = NEW(Type);
+    result->kind = typeCharK;
+    result->location = location;
+    return result;
+}
+
+Term *makeCharTerm(char *c, Location location) {
+    Term* term = NEW(Term);
+
+    term->lineno = lineno;
+    term->val.charD.c = c;
+    term->kind = charK;
+    term->location = location;
+
+    return term;
 }

@@ -1,0 +1,74 @@
+class String {
+    constructor (initialSize: int) {
+        stringSize = 0;
+        allocate internal of length initialSize;
+    };
+    var stringSize: int;
+    var internal: array of char;
+
+    val size = (): int -> {
+        return stringSize;
+    };
+
+    val getByIndex = (idx: int): char -> {
+        return internal[idx];
+    };
+
+    val forEach = (f: (char) -> void): void -> {
+        var i: int;
+        i = 0;
+
+        while i < stringSize do {
+            f(internal[i]);
+            i = i + 1;
+        }
+    };
+
+    val print = (): void -> {
+        var i: int;
+        i = 0;
+
+        while i < stringSize do {
+            write internal[i];
+            i = i + 1;
+        }
+    };
+
+    val append = (c : char): void -> {
+        internal[stringSize] = c;
+        stringSize = stringSize + 1;
+    };
+};
+
+var s: class String;
+var s2: class String;
+
+allocate s(30);
+allocate s2(30);
+
+s.append('h');
+s.append('e');
+s.append('l');
+s.append('l');
+s.append('o');
+
+s2.append(' ');
+s2.append('w');
+s2.append('o');
+s2.append('r');
+s2.append('l');
+s2.append('d');
+s2.append('!');
+
+s.print();
+write nl;
+
+s2.print();
+write nl;
+
+s2.forEach((c: char): void -> {
+    s.append(c);
+});
+
+s.print();
+write nl;

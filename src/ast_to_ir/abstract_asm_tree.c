@@ -451,6 +451,15 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
 size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
     switch (term->kind) {
+        case charK: {
+            Instructions *num = newInstruction();
+            num->kind = INSTRUCTION_CONST;
+            num->val.constant.value = (int)(*term->val.charD.c);
+            num->val.constant.temp = currentTemporary;
+            appendInstructions(num);
+            currentTemporary++;
+            return currentTemporary - 1;
+        } break;
         case variableK: {
             return generateInstructionsForVariableAccess(term->val.variableD.var, symbolTable);
         } break;
@@ -1332,17 +1341,41 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
             currentTemporary++;
         } break;
-        case statWriteK: {
+        case writeNL: {
             Instructions *instructions = newInstruction();
-            instructions->kind = INSTRUCTION_WRITE;
-            instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+            instructions->kind = INSTRUCTION_WRITE_NL;
             appendInstructions(instructions);
-        }
-            break;
+        } break;
+        case writeAny:
+        case statWriteK: {
+            if (evaluateExpressionType(statement->val.writeD.exp, statement->symbolTable)->kind == typeCharK) {
+                Instructions *instructions = newInstruction();
+                instructions->kind = INSTRUCTION_WRITE_CHAR;
+                instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+                appendInstructions(instructions);
+            } else {
+                Instructions *instructions = newInstruction();
+                instructions->kind = INSTRUCTION_WRITE;
+                instructions->val.tempToWrite = generateInstructionsForExpression(statement->val.writeD.exp, statement->symbolTable);
+                appendInstructions(instructions);
+            }
+        } break;
         case statAllocateK: {
             Type *tpe = unwrapTypedef(unwrapVariable(statement->val.allocateD.var, statement->symbolTable), statement->symbolTable, NULL);
 
             size_t fieldCount = 0;
+
+            SYMBOL *baseSym = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
+
+            Instructions *allocdebug = newInstruction();
+            allocdebug->kind = METADATA_DEBUG_INFO;
+            allocdebug->val.debugInfo = "ALLOC";
+            appendInstructions(allocdebug);
+
+            Instructions *debug = newInstruction();
+            debug->kind = METADATA_DEBUG_INFO;
+            debug->val.debugInfo = variableToString(statement->val.allocateD.var);
+            appendInstructions(debug);
 
             SortedSet *bodySet;
 
@@ -1353,7 +1386,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
                 bodySet = initHeadedSortedSet();
                 while (iter != NULL) {
                     Type *unwrapped = unwrapTypedef(iter->type, statement->symbolTable, NULL);
-                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+                    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK && unwrapped->kind != typeCharK) {
                         insertSortedSet(bodySet, (int)fieldCount);
                     }
 
@@ -1551,7 +1584,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
             ret->val.allocate.timesTemp = lenExp;
             ret->val.allocate.eleSize = POINTER_SIZE;
             ret->val.allocate.intermediate = currentTemporary++;
-            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK) {
+            if (type->val.arrayType.type->kind == typeIntK || type->val.arrayType.type->kind == typeBoolK || type->val.arrayType.type->kind == typeCharK) {
                 ret->val.allocate.allocationType = ALLOC_ARR_OF_PRIM;
             } else {
                 ret->val.allocate.allocationType = ALLOC_ARR_OF_PTR;
@@ -1801,6 +1834,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
             gc->kind = COMPLEX_GARBAGE_COLLECT;
             appendInstructions(gc);
         } break ;
+        case gcDebugK : {
+            Instructions *gcdebug = newInstruction();
+            gcdebug->kind = INSTRUCTION_FUNCTION_CALL;
+            gcdebug->val.function = "gcPrintDebug";
+            appendInstructions(gcdebug);
+        } break;
     }
 }
 
@@ -2022,9 +2061,11 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
     if (symbol->value->kind == typeFunctionK && !symbol->value->val.typeFunctionD.isLambda) {
         return;
     }
+
     Type* typeToUnwrap = symbol->value->val.typeD.tpe;
     if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
-        typeToUnwrap = symbol->value->val.typeFunctionD.returnType;
+        insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
+        return;
     }
 
     Type *unwrapped = unwrapTypedef(typeToUnwrap, symbolTable, NULL);
@@ -2034,7 +2075,7 @@ void insertForType(SortedSet *sortedSet, SYMBOL *symbol, SymbolTable *symbolTabl
         return;
     }
 
-    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK) {
+    if (unwrapped->kind != typeIntK && unwrapped->kind != typeBoolK && unwrapped->kind != typeCharK) {
         insertSortedSet(sortedSet, (int)symbol->uniqueIdForScope);
     }
 }

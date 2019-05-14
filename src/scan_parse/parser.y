@@ -66,6 +66,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 %union {
    int intconst;
    char *stringconst;
+   char *charconst;
    struct Expression *expression;
    struct Body *body;
    struct DeclarationList *declarationList;
@@ -88,6 +89,7 @@ void lyyerror(YYLTYPE t, char const *s) {
 
 %token <intconst> tINTCONST
 %token <stringconst> tIDENTIFIER
+%token <charconst> tCHAR
 %token tFUNC
 %token tEND
 %token tTYPE
@@ -123,6 +125,10 @@ void lyyerror(YYLTYPE t, char const *s) {
 %token tVOID
 %token tCONSTRUCTOR
 %token tGC
+%token tGCDEBUG
+%token tWRITEANY
+%token tCHARTYPE
+%token tWRITENL
 
 %type <expression> expression
 %type <lambda> lambda
@@ -241,14 +247,20 @@ statement : tRETURN expression ';'
         {$$ = makeAssignment($1, $3, @$);}
         | tWRITE expression ';'
         {$$ = makeWriteStatement($2, @$);}
+        | tWRITEANY expression ';'
+        {$$ = makeWriteAnyStatement($2, @$);}
         | tWHILE expression tDO statement
         {$$ = makeWhileStatement($2, $4, @$);}
         | '{' stm_list '}'
         {$$ = makeStatementFromList($2, @$);}
         | expression ';'
         {$$ = makeEmptyExpression($1, @$);}
+        | tWRITENL ';'
+        {$$ = makeWriteNlStatement(@$);}
         | tGC ';'
         {$$ = makeGCStatement(@$);}
+        | tGCDEBUG ';'
+        {$$ = makeGCDebugStatement(@$);}
         | error ';'
         {};
         | error '}'
@@ -281,6 +293,8 @@ type :  tIDENTIFIER
         {$$ = makeLambdaType($2, $5, @$);}
         | '(' type_list ')' tLAMBDA_ARROW voidType
         {$$ = makeLambdaType($2, $5, @$);}
+        | tCHARTYPE
+        {$$ = makeCharType(@$);}
 ;
 
 voidType :  tVOID
@@ -380,6 +394,8 @@ term : variable
         {$$ = makeAbsTerm($2, @$);}
         | tINTCONST
         {$$ = makeNumTerm($1, @$);}
+        | tCHAR
+        {$$ = makeCharTerm($1, @$);}
         | tTRUE
         {$$ = makeTrueTerm(@$);}
         | tFALSE

@@ -22,7 +22,7 @@ typedef struct VarDelList {
 } VarDelList;
 
 typedef enum {
-    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK
+    typeIdK, typeIntK, typeBoolK, typeArrayK, typeRecordK, typeLambdaK, typeClassK, typeGenericK, typeVoidK, typeCharK
 } TypeKind;
 
 typedef struct Type {
@@ -184,7 +184,10 @@ typedef struct Statement {
         assignmentK,
         emptyK,
         gcK,
-        noop
+        gcDebugK,
+        noop,
+        writeAny,
+        writeNL
     } kind;
     SymbolTable *symbolTable;
     union {
@@ -294,7 +297,8 @@ typedef enum {
     nullK,
     lambdaK,
     classDowncastk,
-    shorthandCallK
+    shorthandCallK,
+    charK
 } TermKind;
 
 
@@ -322,6 +326,9 @@ typedef struct Term {
         struct {
             int num;
         } numD;
+        struct {
+            char *c;
+        } charD;
         struct {
             Lambda *lambda;
         } lambdaD;
@@ -387,6 +394,10 @@ Term *makeDowncastTerm(Variable *var, Type *toCastTo, Location location);
 
 Term *makeShorthandLambdaCall(Variable *access, ExpressionList *expressionList, Location location);
 
+Term *makeCharTerm(char *c, Location location);
+
+Type *makeCharType(Location location);
+
 Expression *makeEXPOpEXP(Expression *lhs, Operator *op, Expression *rhs, Location location);
 
 //OPERATORS START
@@ -449,6 +460,10 @@ Statement *makeAllocateOfLenStatement(Variable *var, Expression *len, Location l
 
 Statement *makeWriteStatement(Expression *exp, Location location);
 
+Statement *makeWriteAnyStatement(Expression *exp, Location location);
+
+Statement *makeWriteNlStatement(Location location);
+
 Statement *makeWhileStatement(Expression *exp, Statement *stm, Location location);
 
 Statement *makeStatementFromList(StatementList *statementList, Location location);
@@ -456,6 +471,8 @@ Statement *makeStatementFromList(StatementList *statementList, Location location
 Statement *makeEmptyExpression(Expression *expression, Location location);
 
 Statement *makeGCStatement(Location location);
+
+Statement *makeGCDebugStatement(Location location);
 
 Type *makeIdType(char *id, Location location);
 

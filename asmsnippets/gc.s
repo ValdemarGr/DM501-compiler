@@ -3,6 +3,16 @@ staticLink:
 	.space 24
 intprint:
 	.asciz "%i\n"
+gconeprint:
+    .asciz "Gc one\n"
+gctwoprint:
+    .asciz "Gc two\n"
+gcrueentsize:
+    .asciz "Current size: %i\n"
+gcinuse:
+    .asciz "In use: %i\n"
+gcstataddr:
+    .asciz "Start address: %i\n"
 gcHeapOne:
     .space 32
 gcHeapTwo:
@@ -14,6 +24,88 @@ gcHeapTwo:
 # VAR clsB
 # VAR clsA
 # METADATA_CREATE_MAIN
+.type gcPrintDebug, @function
+gcPrintDebug:
+    push %rbp
+    movq %rsp, %rbp
+
+    push %rax
+    push %rcx
+    push %rdx
+    push %rbx
+    push %rsi
+    push %rdi
+    push %r8
+    push %r9
+    push %r10
+    push %r11
+    push %r12
+    push %r13
+    push %r14
+
+    # for gc one
+    leaq gcHeapOne, %r15
+
+    movq $gconeprint, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 0(%r15), %rsi
+    movq $gcinuse, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 8(%r15), %rsi
+    movq $gcrueentsize, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 24(%r15), %rsi
+    movq $gcstataddr, %rdi
+    movq $0, %rax
+    call printf
+
+    # for gc two
+    leaq gcHeapTwo, %r15
+
+    movq $gctwoprint, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 0(%r15), %rsi
+    movq $gcinuse, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 8(%r15), %rsi
+    movq $gcrueentsize, %rdi
+    movq $0, %rax
+    call printf
+
+    movq 24(%r15), %rsi
+    movq $gcstataddr, %rdi
+    movq $0, %rax
+    call printf
+
+
+    pop %r15
+    pop %r14
+    pop %r13
+    pop %r12
+    pop %r11
+    pop %r10
+    pop %r9
+    pop %r8
+    pop %rdi
+    pop %rsi
+    pop %rbx
+    pop %rdx
+    pop %rcx
+    pop %rax
+
+    movq %rbp,%rsp
+    pop %rbp
+    ret
 
 .type garbageCollectBFS, @function
 garbageCollectBFS:
@@ -446,7 +538,7 @@ garbageCollect:
         jmp newHeapTraverseBegin
     newHeapTraverseEnd:
 
-    movq 8(%r15), %rax # rax has current new heap pos
+    movq %rax, 8(%r15) # rax has current new heap pos
 
 
 
@@ -475,6 +567,7 @@ garbageCollectAllocate:
     movq %rsp, %rbp
     subq $32, %rsp
 
+    push %rsi
     push %r15
     push %r14
 
@@ -487,6 +580,30 @@ garbageCollectAllocate:
     movq 24(%rbp), %rax
     movq %rax, -8(%rbp)
 
+    # check if we need to gc
+    leaq gcHeapOne, %r15
+    cmp $1, 0(%r15)
+    je heapSelectorEndAlloc1
+    leaq gcHeapTwo, %r15
+    heapSelectorEndAlloc1:
+
+    # current heap position
+    movq 8(%r15), %r14
+    # add new size
+    movq -8(%rbp), %rax
+    addq %r14, %rax
+    # buffer
+    addq $40, %rax
+    cmp 16(%r15), %rax
+    #if we are in the safe zone
+    jl continueTheAlloc
+        pushq -16(%rbp)
+        call garbageCollect
+        addq $8, %rsp
+    continueTheAlloc:
+
+
+    # do the alloc
     leaq gcHeapOne, %r15
     cmp $1, 0(%r15)
     je heapSelectorEndAlloc
@@ -504,8 +621,19 @@ garbageCollectAllocate:
     movq 24(%r15), %rax
     addq %r14, %rax
 
+    movq $0, %rsi
+    # set all fields to 0
+    zeroSetterCmp:
+    cmp %rsi, -8(%rbp)
+    je zeroSetterEnd
+    movq $0, (%rax, %rsi, 1)
+    addq $8, %rsi
+    jmp zeroSetterCmp
+    zeroSetterEnd:
+
     pop %r14
     pop %r15
+    pop %rsi
 
     mov %rbp,%rsp
     pop %rbp
