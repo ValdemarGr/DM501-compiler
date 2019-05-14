@@ -643,6 +643,7 @@ garbageCollectAllocate:
     pop %rbp
     ret
 # METADATA_BEGIN_BODY_BLOCK
+# VAR b
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -656,10 +657,10 @@ mov %rbp, %rax
     #move heap into one
     leaq gcHeapOne, %r15
     movq %rax, 24(%r15)
-    movq $1048576000, 16(%r15)
+    movq $2097152000, 16(%r15)
     movq $0, 8(%r15)
     movq $1, 0(%r15)
-    addq $1048576000, %rax
+    addq $2097152000, %rax
     push %rax
     movq %rax, %rdi
     mov $12, %rax
@@ -671,26 +672,52 @@ mov %rbp, %rax
 
     leaq gcHeapTwo, %r15
     movq %rax, 24(%r15)
-    movq $1048576000, 16(%r15)
+    movq $2097152000, 16(%r15)
     movq $0, 8(%r15)
     movq $0, 0(%r15)
 
-    addq $1048576000, %rax
+    addq $2097152000, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $32, %rsp
+	subq $56, %rsp
 	popq %rax
 	movq %rax, -8(%rbp)
-	movq $0, -16(%rbp)
+	movq $1, -16(%rbp)
+	movq $1, -24(%rbp)
+	movq $0, -40(%rbp)
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $22, %rcx
+		mov $10, %rcx
+# COMPLEX_ALLOCATE
+		movq $8, %rdx
+		imulq %rcx, %rdx
+# ALLOC_ARR_OF_PTR
+		addq $8, %rdx
+		pushq %rdx
+		pushq %rbp
+		call garbageCollectAllocate
+		movq %rcx, 0(%rax)
+# ALLOC_ARR_OF_PTR
+		subq $0, %rdx
+		movq $-1, (%rax, %rdx, 1)
+		popq %rdx
+		popq %rdx
+		addq $8, %rax
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, -40(%rbp)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rbx
+# INSTRUCTION_CONST
+		mov $-8, %rsi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rbx, %rsi,1), %rbx
 # INSTRUCTION_WRITE
-		movq %rcx, %rsi
+		movq %rbx, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
+movq $0, %rax
 leave
 ret
