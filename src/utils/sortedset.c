@@ -20,8 +20,8 @@ SortedSet *initSortedSet(int data) {
     return sortedSet;
 }
 
-bool exists(SortedSet *sortedSet, int data) {
-    SortedSet *iter = sortedSet;
+bool exists(const SortedSet *sortedSet, int data) {
+    const SortedSet *iter = sortedSet;
 
     while (iter != NULL) {
 
@@ -35,10 +35,10 @@ bool exists(SortedSet *sortedSet, int data) {
     return false;
 }
 
-size_t length(SortedSet *sortedSet) {
+size_t length(const SortedSet *sortedSet) {
     size_t counter = 0;
 
-    SortedSet *iter = sortedSet;
+    const SortedSet *iter = sortedSet;
 
     while (iter != NULL) {
         counter = counter + 1;
@@ -80,9 +80,9 @@ void insertSortedSet(SortedSet *sortedSet, int data) {
     }
 }
 
-SortedSet *sortedSetUnion(SortedSet *set1, SortedSet *set2) {
-    SortedSet *iter1 = set1;
-    SortedSet *iter2 = set2;
+SortedSet *sortedSetUnion(const SortedSet *set1, const SortedSet *set2) {
+    const SortedSet *iter1 = set1;
+    const SortedSet *iter2 = set2;
 
     SortedSet *newSet = initHeadedSortedSet();
 
@@ -99,9 +99,9 @@ SortedSet *sortedSetUnion(SortedSet *set1, SortedSet *set2) {
     return newSet;
 }
 
-SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2) {
-    SortedSet *iter1 = set1;
-    SortedSet *iter2 = set2;
+SortedSet *sortedSetDiff(const SortedSet *set1, const SortedSet *set2) {
+    const SortedSet *iter1 = set1;
+    const SortedSet *iter2 = set2;
 
     SortedSet *newSet = initHeadedSortedSet();
 
@@ -138,15 +138,53 @@ void freeSortedSet(SortedSet* sortedSet) {
     }
 }
 
-SortedSet *iterateSortedSet(SortedSet* set) {
+SortedSet *iterateSortedSet(const SortedSet* set) {
     return set->_next;
 }
 
-int sortedSetFirst(SortedSet* set) {
+int sortedSetFirst(const SortedSet* set) {
     return set->_next->data;
 }
 
-SortedSet *first(SortedSet *set) {
+SortedSet *first(const SortedSet *set) {
     if (set == NULL) return NULL;
     return set->_next;
+}
+
+char *sortedSetToString(const SortedSet *sortedSet) {
+    SortedSet *iter = sortedSet->_next;
+    char *buffer = malloc(sizeof(char) * 16);
+    size_t allocated = 16;
+    size_t len = 1;
+    size_t bufLen = 0;
+
+    char *start = "{";
+    memmove(buffer, start, 1);
+    while (iter != NULL) {
+        char buf[24];
+        if (len == 1) {
+            sprintf(buf, "%d", iter->data);
+        } else {
+            sprintf(buf, ", %d", iter->data);
+        }
+
+        bufLen = strlen(buf);
+
+        if (bufLen + len + 2 > allocated) {
+            while (bufLen + len + 2 > allocated) {
+                allocated *= 2;
+            }
+            buffer = realloc(buffer, allocated);
+        }
+
+        memmove(buffer + len, buf, bufLen);
+        len += bufLen;
+
+        iter = iter->_next;
+    }
+    char *end = "}";
+    memmove(buffer + len, end, 1);
+    len += 1;
+
+    return buffer;
 }

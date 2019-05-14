@@ -95,7 +95,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 graph[i].beenSimplified = true;
                 couldSimplify = true;
                 nodesRemoved++;
-            } else {
+            } else if (!graph[i].beenSimplified) {
                 toRemove = &graph[i];
                 toRemoveIndex = i;
             }

@@ -270,14 +270,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_PUSH_STACK: {
             fprintf(out, "# INSTRUCTION_PUSH_STACK\n");
             printIndentation(out);
-            fprintf(out, "push %d(%%rbp)\n",
-                    (int)instruction->val.popPushStack.offset);
+            fprintf(out, "push -%zu(%%rbp)\n",
+                    instruction->val.popPushStack.offset + offsetForFunction * POINTER_SIZE);
         } break;
         case INSTRUCTION_POP_STACK: {
             fprintf(out, "# INSTRUCTION_POP_STACK\n");
             printIndentation(out);
-            fprintf(out, "pop %d(%%rbp)\n",
-                    (int)instruction->val.popPushStack.offset);
+            fprintf(out, "pop -%zu(%%rbp)\n",
+                    instruction->val.popPushStack.offset + offsetForFunction * POINTER_SIZE);
         } break;
         case INSTRUCTION_NEGATE: {
             fprintf(out, "# INSTRUCTION_NEGATE\n");
