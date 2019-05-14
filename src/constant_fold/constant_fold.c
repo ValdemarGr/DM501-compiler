@@ -278,7 +278,7 @@ void constantFoldTerm(Term *term, SymbolTable *symbolTable) {
             Pair *constantEvaluatedFunction = get(constantFunctionEvalutationMap, makeCharKey(buf));
 
             if (constantEvaluatedFunction != NULL) {
-                Type *unwrappedReturn = unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable, NULL);
+                Type *unwrappedReturn = unwrapTypedef(symbol->value->val.typeFunctionD.returnType, symbolTable, NULL, true);
                 if (unwrappedReturn->kind == typeIntK) {
                     term->kind = numK;
                     term->val.numD.num = *((int*)constantEvaluatedFunction->v);
@@ -761,7 +761,7 @@ void constantFoldDeclaration(Declaration *declaration) {
         case declFuncK: {
             constantFoldBody(declaration->val.functionD.function->body);
 
-            Type *unwrappedReturn = unwrapTypedef(declaration->val.functionD.function->head->returnType, declaration->symbolTable, NULL);
+            Type *unwrappedReturn = unwrapTypedef(declaration->val.functionD.function->head->returnType, declaration->symbolTable, NULL, true);
 
             if (unwrappedReturn->kind == typeIntK || unwrappedReturn->kind == typeBoolK) {
                 if (doesBodyAffectOutside(declaration->val.functionD.function->body, declaration->symbolTable->distanceFromRoot + 1) == false) {
