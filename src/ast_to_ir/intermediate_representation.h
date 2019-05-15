@@ -96,7 +96,9 @@ typedef enum {
     RUNTIME_ARRAY_BOUNDS_CHECK,
     RUNTIME_NEGATIVE_ALLOC,
     RUNTIME_NULLPTR_CHECK,
-    RUNTIME_DIV_ZERO
+    RUNTIME_DIV_ZERO,
+
+    NOOP
 } InstructionKind;
 
 typedef enum {

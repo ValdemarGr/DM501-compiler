@@ -31,7 +31,8 @@ typedef enum {
     REMOVE_PUSH_POP,
     CONST_ZERO_TO_SET_ZERO,
     CONST_ADD_TO_LEA,
-    ADD_TO_LEA
+    ADD_TO_LEA,
+    ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK
 } PeepholeApplyType;
 
 typedef struct PeepholeTemplates {

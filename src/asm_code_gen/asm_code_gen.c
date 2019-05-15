@@ -207,6 +207,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_WRITE: {
             fprintf(out, "# INSTRUCTION_WRITE\n");
 
+            printIndentation(out);
+            fprintf(out, "pushq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdi\n");
 
             printIndentation(out);
             fprintf(out, "movq %%%s, %%rsi\n",
@@ -217,6 +221,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+
+
+            printIndentation(out);
+            fprintf(out, "popq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rsi\n");
         } break;
         case INSTRUCTION_WRITE_CHAR: {
             fprintf(out, "# INSTRUCTION_WRITE_CHAR\n");
@@ -241,12 +251,21 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case INSTRUCTION_WRITE_NL: {
             fprintf(out, "# INSTRUCTION_WRITE_NL\n");
+
+            printIndentation(out);
+            fprintf(out, "pushq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdi\n");
             printIndentation(out);
             fprintf(out, "movq $nlprint, %%rdi\n");
             printIndentation(out);
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rsi\n");
         } break;
         case INSTRUCTION_AND: {
             fprintf(out, "# INSTRUCTION_AND\n");
