@@ -221,7 +221,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_WRITE_CHAR: {
             fprintf(out, "# INSTRUCTION_WRITE_CHAR\n");
 
-
+            printIndentation(out);
+            fprintf(out, "pushq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdi\n");
             printIndentation(out);
             fprintf(out, "movq %%%s, %%rsi\n",
                     getNextRegister(instruction->val.tempToWrite));
@@ -231,6 +234,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq $0, %%rax\n");
             printIndentation(out);
             fprintf(out, "call printf\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rsi\n");
         } break;
         case INSTRUCTION_WRITE_NL: {
             fprintf(out, "# INSTRUCTION_WRITE_NL\n");

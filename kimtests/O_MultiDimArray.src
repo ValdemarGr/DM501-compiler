@@ -7,14 +7,12 @@ var a : intArrayArray, i : int, j : int, sum : int;
 allocate a of length 5;
 
 i = 0;
-write |a|;
 while (i < |a|) do
 {
   allocate a[i] of length 5;
   j = 0;
   while (j < |a[i]|) do
   {
-    write i + j;
     a[i][j] = i+j;
     j = j+1;
   } 
