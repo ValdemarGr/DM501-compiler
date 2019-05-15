@@ -188,3 +188,13 @@ char *sortedSetToString(const SortedSet *sortedSet) {
 
     return buffer;
 }
+
+SortedSet *getByIndex(SortedSet *head, int index) {
+    int counter = index;
+    while (counter != 0) {
+        head = head->_next;
+        counter--;
+    }
+
+    return head.
+}

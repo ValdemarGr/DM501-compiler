@@ -975,6 +975,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_SAVE_ALL: {
             fprintf(out, "# COMPLEX_SAVE_ALL\n");
+
+            SortedSet *ss = instruction->val.restoreSave;
+            for (int i = 0; i < 16; i++) {
+                if (exists(ss, i)) {
+                    printIndentation(out);
+                    fprintf(out, "pushq %%%s\n",
+                            getNextRegister(i));
+                }
+            }
+
+
 /*
             printIndentation(out);
             fprintf(out, "pushq %%rcx\n");
@@ -1006,6 +1017,16 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_RESTORE_ALL: {
             fprintf(out, "# COMPLEX_RESTORE_ALL\n");
+
+            SortedSet *ss = instruction->val.restoreSave;
+            for (int i = 16; i < 0; i++) {
+                if (exists(ss, i)) {
+                    printIndentation(out);
+                    fprintf(out, "pushq %%%s\n",
+                            getNextRegister(i));
+                }
+            }
+
 /*
             printIndentation(out);
             fprintf(out, "popq %%r15\n");

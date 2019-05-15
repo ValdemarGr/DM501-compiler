@@ -41,4 +41,6 @@ SortedSet *first(const SortedSet *set);
 
 char *sortedSetToString(const SortedSet *sortedSet);
 
+SortedSet *getByIndex(SortedSet *head, int index);
+
 #endif //HELLO_SORTEDSET_H
