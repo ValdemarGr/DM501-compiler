@@ -12,12 +12,6 @@ class Optional[A] {
             apply(internalValue);
         }
     };
-
-    val map = (apply: (A) -> A): void -> {
-        if (hasValue == true) then {
-            internalValue = apply(internalValue);
-        }
-    };
 };
 
 class IntBox {
@@ -58,11 +52,7 @@ gc;
 opt.forEach((value: IntBox): void -> {
     write value.constValue;
 });
-opt.map((value: IntBox): IntBox -> {
-    var new: class IntBox;
-    allocate new(value.constValue * 2);
-    return new;
-});
+opt.internalValue.constValue = 99;
 opt.forEach((value: IntBox): void -> {
     write value.constValue;
 });

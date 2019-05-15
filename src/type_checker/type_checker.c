@@ -24,6 +24,7 @@ Error *traverseClassExtensionsAndInsertGenerics(ConstMap *constMap, char *classI
 Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTable *symbolTable);
 bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable);
 Type *evaluateExpressionType(Expression *expression, SymbolTable *symbolTable);
+Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, SymbolTable *symbolTable);
 SYMBOL *getSymbolForBaseVariable(Variable *variable, SymbolTable *symbolTable) {
     switch (variable->kind) {
         case varIdK: {
@@ -467,6 +468,10 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
                 return areTypesEqual(unwrapTypedef(first, symbolTable), unwrapTypedef(second, symbolTable), symbolTable);
             }*/
         }
+    } else if (first->kind == typeIdK) {
+        return areTypesEqual(unwrapTypedef(first, symbolTable, NULL, false), second, symbolTable);
+    } else if (second->kind == typeIdK) {
+        return areTypesEqual(first, unwrapTypedef(second, symbolTable, NULL, false), symbolTable);
     } else {
         return false;
     }
@@ -849,37 +854,6 @@ Type *bindGenericTypes(ConstMap *genericMap, Type *typeToBindOn, SymbolTable *sy
         case typeVoidK:
             return typeToBindOn;
             break;
-    }
-
-    return NULL;
-}
-
-Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, SymbolTable *symbolTable) {
-    TypeList *boundIter = bound;
-    TypeList *genericIter = generic;
-
-    while (boundIter != NULL && genericIter != NULL) {
-        if (boundIter->type->kind == typeIntK || boundIter->type->kind == typeBoolK || boundIter->type->kind == typeCharK) {
-            Error *e = NEW(Error);
-
-            e->error = NO_PRIMITIVE_GENERICS;
-            e->location = boundIter->type->location;
-
-            return e;
-        }
-
-        insert(constMap, makeCharKey(genericIter->type->val.typeGeneric.genericName), (void*)boundIter->type);
-        boundIter = boundIter->next;
-        genericIter = genericIter->next;
-    }
-
-    if (boundIter != NULL || genericIter != NULL) {
-        Error *e = NEW(Error);
-
-        e->error = TOO_MANY_GENERICS;
-        e->location = generic->location;
-
-        return e;
     }
 
     return NULL;
@@ -2095,6 +2069,37 @@ Error *typeCheckExpression(Expression *expression, Type *expectedType, SymbolTab
             break;
     }
 
+
+    return NULL;
+}
+
+Error *insertGenerics(ConstMap *constMap, TypeList *bound, TypeList *generic, SymbolTable *symbolTable) {
+    TypeList *boundIter = bound;
+    TypeList *genericIter = generic;
+
+    while (boundIter != NULL && genericIter != NULL) {
+        if (boundIter->type->kind == typeIntK || boundIter->type->kind == typeBoolK || boundIter->type->kind == typeCharK) {
+            Error *e = NEW(Error);
+
+            e->error = NO_PRIMITIVE_GENERICS;
+            e->location = boundIter->type->location;
+
+            return e;
+        }
+
+        insert(constMap, makeCharKey(genericIter->type->val.typeGeneric.genericName), (void*)boundIter->type);
+        boundIter = boundIter->next;
+        genericIter = genericIter->next;
+    }
+
+    if (boundIter != NULL || genericIter != NULL) {
+        Error *e = NEW(Error);
+
+        e->error = TOO_MANY_GENERICS;
+        e->location = generic->location;
+
+        return e;
+    }
 
     return NULL;
 }
