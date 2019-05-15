@@ -228,9 +228,9 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
             toReplaceTo->previous = toReplaceFrom;
             toReplaceFrom->next = toReplaceTo;
         } else {
-            toReplaceFrom->next = instructionHead;
             currentInstruction->next = toReplaceTo;
-            currentInstruction->previous = instructionHead;
+            instructionHead->previous = toReplaceFrom;
+            toReplaceFrom->next = instructionHead;
             toReplaceTo->previous = currentInstruction;
         }
 
