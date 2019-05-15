@@ -1106,9 +1106,9 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_LEA_ADD_CONST: {
             fprintf(out, "# INSTRUCTION_LEA_ADD_CONST\n");
             printIndentation(out);
-            fprintf(out, "leaq (%%%s, %i, 1), %%%s\n",
-                    getNextRegister(instruction->val.art2const.temp),
+            fprintf(out, "leaq %i(%%%s), %%%s\n",
                     instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp),
                     getNextRegister(instruction->val.art2const.temp));
         } break;
     }
