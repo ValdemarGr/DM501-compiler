@@ -93,6 +93,26 @@ PeepholeTemplates *generateRulesetsForSize() {
         addInstructionTemplate(peepholeTemplates, move, CONST_ZERO_TO_SET_ZERO, 1);
     }
 
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
+        SimpleInstruction *add = NEW(SimpleInstruction);
+        add->kind = INSTRUCTION_ADD_CONST;
+        registerTrackerForBlock++;
+
+        addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
+    }
+
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
+        SimpleInstruction *add = NEW(SimpleInstruction);
+        add->kind = INSTRUCTION_ADD;
+        registerTrackerForBlock++;
+
+        addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
+    }
+
     return peepholeTemplates;
 }
 
@@ -105,31 +125,6 @@ Instructions *localAppendInstructions(Instructions *new) {
 
     return iter;
 }
-/*
-size_t smallestRegister(PeepholeTemplates *template, Instructions *instructions) {
-    Instructions *iter = instructions;
-    SimpleInstruction *simpleCounter = template->simpleInstruction;
-
-    int smallestValue = INT_MAX;
-
-    switch (template->apply) {
-        case REMOVE_CONST_REGISTER_ADD: {
-            smallestValue = MIN((int)iter->val.constant.temp, smallestValue);
-            iter = iter->next;
-            smallestValue = MIN((int)iter->val.arithmetic2.source, smallestValue);
-            smallestValue = MIN((int)iter->val.arithmetic2.dest, smallestValue);
-        } break;
-        case REMOVE_CONST_REGISTER_MUL: {
-            smallestValue = MIN((int)iter->val.constant.temp, smallestValue);
-            iter = iter->next;
-            smallestValue = MIN((int)iter->val.arithmetic2.source, smallestValue);
-            smallestValue = MIN((int)iter->val.arithmetic2.dest, smallestValue);
-        } break;
-    }
-
-    return (size_t)smallestValue;
-}
-*/
 
 bool templateMatch(Instructions *head, PeepholeTemplate *template) {
     Kinds *kind = template->kinds;
@@ -200,6 +195,22 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
+        } break;
+        case CONST_ADD_TO_LEA: {
+            instructionHead = newInstruction();
+            instructionHead->kind = INSTRUCTION_LEA_ADD_CONST;
+            instructionHead->val.art2const.constant = instructionsIter->val.art2const.constant;
+            instructionHead->val.art2const.temp = instructionsIter->val.art2const.temp;
+            currentInstruction = instructionHead;
+            templateApplied = true;
+        } break;
+        case ADD_TO_LEA: {
+            instructionHead = newInstruction();
+            instructionHead->kind = INSTRUCTION_LEA_ADD;
+            instructionHead->val.arithmetic2.dest = instructionsIter->val.arithmetic2.dest;
+            instructionHead->val.arithmetic2.source = instructionsIter->val.arithmetic2.source;
+            currentInstruction = instructionHead;
+            templateApplied = true;
         } break;
         default: break;
     }
@@ -296,6 +307,8 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case RUNTIME_NEGATIVE_ALLOC: { return instructions; } break;
         case RUNTIME_NULLPTR_CHECK: { return instructions; } break;
         case RUNTIME_DIV_ZERO: { return instructions; } break;
+        case INSTRUCTION_LEA_ADD:{ return instructions; } break;
+        case INSTRUCTION_LEA_ADD_CONST:{ return instructions; } break;
     }
 }
 
@@ -305,10 +318,16 @@ void peephole(Instructions *instructions) {
     Instructions *iter = instructions;
     bool notEqual;
 
+    int amountOfTimesIterPeepholed = 0;
     while (iter != NULL) {
+        if (amountOfTimesIterPeepholed > 20) {
+            iter = iter->next;
+            continue;
+        }
         PeepholeTemplates *templateIter = peepholeTemplates;
 
         while (templateIter != NULL) {
+
             SimpleInstruction *simpleInstructionIter = templateIter->simpleInstruction;
             Instructions *realInstructionIter = iter;
             notEqual = false;
@@ -329,16 +348,16 @@ void peephole(Instructions *instructions) {
                 continue;
             }
 
-            /*
-            simpleInstructionIter = templateIter->simpleInstruction;
-            realInstructionIter = iter;
-            size_t smallestReg = smallestRegister(templateIter, realInstructionIter);*/
-
             //Apply template
             simpleInstructionIter = templateIter->simpleInstruction;
             realInstructionIter = iter;
 
             iter = applyTemplate(simpleInstructionIter, realInstructionIter, (size_t)templateIter->size, templateIter->apply);//, smallestReg);
+
+            //The template was applied
+            if (iter != realInstructionIter) {
+                amountOfTimesIterPeepholed++;
+            }
 
             templateIter = templateIter->next;
         }

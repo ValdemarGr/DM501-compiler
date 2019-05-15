@@ -2,18 +2,13 @@
 
 .global main
 main:
-    movq $0, %r8
 
-    negq %r8
+    movq $22, %rax
+    movq $11, %rdi
 
-    push %r8
-    call print_number
+    leaq (%rax, %rdi, 1), %rax
 
-    cmp $0, %r8
-    setg %dl
-    movsx %dl, %r8 
-
-    push %r8
+    push %rax
     call print_number
 
 	mov $60, %rax

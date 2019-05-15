@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 8
+	.space 24
 intprint:
 	.asciz "%i\n"
 charprint:
@@ -762,7 +762,6 @@ outOfBoundsCheck:
     ret
 
 # METADATA_BEGIN_BODY_BLOCK
-# VAR sum
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -799,589 +798,265 @@ mov %rbp, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $96, %rsp
+	subq $40, %rsp
 	popq %rax
 	movq %rax, -8(%rbp)
-	movq $1, -16(%rbp)
-	movq $2, -24(%rbp)
-	movq $0, -48(%rbp)
+	movq $0, -16(%rbp)
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
 # METADATA_DEBUG_INFO
-		# 0: {0, 1}
-# INSTRUCTION_CONST
-		mov $5, %rbx
-# METADATA_DEBUG_INFO
-		# 1: {0, 1}
-# RUNTIME_NEGATIVE_ALLOC
+		# 30: {0}
+# COMPLEX_SAVE_ALL
+		pushq %rcx
+		pushq %rdx
 		pushq %rbx
-		call negAllocCheck
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_DEBUG_INFO
+		# 31: {0, 3}
+# INSTRUCTION_CONST
+		mov $5, %rdx
+# METADATA_DEBUG_INFO
+		# 32: {0, 3}
+# INSTRUCTION_PUSH
+		push %rdx
+# METADATA_DEBUG_INFO
+		# 33: {0}
+# INSTRUCTION_FUNCTION_CALL
+		call b__0
+# METADATA_DEBUG_INFO
+		# 34: {0}
+# INSTRUCTION_ADD_STACK_PTR
 		addq $8, %rsp
 # METADATA_DEBUG_INFO
-		# 2: {0, 1, 2}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_ARR_OF_PTR
-		addq $8, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %rbx, 0(%rax)
-# ALLOC_ARR_OF_PTR
-		subq $0, %rdx
-		movq $-1, (%rax, %rdx, 1)
+		# 35: {0}
+# COMPLEX_RESTORE_ALL
+		popq %r15
+		popq %r14
+		popq %r13
+		popq %r12
+		popq %r11
+		popq %r10
+		popq %r9
+		popq %r8
+		popq %rdi
+		popq %rsi
+		popq %rbx
 		popq %rdx
-		popq %rdx
-		addq $8, %rax
+		popq %rcx
 # METADATA_DEBUG_INFO
-		# 3: {0}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rax, -48(%rbp)
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
+		# 36: {0}
+# COMPLEX_RESTORE_STATIC_LINK
+		leaq staticLink, %rdx
+movq %rbp, 0(%rdx)
 # METADATA_DEBUG_INFO
-		# 5: {0, 3}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -56(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_0:
-# METADATA_DEBUG_INFO
-		# 6: {0, 4}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 7: {0, 4, 5}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 8: {0, 4, 5, 6}
-# INSTRUCTION_CONST
-		mov $-8, %rdx
-# METADATA_DEBUG_INFO
-		# 9: {0, 4, 5, 6}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 10: {0, 4, 5, 6}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 11: {0, 4, 5}
-# INSTRUCTION_MINUS
-		sub %rsi, %rbx
-# METADATA_DEBUG_INFO
-		# 12: {0, 5}
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rax
-		cmp $0, %rbx
-		setg %al
-		movsx %al, %rbx
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 13: {0, 5, 7}
-# INSTRUCTION_CONST
-		mov $1, %rdx
-# METADATA_DEBUG_INFO
-		# 14: {0, 5, 7}
-# INSTRUCTION_CMP
-		cmp %rbx, %rdx
-# METADATA_DEBUG_INFO
-		# 15: {0}
-# INSTRUCTION_JE
-		je while_0_begin
-# METADATA_DEBUG_INFO
-		# 16: {}
-# INSTRUCTION_JMP
-		jmp while_0_end
-# INSTRUCTION_LABEL
-		while_0_begin:
-# METADATA_DEBUG_INFO
-		# 17: {0, 8}
-# INSTRUCTION_CONST
-		mov $5, %rbx
-# METADATA_DEBUG_INFO
-		# 18: {0, 8}
-# RUNTIME_NEGATIVE_ALLOC
-		pushq %rbx
-		call negAllocCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 19: {0, 8, 9}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_ARR_OF_PRIM
-		addq $16, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %rbx, 0(%rax)
-		subq $8, %rdx
-		movq $0, (%rax, %rdx, 1)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 20: {0, 10}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 21: {0, 10}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 22: {0, 10, 11}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 23: {0, 10, 11}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 25: {0, 10, 11}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%rbx, %rdx,1)
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 27: {0, 13}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_1:
-# METADATA_DEBUG_INFO
-		# 28: {0, 14}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 29: {0, 14, 15}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 30: {0, 14, 15}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 31: {0, 14, 15, 16}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 32: {0, 14, 15, 16}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 34: {0, 14, 15, 16}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 35: {0, 14, 15, 18}
-# INSTRUCTION_CONST
-		mov $-8, %rdx
-# METADATA_DEBUG_INFO
-		# 36: {0, 14, 15, 18}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 37: {0, 14, 15, 18}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 38: {0, 14, 15}
-# INSTRUCTION_MINUS
-		sub %rsi, %rbx
-# METADATA_DEBUG_INFO
-		# 39: {0, 15}
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rax
-		cmp $0, %rbx
-		setg %al
-		movsx %al, %rbx
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 40: {0, 15, 19}
-# INSTRUCTION_CONST
-		mov $1, %rdx
-# METADATA_DEBUG_INFO
-		# 41: {0, 15, 19}
-# INSTRUCTION_CMP
-		cmp %rbx, %rdx
-# METADATA_DEBUG_INFO
-		# 42: {0}
-# INSTRUCTION_JE
-		je while_1_begin
-# METADATA_DEBUG_INFO
-		# 43: {0}
-# INSTRUCTION_JMP
-		jmp while_1_end
-# INSTRUCTION_LABEL
-		while_1_begin:
-# METADATA_DEBUG_INFO
-		# 44: {0, 20}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 45: {0, 20, 21}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 46: {0, 20, 21}
-# INSTRUCTION_ADD
-		add %rdx, %rsi
-# METADATA_DEBUG_INFO
-		# 47: {0, 20, 22}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 48: {0, 20, 22}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 49: {0, 20, 22, 23}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 50: {0, 20, 22, 23}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 52: {0, 20, 22, 23}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 53: {0, 20, 22}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 54: {0, 20, 22, 25}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 55: {0, 20, 22, 25}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 57: {0, 20, 22, 25}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 58: {0, 27}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# INSTRUCTION_ADD_CONST
-		add $1, %rdx
-# METADATA_DEBUG_INFO
-		# 60: {0, 27}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# METADATA_DEBUG_INFO
-		# 61: {0}
-# INSTRUCTION_JMP
-		jmp while_cnd_1
-# INSTRUCTION_LABEL
-		while_1_end:
-# METADATA_DEBUG_INFO
-		# 62: {0, 29}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# INSTRUCTION_ADD_CONST
-		add $1, %rdx
-# METADATA_DEBUG_INFO
-		# 64: {0, 29}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -56(%rbp)
-# METADATA_DEBUG_INFO
-		# 65: {0}
-# INSTRUCTION_JMP
-		jmp while_cnd_0
-# INSTRUCTION_LABEL
-		while_0_end:
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 67: {31}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -72(%rbp)
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 69: {32}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -56(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_2:
-# METADATA_DEBUG_INFO
-		# 70: {33}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 71: {33, 34}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 72: {33, 34, 35}
-# INSTRUCTION_CONST
-		mov $-8, %rdx
-# METADATA_DEBUG_INFO
-		# 73: {33, 34, 35}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 74: {33, 34, 35}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 75: {33, 34}
-# INSTRUCTION_MINUS
-		sub %rsi, %rbx
-# METADATA_DEBUG_INFO
-		# 76: {34}
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rax
-		cmp $0, %rbx
-		setg %al
-		movsx %al, %rbx
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 77: {34, 36}
-# INSTRUCTION_CONST
-		mov $1, %rdx
-# METADATA_DEBUG_INFO
-		# 78: {34, 36}
-# INSTRUCTION_CMP
-		cmp %rbx, %rdx
-# METADATA_DEBUG_INFO
-		# 79: {}
-# INSTRUCTION_JE
-		je while_2_begin
-# METADATA_DEBUG_INFO
-		# 80: {}
-# INSTRUCTION_JMP
-		jmp while_2_end
-# INSTRUCTION_LABEL
-		while_2_begin:
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 82: {37}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_3:
-# METADATA_DEBUG_INFO
-		# 83: {38}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 84: {38, 39}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 85: {38, 39}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 86: {38, 39, 40}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 87: {38, 39, 40}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 89: {38, 39, 40}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 90: {38, 39, 42}
-# INSTRUCTION_CONST
-		mov $-8, %rdx
-# METADATA_DEBUG_INFO
-		# 91: {38, 39, 42}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 92: {38, 39, 42}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 93: {38, 39}
-# INSTRUCTION_MINUS
-		sub %rsi, %rbx
-# METADATA_DEBUG_INFO
-		# 94: {39}
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rax
-		cmp $0, %rbx
-		setg %al
-		movsx %al, %rbx
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 95: {39, 43}
-# INSTRUCTION_CONST
-		mov $1, %rdx
-# METADATA_DEBUG_INFO
-		# 96: {39, 43}
-# INSTRUCTION_CMP
-		cmp %rbx, %rdx
-# METADATA_DEBUG_INFO
-		# 97: {}
-# INSTRUCTION_JE
-		je while_3_begin
-# METADATA_DEBUG_INFO
-		# 98: {}
-# INSTRUCTION_JMP
-		jmp while_3_end
-# INSTRUCTION_LABEL
-		while_3_begin:
-# METADATA_DEBUG_INFO
-		# 99: {44}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -72(%rbp), %rsi
-# METADATA_DEBUG_INFO
-		# 100: {44, 45}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 101: {44, 45}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 102: {44, 45, 46}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 103: {44, 45, 46}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 105: {44, 45, 46}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 106: {44, 45}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 107: {44, 45, 48}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 108: {44, 45, 48}
-# RUNTIME_ARRAY_BOUNDS_CHECK
-		pushq %rdx
-		pushq %rbx
-		call outOfBoundsCheck
-		addq $16, %rsp
-# INSTRUCTION_MUL_CONST
-		imul $8, %rdx
-# METADATA_DEBUG_INFO
-		# 110: {44, 45, 48}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx,1), %rbx
-# METADATA_DEBUG_INFO
-		# 111: {44, 45}
-# INSTRUCTION_ADD
-		add %rbx, %rsi
-# METADATA_DEBUG_INFO
-		# 112: {44}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rsi, -72(%rbp)
-# METADATA_DEBUG_INFO
-		# 113: {50}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# INSTRUCTION_ADD_CONST
-		add $1, %rdx
-# METADATA_DEBUG_INFO
-		# 115: {50}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# METADATA_DEBUG_INFO
-		# 116: {}
-# INSTRUCTION_JMP
-		jmp while_cnd_3
-# INSTRUCTION_LABEL
-		while_3_end:
-# METADATA_DEBUG_INFO
-		# 117: {52}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdx
-# INSTRUCTION_ADD_CONST
-		add $1, %rdx
-# METADATA_DEBUG_INFO
-		# 119: {52}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -56(%rbp)
-# METADATA_DEBUG_INFO
-		# 120: {}
-# INSTRUCTION_JMP
-		jmp while_cnd_2
-# INSTRUCTION_LABEL
-		while_2_end:
-# METADATA_DEBUG_INFO
-		# 121: {54}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -72(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 122: {54}
+		# 37: {0}
 # INSTRUCTION_WRITE
-		movq %rdx, %rsi
+		movq %rax, %rsi
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
 movq $0, %rax
 leave
+ret
+# METADATA_DEBUG_INFO
+		# 0: {}
+# INSTRUCTION_FUNCTION_LABEL
+.type b__0, @function
+b__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $48, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		leaq staticLink, %rdx
+		movq %rbp, 8(%rdx)
+# METADATA_DEBUG_INFO
+			# 1: {}
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rdx
+			mov %rdx, -24(%rbp)
+# METADATA_DEBUG_INFO
+			# 20: {0, 5}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_DEBUG_INFO
+			# 21: {0, 5}
+# COMPLEX_SAVE_ALL
+			pushq %rcx
+			pushq %rdx
+			pushq %rbx
+			pushq %rsi
+			pushq %rdi
+			pushq %r8
+			pushq %r9
+			pushq %r10
+			pushq %r11
+			pushq %r12
+			pushq %r13
+			pushq %r14
+			pushq %r15
+# METADATA_DEBUG_INFO
+			# 22: {0, 5, 6}
+# INSTRUCTION_CONST
+			mov $1, %rbx
+# METADATA_DEBUG_INFO
+			# 23: {0, 5, 6}
+# INSTRUCTION_PUSH
+			push %rbx
+# METADATA_DEBUG_INFO
+			# 24: {0, 5}
+# INSTRUCTION_FUNCTION_CALL
+			call b__1
+# METADATA_DEBUG_INFO
+			# 25: {0, 5}
+# INSTRUCTION_ADD_STACK_PTR
+			addq $8, %rsp
+# METADATA_DEBUG_INFO
+			# 26: {0, 5}
+# COMPLEX_RESTORE_ALL
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+# METADATA_DEBUG_INFO
+			# 27: {0, 5}
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rdx
+movq %rbp, 8(%rdx)
+# METADATA_DEBUG_INFO
+			# 28: {0, 5}
+# INSTRUCTION_ADD
+			add %rax, %rdx
+# METADATA_DEBUG_INFO
+			# 29: {5}
+# INSTRUCTION_RETURN
+			mov %rdx, %rax
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_DEBUG_INFO
+		# 2: {}
+# INSTRUCTION_FUNCTION_LABEL
+.type b__1, @function
+b__1:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $48, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		leaq staticLink, %rdx
+		movq %rbp, 16(%rdx)
+# METADATA_DEBUG_INFO
+			# 3: {}
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rdx
+			mov %rdx, -24(%rbp)
+# METADATA_DEBUG_INFO
+			# 4: {5}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_DEBUG_INFO
+			# 5: {5, 6}
+# INSTRUCTION_CONST
+			mov $1, %rbx
+# METADATA_DEBUG_INFO
+			# 6: {5, 6}
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# METADATA_DEBUG_INFO
+			# 7: {6, 7}
+# COMPLEX_ABS_VALUE
+			movq %rbx, %rdx
+			sar $63, %rdx
+			addq %rdx, %rbx
+			xor %rbx, %rdx
+# METADATA_DEBUG_INFO
+			# 8: {7}
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdx
+			setg %al
+			movsx %al, %rdx
+			pop %rax
+# METADATA_DEBUG_INFO
+			# 9: {7, 8}
+# INSTRUCTION_CONST
+			mov $1, %rbx
+# METADATA_DEBUG_INFO
+			# 10: {7, 8}
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# METADATA_DEBUG_INFO
+			# 11: {8, 9}
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# METADATA_DEBUG_INFO
+			# 12: {8, 9}
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# METADATA_DEBUG_INFO
+			# 13: {}
+# INSTRUCTION_JE
+			je if_0_begin
+# METADATA_DEBUG_INFO
+			# 14: {}
+# INSTRUCTION_JMP
+			jmp el_0_begin
+# INSTRUCTION_LABEL
+			if_0_begin:
+# METADATA_DEBUG_INFO
+			# 15: {10}
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# METADATA_DEBUG_INFO
+			# 16: {10}
+# INSTRUCTION_RETURN
+			mov %rdx, %rax
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_DEBUG_INFO
+			# 17: {0}
+# INSTRUCTION_JMP
+			jmp ifel_0_end
+# INSTRUCTION_LABEL
+			el_0_begin:
+# INSTRUCTION_SET_ZERO
+			xorq %rdx, %rdx
+# METADATA_DEBUG_INFO
+			# 19: {12}
+# INSTRUCTION_RETURN
+			mov %rdx, %rax
+			mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_LABEL
+			ifel_0_end:
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
 ret

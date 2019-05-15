@@ -519,6 +519,20 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
+            case INSTRUCTION_LEA_ADD: {
+                dataFlowEntry = initDataFlowEntry();
+                dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
+                dataFlowEntry->successors = makeLineList(line + 1);
+            } break;
+            case INSTRUCTION_LEA_ADD_CONST: {
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.art2const.temp);
+
+                insertSortedSet(dataFlowEntry->uses, (int) iter->val.art2const.temp);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+            } break;
         }
 
         iter = iter->next;

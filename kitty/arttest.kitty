@@ -1,0 +1,7 @@
+val a = 5;
+val b = 99;
+val c = a + b;
+val d = 1 + c;
+
+write c;
+write d;
