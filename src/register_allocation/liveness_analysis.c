@@ -134,7 +134,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_LABEL: break;
             case METADATA_FUNCTION_ARGUMENT:
                 dataFlowEntry = initDataFlowEntry();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.args.moveReg);
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.args.moveReg);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
@@ -177,7 +177,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_FUNCTION_LABEL: {
                 dataFlowEntry = initDataFlowEntry();
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.functionHead.temporary);
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.functionHead.temporary);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
@@ -262,13 +262,19 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_COPY: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.arithmetic2.source);
+                insertSortedSet(dataFlowEntry->defines, iter->val.arithmetic2.dest);
+
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
             case INSTRUCTION_CMP: {
                 dataFlowEntry = initDataFlowEntry();
-                dataFlowEntryFromArithmetic2(dataFlowEntry, iter->val.arithmetic2);
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.arithmetic2.source);
+                insertSortedSet(dataFlowEntry->uses, iter->val.arithmetic2.dest);
+
                 dataFlowEntry->successors = makeLineList(line + 1);
             }
                 break;
@@ -339,7 +345,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case COMPLEX_RESTORE_STATIC_LINK: {
                 dataFlowEntry = initDataFlowEntry();
                 
-                insertSortedSet(dataFlowEntry->defines, (int) iter->val.pushPopStaticLink.temporary);
+                insertSortedSet(dataFlowEntry->intermediates, (int) iter->val.pushPopStaticLink.temporary);
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             }

@@ -38,16 +38,16 @@ int getAssigned(int *colors, int temporary) {
 }
 
 void appendToInstruction(Instructions* i1, Instructions *i2) {
-    i1->next->previous = i2;
     i2->next = i1->next;
     i2->previous = i1;
+    i1->next->previous = i2;
     i1->next = i2;
 }
 
 void prependToInstruction(Instructions* i1, Instructions *i2) {
-    i1->previous->next = i2;
-    i2->previous = i1->previous;
     i2->next = i1;
+    i2->previous = i1->previous;
+    i1->previous->next = i2;
     i1->previous = i2;
 }
 
@@ -433,10 +433,20 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
             case INSTRUCTION_XOR:handleArithmetic2(colors, state);
                 break;
             case INSTRUCTION_COPY:
-                handleArithmetic2(colors, state);
+                temporaries = makeTemporary(state->current->val.arithmetic2.source, RaRead);
+                temporaries->next = makeTemporary(state->current->val.arithmetic2.dest, RaWrite);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.arithmetic2.source = temporaries->reg;
+                state->current->val.arithmetic2.dest = temporaries->next->reg;
                 break;
             case INSTRUCTION_CMP:
-                handleArithmetic2(colors, state);
+                temporaries = makeTemporary(state->current->val.arithmetic2.source, RaRead);
+                temporaries->next = makeTemporary(state->current->val.arithmetic2.dest, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.arithmetic2.source = temporaries->reg;
+                state->current->val.arithmetic2.dest = temporaries->next->reg;
                 break;
             case INSTRUCTION_LABEL:break;
             case INSTRUCTION_JE:break;
