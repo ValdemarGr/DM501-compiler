@@ -95,7 +95,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 graph[i].beenSimplified = true;
                 couldSimplify = true;
                 nodesRemoved++;
-            } else {
+            } else if (!graph[i].beenSimplified) {
                 toRemove = &graph[i];
                 toRemoveIndex = i;
             }
@@ -157,6 +157,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
         }
 
         if (!colorFound) {
+            fprintf(stderr, "Temporary %d has been spilled\n", poppedNode->value);
             color_overview[poppedNode->value] = -1;
         }
     }
@@ -183,6 +184,7 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
          * node
          */
         if (!colorFound) {
+            fprintf(stderr, "Temporary %d has been spilled by chance\n", poppedNode->value);
             color_overview[poppedNode->value] = -1;
             break;
         }

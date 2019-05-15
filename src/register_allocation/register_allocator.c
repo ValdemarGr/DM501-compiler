@@ -89,13 +89,13 @@ int getTemporary(int *colors, int temporary, RaState *state) {
     return reg;
 }
 
-void readFromStack(int* colors, int temporary, int reg, RaState *state) {
-    Pair *pair = get(state->stackLocation, makeIntKey((int) currentSymbolTable));
+RaVariableLocation *getLocation(int temporary, RaState *state) {
+    Pair *pair = get(state->stackLocation, makeIntKey((long) currentSymbolTable));
 
     ConstMap *map;
     if (pair == NULL) {
         map = initMap(128);
-        insert(state->stackLocation, makeIntKey((int) currentSymbolTable), map);
+        insert(state->stackLocation, makeIntKey((long) currentSymbolTable), map);
     } else {
         map = pair->v;
     }
@@ -114,6 +114,12 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
     } else {
         location = pair->v;
     }
+
+    return location;
+}
+
+void readFromStack(int* colors, int temporary, int reg, RaState *state) {
+    RaVariableLocation *location = getLocation(temporary, state);
 
     Instructions *read = NEW(Instructions);
 
@@ -136,33 +142,9 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
 }
 
 void writeToStack(int* colors, int temporary, int reg, RaState *state) {
-    Pair *pair = get(state->stackLocation, makeIntKey((int)currentSymbolTable));
-
-    ConstMap *map;
-    if (pair == NULL) {
-        map = initMap(128);
-        insert(state->stackLocation, makeIntKey((int)currentSymbolTable), map);
-    } else {
-        map = pair->v;
-    }
-
-    pair = get(map, makeIntKey(temporary));
-
-    RaVariableLocation *location;
-    if (pair == NULL) {
-        location = NEW(RaVariableLocation);
-        location->useScope = false;
-        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
-        location->scope = currentSymbolTable->distanceFromRoot;
-
-        insert(map, makeIntKey(temporary), location);
-        currentSymbolTable->nextSymbolId++;
-    } else {
-        location = pair->v;
-    }
+    RaVariableLocation *location = getLocation(temporary, state);
 
     Instructions *write = NEW(Instructions);
-    write;
 
     if (location->useScope) {
         write->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE;
@@ -336,19 +318,7 @@ void handlePopInstruction(int *colors, RaState *state) {
         return;
     }
 
-    Pair *pair = get(state->stackLocation, makeIntKey(state->current->val.tempToPopInto));
-
-    RaVariableLocation *location;
-    if (pair == NULL) {
-        location = NEW(RaVariableLocation);
-        location->useScope = false;
-        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
-
-        insert(state->stackLocation, makeIntKey(state->current->val.tempToPopInto), location);
-        currentSymbolTable->nextSymbolId++;
-    } else {
-        location = pair->v;
-    }
+    RaVariableLocation *location = getLocation(state->current->val.tempToPopInto, state);
 
     state->current->kind = INSTRUCTION_POP_STACK;
     state->current->val.popPushStack.offset = location->offset;
@@ -362,24 +332,13 @@ void handlePushInstruction(int *colors, RaState *state) {
         return;
     }
 
-    Pair *pair = get(state->stackLocation, makeIntKey(state->current->val.tempToPush));
-
-    RaVariableLocation *location;
-    if (pair == NULL) {
-        location = NEW(RaVariableLocation);
-        location->useScope = false;
-        location->offset = currentSymbolTable->nextSymbolId * POINTER_SIZE;
-
-        insert(state->stackLocation, makeIntKey(state->current->val.tempToPush), location);
-        currentSymbolTable->nextSymbolId++;
-    } else {
-        location = pair->v;
-    }
+    RaVariableLocation *location = getLocation(state->current->val.tempToPush, state);
 
     state->current->kind = INSTRUCTION_PUSH_STACK;
     state->current->val.popPushStack.offset = location->offset;
 }
 
+extern size_t maxTemporary;
 /*
  * When we spill we put intermediate products on the stack
  * The position will be the context pointer: rbp + sizeof(var) * varsInContext
@@ -387,6 +346,12 @@ void handlePushInstruction(int *colors, RaState *state) {
 Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
     LivenessAnalysisResult *livenessAnalysisResult = livenessAnalysis(head);
     int *colors = colorGraph(livenessAnalysisResult->sets, livenessAnalysisResult->numberSets, numberRegisters + 1);
+
+    for (int i = 0; i < (int)maxTemporary; i++) {
+        if (colors[i] < 0) {
+            fprintf(stderr, "Temporary %d is spill\n", i);
+        }
+    }
 
     RaState *state = NEW(RaState);
     state->current = head;

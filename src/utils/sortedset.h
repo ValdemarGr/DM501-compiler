@@ -9,6 +9,9 @@
 #ifndef HELLO_SORTEDSET_H
 #define HELLO_SORTEDSET_H
 
+#include <stdio.h>
+#include <string.h>
+
 typedef struct SortedSet {
     int data;
     struct SortedSet *_next;
@@ -18,22 +21,24 @@ SortedSet *initHeadedSortedSet();
 
 SortedSet *initSortedSet(int data);
 
-bool exists(SortedSet *sortedSet, int data);
+bool exists(const SortedSet *sortedSet, int data);
 
 void insertSortedSet(SortedSet *sortedSet, int data);
 
-size_t length(SortedSet *sortedSet);
+size_t length(const SortedSet *sortedSet);
 
-SortedSet *sortedSetUnion(SortedSet *set1, SortedSet *set2);
+SortedSet *sortedSetUnion(const SortedSet *set1, const SortedSet *set2);
 
-SortedSet *sortedSetDiff(SortedSet *set1, SortedSet *set2);
+SortedSet *sortedSetDiff(const SortedSet *set1, const SortedSet *set2);
 
 void freeSortedSet(SortedSet* sortedSet);
 
-SortedSet *iterateSortedSet(SortedSet* set);
+SortedSet *iterateSortedSet(const SortedSet* set);
 
-int sortedSetFirst(SortedSet* set);
+int sortedSetFirst(const SortedSet* set);
 
-SortedSet *first(SortedSet *set);
+SortedSet *first(const SortedSet *set);
+
+char *sortedSetToString(const SortedSet *sortedSet);
 
 #endif //HELLO_SORTEDSET_H

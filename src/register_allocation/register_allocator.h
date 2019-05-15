@@ -49,6 +49,9 @@ typedef struct RaState {
     ConstMap *stackLocation;
 } RaState;
 
+void appendToInstruction(Instructions* i1, Instructions *i2);
+void prependToInstruction(Instructions* i1, Instructions *i2);
+Instructions *makeDebugInstructions(char *text);
 Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H

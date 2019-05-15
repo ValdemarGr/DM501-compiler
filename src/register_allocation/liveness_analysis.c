@@ -490,7 +490,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     }
 
     LineList *successor;
-    bool dataFlowChanged = false;
+    bool dataFlowChanged;
     int lastSize = 0;
 
     do {
@@ -533,13 +533,21 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
         }
     } while (dataFlowChanged);
 
+    /*
+    Instructions *debug;
+    for (int i = 0; i < dataFlowSize; i++) {
+        dataFlowEntry = dataFlow[i];
+
+        char* buffer = sortedSetToString(sortedSetUnion(sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out), dataFlow[i]->intermediates));
+        prependToInstruction(dataFlowEntry->instruction, makeDebugInstructions(buffer));
+    }
+*/
 
     LivenessAnalysisResult *result = NEW(LivenessAnalysisResult);
     result->numberSets = dataFlowSize;
     result->sets = malloc(sizeof(SortedSet) * dataFlowSize);
     for (int i = 0; i < dataFlowSize; ++i) {
         result->sets[i] = sortedSetUnion(sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out), dataFlow[i]->intermediates);
-        freeDataFlowEntry(dataFlow[i]);
     }
 
     return result;

@@ -23,14 +23,18 @@ function compile_kitty_file {
         error="Segmentation fault (core dumped)"
     fi
 
-    if [[ -n "$error" ]]; then
+    if [[ ${status} -ne 0 ]]; then
         echo -ne "\e[1m\e[31m"
-        echo "$error"
+        echo -e "$error"
         echo -ne "\e[0m"
         echo
         return 1
     fi
 
+
+    (>&2 echo -ne "\e[2m")
+    (>&2 echo -e "$error")
+    (>&2 echo -ne "\e[0m")
     echo "$output_file"
     return 0
 }
@@ -68,7 +72,7 @@ if [[ ${ret} -eq 0 ]]; then
 
     if [[ ${ret} -eq 0 ]]; then
         echo "Compiled to binary. $binary"
-        echo
+        echo "---"
         ${binary}
         ret=$?
         if [[ ${ret} -ne 0 ]]; then
@@ -79,10 +83,10 @@ if [[ ${ret} -eq 0 ]]; then
         fi
     else
         echo "Failed to compile assembly to binary"
-        echo ${asm_file}
+        echo -e "$asm_file"
     fi
 else
     echo "Failed to compile Kitty to assembly"
-    echo ${asm_file}
+    echo -e "$asm_file"
 fi
 

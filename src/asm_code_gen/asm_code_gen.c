@@ -270,14 +270,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case INSTRUCTION_PUSH_STACK: {
             fprintf(out, "# INSTRUCTION_PUSH_STACK\n");
             printIndentation(out);
-            fprintf(out, "push %d(%%rbp)\n",
-                    (int)instruction->val.popPushStack.offset);
+            fprintf(out, "push -%zu(%%rbp)\n",
+                    instruction->val.popPushStack.offset + offsetForFunction * POINTER_SIZE);
         } break;
         case INSTRUCTION_POP_STACK: {
             fprintf(out, "# INSTRUCTION_POP_STACK\n");
             printIndentation(out);
-            fprintf(out, "pop %d(%%rbp)\n",
-                    (int)instruction->val.popPushStack.offset);
+            fprintf(out, "pop -%zu(%%rbp)\n",
+                    instruction->val.popPushStack.offset + offsetForFunction * POINTER_SIZE);
         } break;
         case INSTRUCTION_NEGATE: {
             fprintf(out, "# INSTRUCTION_NEGATE\n");
@@ -297,18 +297,18 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_CONSTRAIN_BOOLEAN: {
             fprintf(out, "# COMPLEX_CONSTRAIN_BOOLEAN\n");
             printIndentation(out);
-            fprintf(out, "push %%rdx\n");
+            fprintf(out, "push %%rax\n");
             printIndentation(out);
             fprintf(out, "cmp $0, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
             printIndentation(out);
-            fprintf(out, "setg %%dl\n");
+            fprintf(out, "setg %%al\n");
             printIndentation(out);
-            fprintf(out, "movsx %%dl, %%%s\n",
+            fprintf(out, "movsx %%al, %%%s\n",
                     getNextRegister(instruction->val.tempToConstrain));
 
             printIndentation(out);
-            fprintf(out, "pop %%rdx\n");
+            fprintf(out, "pop %%rax\n");
         } break;
             /*case COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE: {
                 fprintf(out, "# COMPLEX_LOAD_VARIABLE_POINTER_FROM_STACK_IN_SCOPE\n");

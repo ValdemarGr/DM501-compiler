@@ -214,6 +214,7 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
         }
 
         if (instructionHead == NULL) {
+            toReplaceTo->previous = toReplaceFrom;
             toReplaceFrom->next = toReplaceTo;
         } else {
             toReplaceFrom->next = instructionHead;
