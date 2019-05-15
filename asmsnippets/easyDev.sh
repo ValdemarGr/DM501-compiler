@@ -1,5 +1,6 @@
+#!/usr/bin/env bash
 cd ../build-files
-rm compiler
+rm compiler || true
 make compiler
 ./compiler -mem=1000 < ./../kitty/$1.kitty > ./../asmsnippets/run.s
 cd ./../asmsnippets

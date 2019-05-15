@@ -132,6 +132,10 @@ fp = 0-1; (* Final profit *)
 fw = 0; (* Final weight *)
 fe = 0; (* Final elements *)
 
+write |w|;
+write |p|;
+write |x|;
+
 (* Initialisering til pseudorandom generator *)
 rand = 1;
 a = 40;
