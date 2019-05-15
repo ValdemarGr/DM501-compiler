@@ -462,6 +462,10 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                 state->current->val.art2const.temp =
                         getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
                 break;
+            case INSTRUCTION_SUB_CONST:
+                state->current->val.art2const.temp =
+                        getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
+                break;
             case INSTRUCTION_MOVE_TO_OFFSET:
                 temporaries = makeTemporary(state->current->val.moveToOffset.tempToMove, RaRead);
                 temporaries->next = makeTemporary(state->current->val.moveToOffset.offsetTemp, RaRead);

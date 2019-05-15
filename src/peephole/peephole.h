@@ -28,6 +28,7 @@ typedef struct SimpleInstruction {
 typedef enum {
     REMOVE_CONST_REGISTER_ADD,
     REMOVE_CONST_REGISTER_MUL,
+    REMOVE_CONST_REGISTER_SUB,
     REMOVE_PUSH_POP,
     CONST_ZERO_TO_SET_ZERO,
     CONST_ADD_TO_LEA,

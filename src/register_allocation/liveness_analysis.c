@@ -362,7 +362,17 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 break;
             case INSTRUCTION_MUL_CONST: {
                 dataFlowEntry = initDataFlowEntry();
-                
+
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.art2const.temp);
+
+                insertSortedSet(dataFlowEntry->uses, (int) iter->val.art2const.temp);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+            }
+                break;
+            case INSTRUCTION_SUB_CONST: {
+                dataFlowEntry = initDataFlowEntry();
+
                 insertSortedSet(dataFlowEntry->defines, (int) iter->val.art2const.temp);
 
                 insertSortedSet(dataFlowEntry->uses, (int) iter->val.art2const.temp);

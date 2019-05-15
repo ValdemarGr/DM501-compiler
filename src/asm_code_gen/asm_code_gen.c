@@ -787,6 +787,13 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     instruction->val.art2const.constant,
                     getNextRegister(instruction->val.art2const.temp));
         } break;
+        case INSTRUCTION_SUB_CONST: {
+            fprintf(out, "# INSTRUCTION_SUB_CONST\n");
+            printIndentation(out);
+            fprintf(out, "sub $%i, %%%s\n",
+                    instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp));
+        } break;
         case METADATA_BEGIN_ARITHMETIC_EVALUATION: {
 
         } break;

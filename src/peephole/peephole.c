@@ -72,6 +72,20 @@ PeepholeTemplates *generateRulesetsForSize() {
     {
         size_t registerTrackerForBlock = ANY + 1;
 
+        SimpleInstruction *movConst = NEW(SimpleInstruction);
+        movConst->kind = INSTRUCTION_CONST;
+        registerTrackerForBlock++;
+
+        SimpleInstruction *sub = NEW(SimpleInstruction);
+        sub->kind = INSTRUCTION_MINUS;
+        registerTrackerForBlock++;
+        appendInstruction(movConst, sub);
+        addInstructionTemplate(peepholeTemplates, movConst, REMOVE_CONST_REGISTER_SUB, 2);
+    }
+
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
         SimpleInstruction *push = NEW(SimpleInstruction);
         push->kind = INSTRUCTION_PUSH;
         registerTrackerForBlock++;
@@ -100,7 +114,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = INSTRUCTION_ADD_CONST;
         registerTrackerForBlock++;
 
-        addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
+        //addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
     }
 
     {
@@ -175,6 +189,17 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                 instructionHead->kind = INSTRUCTION_MUL_CONST;
                 instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
                 instructionsIter = skipToNextImportantInstruction(instructionsIter->next);
+                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                currentInstruction = instructionHead;
+                templateApplied = true;
+            }
+        } break;
+        case REMOVE_CONST_REGISTER_SUB: {
+            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+                instructionHead = newInstruction();
+                instructionHead->kind = INSTRUCTION_SUB_CONST;
+                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
+                instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
                 instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
                 currentInstruction = instructionHead;
                 templateApplied = true;
