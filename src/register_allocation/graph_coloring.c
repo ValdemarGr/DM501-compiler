@@ -11,6 +11,7 @@
 extern size_t maxTemporary;
 
 typedef struct Node {
+    int id;
     int  value;
     struct Node* next;
     bool beenSimplified;
@@ -26,7 +27,8 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
 
     //Init Empty graph
     for (int i = 0; i < max_size; i++) {
-        graph[i].value = -1;
+        graph[i].value = 0;
+        graph[i].id = i;
         graph[i].next = NULL;
         graph[i].beenSimplified = false;
     }
@@ -47,15 +49,17 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 if(pos1->data != pos2->data){
                     Node *iterator = &graph[pos1->data];
                     while (iterator != NULL){
+                        if(iterator->value == pos2->data){
+                            break;
+                        }
                         if(iterator->next == NULL){
                             Node *tempNode = NEW(Node);
                             tempNode->value = pos2->data;
+                            tempNode->id = pos2->data;
                             tempNode->next = NULL;
+
                             iterator->next = tempNode;
                             graph[pos2->data].value++;
-                            break;
-                        }
-                        if(iterator->value == pos1->data){
                             break;
                         }
                         iterator = iterator->next;
@@ -73,8 +77,8 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
     bool couldSimplify = true;
     int stackSize = 0;
     int nodesRemoved = 1;
-    Node *toRemove = NULL;
     int toRemoveIndex = 0;
+    int toRemoveCount = 0;
 
     graph[0].beenSimplified = true;
     //Simplify
@@ -95,9 +99,9 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
                 graph[i].beenSimplified = true;
                 couldSimplify = true;
                 nodesRemoved++;
-            } else if (!graph[i].beenSimplified) {
-                toRemove = &graph[i];
+            } else if (!graph[i].beenSimplified && toRemoveCount < graph[i].value) {
                 toRemoveIndex = i;
+                toRemoveCount = graph[i].value;
             }
         }
 
@@ -106,19 +110,20 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
          * assume that it will spill
          */
         if (!couldSimplify && nodesRemoved < max_size) {
-                Node *iterator = toRemove->next;
-                while (iterator != NULL) {
-                    if (!graph[iterator->value].beenSimplified) {
-                        graph[iterator->value].value--;
-                    }
-                    iterator = iterator->next;
+            Node *iterator = graph[toRemoveIndex].next;
+            while (iterator != NULL) {
+                if (!graph[iterator->value].beenSimplified) {
+                    graph[iterator->value].value--;
                 }
-                toRemove->value = toRemoveIndex;
-                push(removedStack, (void *) toRemove);
-                toRemove->beenSimplified = true;
-                couldSimplify = true;
-                nodesRemoved++;
+                iterator = iterator->next;
+            }
+            graph[toRemoveIndex].value = toRemoveIndex;
+            push(removedStack, (void *) &graph[toRemoveIndex]);
+            graph[toRemoveIndex].beenSimplified = true;
+            couldSimplify = true;
+            nodesRemoved++;
         }
+        toRemoveCount = 0;
     }
 
     bool colorFound;
@@ -157,7 +162,6 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
         }
 
         if (!colorFound) {
-            fprintf(stderr, "Temporary %d has been spilled\n", poppedNode->value);
             color_overview[poppedNode->value] = -1;
         }
     }
@@ -184,7 +188,6 @@ int *colorGraph(SortedSet **livenessResult, int numberOfSets,  int colors){
          * node
          */
         if (!colorFound) {
-            fprintf(stderr, "Temporary %d has been spilled by chance\n", poppedNode->value);
             color_overview[poppedNode->value] = -1;
             break;
         }
