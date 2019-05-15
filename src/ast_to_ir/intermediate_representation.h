@@ -63,6 +63,7 @@ typedef enum {
     INSTRUCTION_LEA_TO_OFFSET,
     INSTRUCTION_REGISTER_CALL,
     INSTRUCTION_ADD_STACK_PTR,
+    INSTRUCTION_LOAD_STACK_PTR,
     INSTRUCTION_SET_ZERO,
     INSTRUCTION_LEA_ADD,
     INSTRUCTION_LEA_ADD_CONST,
@@ -120,7 +121,7 @@ typedef struct Instructions {
         SYMBOL *var; //INSTRUCTION_VAR
         struct { size_t timesTemp; size_t eleSize; SortedSet *pointerSet; AllocationType allocationType; size_t intermediate; } allocate;
         struct {char* label; size_t distance; size_t temporary; SymbolTable *tableForFunction; SortedSet *pointerSet; } functionHead; //INSTRUCTION_FUNCTION_LABEL & INSTRUCTION_FUNCTION_END
-        char* function; //INSTRUCTION_CALL
+        struct {char* function; Instructions *save; Instructions *restore; } functionCall; //INSTRUCTION_CALL
         size_t callRegister;
         struct {size_t temporary; char* lambdaGlobalName; } lambdaLoad;
         struct {size_t argNum; size_t moveReg; size_t stackNum; } args; //METADATA_FUNCTION_ARGUMENT
@@ -147,9 +148,11 @@ typedef struct Instructions {
         struct { int constant; size_t temp; } art2const;
         struct { size_t offsetTemp; size_t ptrTemp; size_t returnTemp; } dereferenceOffset;
         struct { size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
+        struct SortedSet *restoreSave;
 
         struct { int constant; size_t resultTemp; } leaConstAdd;
         struct { size_t source; size_t dest; } leaDynamicAdd;
+        struct {size_t temp; int offset; } loadStackPtr;
 
         struct {size_t arrPtr; size_t exprTemp; } arrayBounds;
         size_t divZeroTemp;

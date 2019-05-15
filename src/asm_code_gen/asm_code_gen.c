@@ -975,7 +975,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_SAVE_ALL: {
             fprintf(out, "# COMPLEX_SAVE_ALL\n");
-
+/*
             printIndentation(out);
             fprintf(out, "pushq %%rcx\n");
             printIndentation(out);
@@ -1001,12 +1001,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "pushq %%r14\n");
             printIndentation(out);
-            fprintf(out, "pushq %%r15\n");
+            fprintf(out, "pushq %%r15\n");*/
 
         } break;
         case COMPLEX_RESTORE_ALL: {
             fprintf(out, "# COMPLEX_RESTORE_ALL\n");
-
+/*
             printIndentation(out);
             fprintf(out, "popq %%r15\n");
             printIndentation(out);
@@ -1032,7 +1032,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "popq %%rdx\n");
             printIndentation(out);
-            fprintf(out, "popq %%rcx\n");
+            fprintf(out, "popq %%rcx\n");*/
 
         } break;
         case INSTRUCTION_ADD_STACK_PTR: {
@@ -1111,6 +1111,15 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.art2const.temp),
                     getNextRegister(instruction->val.art2const.temp));
         } break;
+        case INSTRUCTION_LOAD_STACK_PTR: {
+            fprintf(out, "# INSTRUCTION_LOAD_STACK_PTR\n");
+            printIndentation(out);
+            fprintf(out, "movq %i(%%rsp), %%%s\n",
+                    instruction->val.loadStackPtr.offset,
+                    getNextRegister(instruction->val.loadStackPtr.temp));
+        } break;
+        case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+        case NOOP:break;
     }
 }
 

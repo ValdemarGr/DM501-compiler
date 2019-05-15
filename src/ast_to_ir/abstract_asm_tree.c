@@ -536,10 +536,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 expressionList = expressionList->next;
             }
 
+            Instructions *call;
 
             if (symbol->value->kind == typeFunctionK && symbol->value->val.typeFunctionD.isLambda) {
 
-                Instructions *call = newInstruction();
+                call = newInstruction();
                 call->kind = INSTRUCTION_REGISTER_CALL;
                 call->val.callRegister = functionToCall;
                 appendInstructions(call);
@@ -609,7 +610,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //currentTemporary++;
 
                 //Then call
-                Instructions *call = newInstruction();
+                call = newInstruction();
                 call->kind = INSTRUCTION_REGISTER_CALL;
                 call->val.callRegister = fncPtrTemp;
                 appendInstructions(call);
@@ -621,9 +622,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
                 sprintf(buf, "%s__%i", baseName, (int)symbol->distanceFromRoot);
 
-                Instructions *call = newInstruction();
+                call = newInstruction();
                 call->kind = INSTRUCTION_FUNCTION_CALL;
-                call->val.function = buf;
+                call->val.functionCall.function = buf;
+                call->val.functionCall.restore = NULL;
+                call->val.functionCall.save = NULL;
                 appendInstructions(call);
             }
 
@@ -635,6 +638,9 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             Instructions *restoreall = newInstruction();
             restoreall->kind = COMPLEX_RESTORE_ALL;
             appendInstructions(restoreall);
+
+            call->val.functionCall.restore = restoreall;
+            call->val.functionCall.save = saveall;
 
             //Return value is in rax
 
@@ -1120,6 +1126,9 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             Instructions *restoreall = newInstruction();
             restoreall->kind = COMPLEX_RESTORE_ALL;
             appendInstructions(restoreall);
+
+            call->val.functionCall.restore = restoreall;
+            call->val.functionCall.save = saveall;
 
             //We need to restore the static link
             Instructions *popLink = newInstruction();
@@ -1613,7 +1622,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
 
                     Instructions *call = newInstruction();
                     call->kind = INSTRUCTION_FUNCTION_CALL;
-                    call->val.function = buf;
+                    call->val.functionCall.function = buf;
                     appendInstructions(call);
 
                     Instructions *sp = newInstruction();
@@ -1903,7 +1912,7 @@ void generateInstructionTreeForStatement(Statement *statement) {
         case gcDebugK : {
             Instructions *gcdebug = newInstruction();
             gcdebug->kind = INSTRUCTION_FUNCTION_CALL;
-            gcdebug->val.function = "gcPrintDebug";
+            gcdebug->val.functionCall.function = "gcPrintDebug";
             appendInstructions(gcdebug);
         } break;
     }
