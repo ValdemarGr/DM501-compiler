@@ -106,15 +106,15 @@ int compile_file(FILE *file) {
     Instructions *instructions = generateInstructionTree(theexpression);
 
     if (dePeephole) {
-        peephole(instructions);
+        //peephole(instructions);
     }
 
     if (dePeephole) {
-        simpleRegisterAllocation(instructions, 13);
+        //simpleRegisterAllocation(instructions, 13);
     }
 
     if (dePeephole) {
-        peephole(instructions);
+        //peephole(instructions);
     }
 
     generate(stdout, instructions);
