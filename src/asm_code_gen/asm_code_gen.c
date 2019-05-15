@@ -186,10 +186,14 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "movq %%%s, %%r10\n",
                     getNextRegister(instruction->val.arithmetic2.dest));
             printIndentation(out);
+            fprintf(out, "pushq %%rdx\n");
+            printIndentation(out);
             fprintf(out, "cqto\n");
             printIndentation(out);
             fprintf(out, "idiv %%r10\n");
 
+            printIndentation(out);
+            fprintf(out, "popq %%rdx\n");
             printIndentation(out);
             fprintf(out, "popq %%r10\n");
             printIndentation(out);

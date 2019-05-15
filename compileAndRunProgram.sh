@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-compiler=./cmake-build-debug/src/compiler
+compiler=./cmake-build-debug-local-container/src/compiler
 output_directory_asm=./build-kitty
 output_directory_bin=./build-kitty
 
