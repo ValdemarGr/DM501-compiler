@@ -160,7 +160,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
                 memberAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
                 memberAccess->val.dereferenceOffset.ptrTemp = classPtrTemp;
                 memberAccess->val.dereferenceOffset.offsetTemp = constOffsetTemp;
-                //memberAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+                memberAccess->val.dereferenceOffset.size = 1;
                 //classPtrTemp = currentTemporary;
                 appendInstructions(memberAccess);
                 //currentTemporary++;
@@ -220,7 +220,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
             ptrAccess->val.dereferenceOffset.ptrTemp = accessTemp;
             ptrAccess->val.dereferenceOffset.offsetTemp = exprTemp;
-            //ptrAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+            ptrAccess->val.dereferenceOffset.size = 1;
             //accessTemp = currentTemporary;
             appendInstructions(ptrAccess);
             //currentTemporary++;
@@ -293,7 +293,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
             ptrAccess->val.dereferenceOffset.ptrTemp = accessTemp;
             ptrAccess->val.dereferenceOffset.offsetTemp = currentTemporary - 1;
-            //ptrAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+            ptrAccess->val.dereferenceOffset.size = 1;
             //accessTemp = currentTemporary;
             appendInstructions(ptrAccess);
             //currentTemporary++;
@@ -570,7 +570,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 capturePtr->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
                 capturePtr->val.dereferenceOffset.ptrTemp = fncPtrTemp;
                 capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
-                //capturePtr->val.dereferenceOffset.returnTemp = currentTemporary;
+                capturePtr->val.dereferenceOffset.size = 1;
                 //fncPtrTemp = currentTemporary;
                 appendInstructions(capturePtr);
                 //currentTemporary++;
@@ -603,7 +603,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
                 ptrAccess->val.dereferenceOffset.ptrTemp = fncPtrTemp;
                 ptrAccess->val.dereferenceOffset.offsetTemp = numTemp;
-                //ptrAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+                ptrAccess->val.dereferenceOffset.size = 1;
                 //fncPtrTemp = currentTemporary;
                 appendInstructions(ptrAccess);
                 //currentTemporary++;
@@ -700,7 +700,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
                 ptrAccess->val.dereferenceOffset.ptrTemp = tempToAbsOn;
                 ptrAccess->val.dereferenceOffset.offsetTemp = currentTemporary - 1;
-                //ptrAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+                ptrAccess->val.dereferenceOffset.size = 1;
                 //size_t resultTemp = currentTemporary;
                 appendInstructions(ptrAccess);
                 //currentTemporary++;
@@ -1068,7 +1068,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             capturePtr->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
             capturePtr->val.dereferenceOffset.ptrTemp = fncPtrTemp;
             capturePtr->val.dereferenceOffset.offsetTemp = captureTemp;
-            //capturePtr->val.dereferenceOffset.returnTemp = currentTemporary;
+            capturePtr->val.dereferenceOffset.size = 1;
             //fncPtrTemp = currentTemporary;
             appendInstructions(capturePtr);
             //currentTemporary++;
@@ -1101,7 +1101,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
             ptrAccess->val.dereferenceOffset.ptrTemp = fncPtrTemp;
             ptrAccess->val.dereferenceOffset.offsetTemp = numTemp;
-            //ptrAccess->val.dereferenceOffset.returnTemp = currentTemporary;
+            ptrAccess->val.dereferenceOffset.size = 1;
             //fncPtrTemp = currentTemporary;
             appendInstructions(ptrAccess);
             //currentTemporary++;
@@ -1373,6 +1373,7 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
 Instructions *newInstruction() {
     Instructions *ret = NEW(Instructions);
 
+    ret->dataFlowEntry = NULL;
     ret->next = NULL;
     //ret->context = NULL;
 

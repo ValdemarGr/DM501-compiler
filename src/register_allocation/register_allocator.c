@@ -13,12 +13,24 @@ size_t timestamp = 0;
 
 SymbolTable *currentSymbolTable = NULL;
 
+DataFlowEntry *mergeDataFlowEntries(const DataFlowEntry *d1, const DataFlowEntry *d2) {
+    if (d1 == NULL || d2 == NULL) {
+        return NULL;
+    }
+
+    DataFlowEntry *newData = NEW(DataFlowEntry);
+
+    newData->defines = sortedSetUnion(d1->defines, d2->defines);
+    newData->uses = sortedSetUnion(d1->uses, d2->uses);
+    newData->in = sortedSetUnion(d1->in, d2->in);
+    newData->out = sortedSetUnion(d1->out, d2->out);
+}
+
 Instructions *makeDebugInstructions(char *text) {
-    Instructions *instructions = NEW(Instructions);
+    Instructions *instructions = newInstruction();
     instructions->kind = METADATA_DEBUG_INFO;
     instructions->val.debugInfo = text;
     instructions->previous = NULL;
-    instructions->next = NULL;
 
     return instructions;
 }
@@ -70,12 +82,12 @@ int getTemporary(int *colors, int temporary, RaState *state) {
 
     int reg = sortedSetFirst(regs);
 
-    Instructions *pushInstruction = NEW(Instructions);
+    Instructions *pushInstruction = newInstruction();
     pushInstruction->kind = INSTRUCTION_PUSH;
     pushInstruction->val.tempToPush = reg;
     appendToInstruction(state->previous, pushInstruction);
 
-    Instructions *popInstruction = NEW(Instructions);
+    Instructions *popInstruction = newInstruction();
     popInstruction->kind = INSTRUCTION_POP;
     popInstruction->val.tempToPopInto = reg;
     appendToInstruction(state->current, popInstruction);
@@ -121,7 +133,7 @@ RaVariableLocation *getLocation(int temporary, RaState *state) {
 void readFromStack(int* colors, int temporary, int reg, RaState *state) {
     RaVariableLocation *location = getLocation(temporary, state);
 
-    Instructions *read = NEW(Instructions);
+    Instructions *read = newInstruction();
 
     if (location->useScope) {
         read->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE;
@@ -146,7 +158,7 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
 void writeToStack(int* colors, int temporary, int reg, RaState *state) {
     RaVariableLocation *location = getLocation(temporary, state);
 
-    Instructions *write = NEW(Instructions);
+    Instructions *write = newInstruction();
 
     if (location->useScope) {
         write->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE;
@@ -263,14 +275,14 @@ int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
     SortedSet *regs = sortedSetDiff(state->allRegs, state->regsInUse);
     int reg = sortedSetFirst(regs);
 
-    Instructions *pushInstruction = NEW(Instructions);
+    Instructions *pushInstruction = newInstruction();
     pushInstruction->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
     pushInstruction->val.tempIntoStack.tempToMove = reg;
     pushInstruction->val.tempIntoStack.offset = offset;
 
     appendToInstruction(state->current, pushInstruction);
 
-    Instructions *popInstruction = NEW(Instructions);
+    Instructions *popInstruction = newInstruction();
     popInstruction->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
     popInstruction->val.tempFromStack.inputTemp = reg;
     popInstruction->val.tempFromStack.offset = offset;
@@ -345,7 +357,7 @@ extern size_t maxTemporary;
  * When we spill we put intermediate products on the stack
  * The position will be the context pointer: rbp + sizeof(var) * varsInContext
  */
-Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
+int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
     LivenessAnalysisResult *livenessAnalysisResult = livenessAnalysis(head);
     int *colors = colorGraph(livenessAnalysisResult->sets, livenessAnalysisResult->numberSets, numberRegisters + 1);
 
@@ -635,5 +647,5 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
         state->current = nextInstruction;
     }
 
-    return head;
+    return colors;
 }

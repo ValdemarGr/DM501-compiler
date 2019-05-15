@@ -822,10 +822,10 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
             fprintf(out, "# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET\n");
             printIndentation(out);
-            fprintf(out, "mov (%%%s, %%%s,1), %%%s\n",
+            fprintf(out, "mov (%%%s, %%%s, %zu), %%%s\n",
                     getNextRegister(instruction->val.dereferenceOffset.ptrTemp),
                     getNextRegister(instruction->val.dereferenceOffset.offsetTemp),
-                    //getNextRegister(instruction->val.dereferenceOffset.returnTemp));
+                    instruction->val.dereferenceOffset.size,
                     getNextRegister(instruction->val.dereferenceOffset.ptrTemp));
         } break;
         case INSTRUCTION_MOVE_TO_OFFSET: {

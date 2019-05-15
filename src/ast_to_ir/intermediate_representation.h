@@ -109,10 +109,12 @@ typedef enum {
     ALLOC_LAMBDA
 } AllocationType;
 
+struct DataFlowEntry;
 typedef struct Instructions {
     struct Instructions* next;
     struct Instructions* previous;
     InstructionKind kind;
+    struct DataFlowEntry *dataFlowEntry;
     union {
         Arithmetic2 arithmetic2; //INSTRUCTION_ADD..
         Arithmetic3 arithmetic3;
@@ -145,7 +147,7 @@ typedef struct Instructions {
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToMove; } moveToOffset;
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
-        struct { size_t offsetTemp; size_t ptrTemp; size_t returnTemp; } dereferenceOffset;
+        struct { size_t offsetTemp; size_t ptrTemp; size_t size; } dereferenceOffset;
         struct { size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
 
         struct { int constant; size_t resultTemp; } leaConstAdd;

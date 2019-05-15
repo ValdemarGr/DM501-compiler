@@ -4,9 +4,11 @@
 
 #include "peephole.h"
 #include "../ast_to_ir/intermediate_representation.h"
+#include "../register_allocation/liveness_analysis.h"
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions);
 
+bool instructionsChanged;
 Instructions *lookForDupFetches(Instructions *original, Instructions *current, InstructionKind ik) {
     if (current->kind != ik) {
         return lookForDupFetches(original, current->previous, ik);
@@ -325,34 +327,40 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
 
     switch (apply) {
         case REMOVE_CONST_REGISTER_ADD: {
-            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+            Instructions *cons = instructionsIter;
+            Instructions *add = skipToNextImportantInstruction(instructionsIter->next);
+            if (cons->val.constant.temp == add->val.arithmetic2.source) {
                 instructionHead = newInstruction();
                 instructionHead->kind = INSTRUCTION_ADD_CONST;
-                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
-                instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
-                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                instructionHead->val.art2const.constant = cons->val.constant.value;
+                instructionHead->val.art2const.temp = add->val.arithmetic2.dest;
+                instructionHead->dataFlowEntry = mergeDataFlowEntries(cons->dataFlowEntry, add->dataFlowEntry);
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
         } break;
         case REMOVE_CONST_REGISTER_MUL: {
-            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+            Instructions *cons = instructionsIter;
+            Instructions *mul = skipToNextImportantInstruction(instructionsIter->next);
+            if (cons->val.constant.temp == mul->val.arithmetic2.source) {
                 instructionHead = newInstruction();
                 instructionHead->kind = INSTRUCTION_MUL_CONST;
-                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
-                instructionsIter = skipToNextImportantInstruction(instructionsIter->next);
-                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                instructionHead->val.art2const.constant = cons->val.constant.value;
+                instructionHead->val.art2const.temp = mul->val.arithmetic2.dest;
+                instructionHead->dataFlowEntry = mergeDataFlowEntries(cons->dataFlowEntry, mul->dataFlowEntry);
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
         } break;
         case REMOVE_CONST_REGISTER_SUB: {
-            if (instructionsIter->val.constant.temp == skipToNextImportantInstruction(instructionsIter->next)->val.arithmetic2.source) {
+            Instructions *cons = instructionsIter;
+            Instructions *sub = skipToNextImportantInstruction(instructionsIter->next);
+            if (cons->val.constant.temp == sub->val.arithmetic2.source) {
                 instructionHead = newInstruction();
                 instructionHead->kind = INSTRUCTION_SUB_CONST;
-                instructionHead->val.art2const.constant = instructionsIter->val.constant.value;
-                instructionsIter =  skipToNextImportantInstruction(instructionsIter->next);
-                instructionHead->val.art2const.temp = instructionsIter->val.arithmetic2.dest;
+                instructionHead->val.art2const.constant = cons->val.constant.value;
+                instructionHead->val.art2const.temp = sub->val.arithmetic2.dest;
+                instructionHead->dataFlowEntry = mergeDataFlowEntries(cons->dataFlowEntry, sub->dataFlowEntry);
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
@@ -369,6 +377,7 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                 instructionHead = newInstruction();
                 instructionHead->kind = INSTRUCTION_SET_ZERO;
                 instructionHead->val.tempToSetZero = instructionsIter->val.constant.temp;
+                instructionHead->dataFlowEntry = instructionsIter->dataFlowEntry;
                 currentInstruction = instructionHead;
                 templateApplied = true;
             }
@@ -378,6 +387,7 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
             instructionHead->kind = INSTRUCTION_LEA_ADD_CONST;
             instructionHead->val.art2const.constant = instructionsIter->val.art2const.constant;
             instructionHead->val.art2const.temp = instructionsIter->val.art2const.temp;
+            instructionHead->dataFlowEntry = instructionsIter->dataFlowEntry;
             currentInstruction = instructionHead;
             templateApplied = true;
         } break;
@@ -386,6 +396,7 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
             instructionHead->kind = INSTRUCTION_LEA_ADD;
             instructionHead->val.arithmetic2.dest = instructionsIter->val.arithmetic2.dest;
             instructionHead->val.arithmetic2.source = instructionsIter->val.arithmetic2.source;
+            instructionHead->dataFlowEntry = instructionsIter->dataFlowEntry;
             currentInstruction = instructionHead;
             templateApplied = true;
         } break;
@@ -424,6 +435,7 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
             toReplaceTo->previous = currentInstruction;
         }
 
+        instructionsChanged = true;
         return toReplaceFrom;
     }
     return instrHead;
@@ -499,14 +511,17 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case RUNTIME_DIV_ZERO: { return instructions; } break;
         case INSTRUCTION_LEA_ADD:{ return instructions; } break;
         case INSTRUCTION_LEA_ADD_CONST:{ return instructions; } break;
+        case INSTRUCTION_SUB_CONST:{ return instructions; } break;
+        case NOOP:{ return skipToNextImportantInstruction(instructions->next); } break;
     }
 }
 
-void peephole(Instructions *instructions) {
+bool peephole(Instructions *instructions) {
     PeepholeTemplates *peepholeTemplates = generateRulesetsForSize();
 
     Instructions *iter = instructions;
     bool notEqual;
+    instructionsChanged = false;
 
     int amountOfTimesIterPeepholed = 0;
     while (iter != NULL) {
@@ -555,4 +570,6 @@ void peephole(Instructions *instructions) {
 
         iter = iter->next;
     }
+
+    return instructionsChanged;
 }

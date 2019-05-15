@@ -59,6 +59,6 @@ typedef struct PeepholeTemplateList{
     struct PeepholeTemplateList *next;
 } PeepholeTemplateList;
 
-void peephole(Instructions *instructions);
+bool peephole(Instructions *instructions);
 
 #endif //HELLO_PEEPHOLE_H

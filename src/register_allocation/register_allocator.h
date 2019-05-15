@@ -52,7 +52,8 @@ typedef struct RaState {
 void appendToInstruction(Instructions* i1, Instructions *i2);
 void prependToInstruction(Instructions* i1, Instructions *i2);
 Instructions *makeDebugInstructions(char *text);
-Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters);
+int *simpleRegisterAllocation(Instructions *head, int numberRegisters);
+struct DataFlowEntry *mergeDataFlowEntries(const struct DataFlowEntry *d1, const struct DataFlowEntry *d2);
 
 #endif //HELLO_REGISTER_ALLOCATOR_H
 

@@ -57,6 +57,7 @@ Instructions *iter;
 DataFlowEntry *initDataFlowEntry() {
     DataFlowEntry *dataFlowEntry = NEW(DataFlowEntry);
     dataFlowEntry->instruction = iter;
+    iter->dataFlowEntry = dataFlowEntry;
     dataFlowEntry->successors = NULL;
     dataFlowEntry->function = NULL;
     dataFlowEntry->out = NULL;
