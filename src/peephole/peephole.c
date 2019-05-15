@@ -276,7 +276,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
         registerTrackerForBlock++;
 
-        addInstructionTemplate(peepholeTemplates, add, ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK, 1);
+        //addInstructionTemplate(peepholeTemplates, add, ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK, 1);
     }
 
     {

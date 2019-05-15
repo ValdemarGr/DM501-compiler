@@ -121,7 +121,7 @@ VDLResult *generateVDLForClassDecls(VarDelList *currentTail, Declaration *declar
     return r;
 }
 
-size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *symbolTable) {
+size_t generateInstructionsForVariableAccessInternal(Variable *variable, SymbolTable *symbolTable) {
     switch (variable->kind) {
         case varIdK: {
             SYMBOL *symbol = getSymbol(symbolTable, variable->val.idD.id);
@@ -187,7 +187,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             }
         } break;
         case arrayIndexK: {
-            size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
+            size_t accessTemp = generateInstructionsForVariableAccessInternal(variable->val.arrayIndexD.var, symbolTable);
 
             Instructions *check = newInstruction();
             check->kind = RUNTIME_NULLPTR_CHECK;
@@ -227,7 +227,7 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             return accessTemp;
         } break;
         case recordLookupK: {
-            size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
+            size_t accessTemp = generateInstructionsForVariableAccessInternal(variable->val.recordLookupD.var, symbolTable);
 
             Instructions *check = newInstruction();
             check->kind = RUNTIME_NULLPTR_CHECK;
@@ -300,6 +300,55 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
             return accessTemp;
         } break;
     }
+}
+
+char *generateVariableUniqueId(Variable* variable, SymbolTable *symbolTable) {
+    switch (variable->kind) {
+        case varIdK: {
+            SYMBOL *sym = getSymbol(symbolTable, variable->val.idD.id);
+            char *toReturnId = malloc(sizeof(char) * (strlen(variable->val.idD.id) + 10));
+
+            sprintf(toReturnId, "%s%i", variable->val.idD.id, (int)sym->distanceFromRoot);
+
+            return toReturnId;
+        } break;
+        case arrayIndexK: {
+            return NULL;
+        } break;
+        case recordLookupK: {
+            char *inner = generateVariableUniqueId(variable->val.recordLookupD.var, symbolTable);
+
+            if (inner == NULL) return NULL;
+
+            char *newBuf = malloc(sizeof(char) * (strlen(inner) + strlen(variable->val.recordLookupD.id)));
+
+            sprintf(newBuf, "%s.%s", inner, variable->val.recordLookupD.id);
+
+            return newBuf;
+        } break;
+    }
+
+    return "";
+}
+
+size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *symbolTable) {
+    char *accessId = generateVariableUniqueId(variable, symbolTable);
+
+    if (accessId != NULL) {
+        Instructions *metadataBeginAccess = newInstruction();
+        metadataBeginAccess->kind = METADATA_ACCESS_VARIABLE_START;
+        metadataBeginAccess->val.accessId = accessId;
+    }
+
+    size_t toReturn = generateInstructionsForVariableAccessInternal(variable, symbolTable);
+
+    if (accessId != NULL) {
+        Instructions *metadataBeginAccess = newInstruction();
+        metadataBeginAccess->kind = METADATA_ACCESS_VARIABLE_END;
+        metadataBeginAccess->val.accessId = accessId;
+    }
+
+    return toReturn;
 }
 
 void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbolTable, size_t tempToSave, bool forArrayLen) {
@@ -892,7 +941,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //CREATE THE LAMBDA IN GLOBAL SCOPE
                 Instructions *beginGlobalBLock = newInstruction();
                 beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-                beginGlobalBLock->val.function = buf;
+                beginGlobalBLock->val.functionCall.function = buf;
                 appendInstructions(beginGlobalBLock);
 
                 Instructions *label = newInstruction();
@@ -1650,7 +1699,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             check->val.divZeroTemp = lenExp;
             appendInstructions(check);
 
-
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 
             Type *type = unwrapTypedef(unwrapVariable(statement->val.allocateLenD.var, statement->symbolTable), statement->symbolTable, NULL, true);
@@ -1671,30 +1719,6 @@ void generateInstructionTreeForStatement(Statement *statement) {
             //Instructions for getting getting the address we need to move the pointer to
             generateInstructionsForVariableSave(statement->val.allocateLenD.var, statement->symbolTable, allocPtrTemp, false);
 
-            /*
-            //Artificial var
-            Variable *artiVar = NEW(Variable);
-            artiVar->kind = arrayIndexK;
-            artiVar->val.arrayIndexD.var = statement->val.allocateLenD.var;
-
-            //Arti term
-            Term *term = NEW(Term);
-            term->kind = numK;
-            term->val.numD.num = 0;
-
-            //Artificial 0 expression
-            Expression *artiExp = NEW(Expression);
-            artiExp->kind = termK;
-            artiExp->val.termD.term = term;
-            artiVar->val.arrayIndexD.idx = artiExp;
-
-            lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
-
-            generateInstructionsForVariableSave(artiVar, statement->symbolTable, lenExp, true);*/
-
-            //Instructions *endAlloc = newInstruction();
-            //endAlloc->kind = COMPLEX_ALLOCATE_END;
-            //appendInstructions(endAlloc);
         } break;
         case statIfK: {
             //TODO
@@ -1962,7 +1986,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
 
             Instructions *beginGlobalBLock = newInstruction();
             beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-            beginGlobalBLock->val.function = buf;
+            beginGlobalBLock->val.functionCall.function = buf;
             appendInstructions(beginGlobalBLock);
 
 
@@ -2053,7 +2077,7 @@ void generateInstructionTreeForDeclaration(Declaration *declaration) {
                 //Create constructor
                 Instructions *beginGlobalBLock = newInstruction();
                 beginGlobalBLock->kind = METADATA_BEGIN_GLOBAL_BLOCK;
-                beginGlobalBLock->val.function = buf;
+                beginGlobalBLock->val.functionCall.function = buf;
                 appendInstructions(beginGlobalBLock);
 
                 Instructions *label = newInstruction();

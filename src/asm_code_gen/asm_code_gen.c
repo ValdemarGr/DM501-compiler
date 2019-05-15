@@ -322,7 +322,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# INSTRUCTION_FUNCTION_CALL\n");
             printIndentation(out);
             fprintf(out, "call %s\n",
-                    instruction->val.function);
+                    instruction->val.functionCall.function);
         } break;
         case COMPLEX_CONSTRAIN_BOOLEAN: {
             fprintf(out, "# COMPLEX_CONSTRAIN_BOOLEAN\n");
@@ -976,17 +976,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_SAVE_ALL: {
             fprintf(out, "# COMPLEX_SAVE_ALL\n");
 
-            SortedSet *ss = instruction->val.restoreSave;
+/*            SortedSet *ss = instruction->val.restoreSave;
             for (int i = 0; i < 16; i++) {
                 if (exists(ss, i)) {
                     printIndentation(out);
                     fprintf(out, "pushq %%%s\n",
                             getNextRegister(i));
                 }
-            }
+            }*/
 
 
-/*
+
             printIndentation(out);
             fprintf(out, "pushq %%rcx\n");
             printIndentation(out);
@@ -1012,22 +1012,22 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "pushq %%r14\n");
             printIndentation(out);
-            fprintf(out, "pushq %%r15\n");*/
+            fprintf(out, "pushq %%r15\n");
 
         } break;
         case COMPLEX_RESTORE_ALL: {
             fprintf(out, "# COMPLEX_RESTORE_ALL\n");
 
-            SortedSet *ss = instruction->val.restoreSave;
+/*            SortedSet *ss = instruction->val.restoreSave;
             for (int i = 16; i < 0; i++) {
                 if (exists(ss, i)) {
                     printIndentation(out);
                     fprintf(out, "pushq %%%s\n",
                             getNextRegister(i));
                 }
-            }
+            }*/
 
-/*
+
             printIndentation(out);
             fprintf(out, "popq %%r15\n");
             printIndentation(out);
@@ -1053,7 +1053,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "popq %%rdx\n");
             printIndentation(out);
-            fprintf(out, "popq %%rcx\n");*/
+            fprintf(out, "popq %%rcx\n");
 
         } break;
         case INSTRUCTION_ADD_STACK_PTR: {
