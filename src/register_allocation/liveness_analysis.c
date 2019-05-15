@@ -484,6 +484,35 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
                 dataFlowEntry->successors = makeLineList(line + 1);
                 break;
+            case RUNTIME_ARRAY_BOUNDS_CHECK:
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.arrayBounds.exprTemp);
+                insertSortedSet(dataFlowEntry->uses, iter->val.arrayBounds.arrPtr);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case RUNTIME_NEGATIVE_ALLOC:
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.negLenTemp);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case RUNTIME_NULLPTR_CHECK:
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.nullPtrCheck);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case RUNTIME_DIV_ZERO:
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->uses, iter->val.divZeroTemp);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
         }
 
         iter = iter->next;

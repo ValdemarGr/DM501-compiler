@@ -292,6 +292,10 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case COMPLEX_RESTORE_ALL: { return instructions; } break;
         case INSTRUCTION_WRITE_CHAR: { return instructions; } break;
         case INSTRUCTION_WRITE_NL: { return instructions; } break;
+        case RUNTIME_ARRAY_BOUNDS_CHECK: { return instructions; } break;
+        case RUNTIME_NEGATIVE_ALLOC: { return instructions; } break;
+        case RUNTIME_NULLPTR_CHECK: { return instructions; } break;
+        case RUNTIME_DIV_ZERO: { return instructions; } break;
     }
 }
 

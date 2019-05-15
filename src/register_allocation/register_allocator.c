@@ -136,9 +136,11 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
         read->val.tempFromStack.offset = location->offset;
     }
 
-    state->previous->next = read;
-    read->next = state->current;
-    state->previous = read;
+    prependToInstruction(state->current, read);
+
+    char *buffer = malloc(sizeof(char) * 128);
+    sprintf(buffer, "read %d from stack to %d", temporary, reg);
+    prependToInstruction(read, makeDebugInstructions(buffer));
 }
 
 void writeToStack(int* colors, int temporary, int reg, RaState *state) {
@@ -286,7 +288,7 @@ int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
 }
 
 void handleArithmetic2(int *colors, RaState *state) {
-    RaTemporaries *temporaries = makeTemporary(state->current->val.arithmetic2.source, RaWrite);
+    RaTemporaries *temporaries = makeTemporary(state->current->val.arithmetic2.source, RaRead);
     temporaries->next = makeTemporary(state->current->val.arithmetic2.dest, RaReadWrite);
 
     getTemporaries(colors, temporaries, state);
@@ -578,6 +580,32 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
                         getReadTemporary(colors, state->current->val.tempToWrite, state);
                 break;
             case INSTRUCTION_WRITE_NL:break;
+            case RUNTIME_ARRAY_BOUNDS_CHECK:
+                temporaries = makeTemporary(state->current->val.arrayBounds.exprTemp, RaRead);
+                temporaries->next = makeTemporary(state->current->val.arrayBounds.arrPtr, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.arrayBounds.exprTemp = temporaries->reg;
+                state->current->val.arrayBounds.arrPtr = temporaries->next->reg;
+                break;
+            case RUNTIME_NEGATIVE_ALLOC:
+                temporaries = makeTemporary(state->current->val.negLenTemp, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.negLenTemp = temporaries->reg;
+                break;
+            case RUNTIME_NULLPTR_CHECK:
+                temporaries = makeTemporary(state->current->val.nullPtrCheck, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.nullPtrCheck = temporaries->reg;
+                break;
+            case RUNTIME_DIV_ZERO:
+                temporaries = makeTemporary(state->current->val.divZeroTemp, RaRead);
+                getTemporaries(colors, temporaries, state);
+
+                state->current->val.divZeroTemp = temporaries->reg;
+                break;
         }
 
         freeSortedSet(state->regsInUse);
