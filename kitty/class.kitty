@@ -12,7 +12,6 @@ class ClassB[A : ClassC, B] {
     var b: A;
 
     val f = (z: A, transformer: (A) -> B):B -> {
-        #This should not work
         write z.g;
         write z.t.h;
         return transformer(z);
@@ -20,8 +19,7 @@ class ClassB[A : ClassC, B] {
 };
 
 
-var a: class ClassB[class ClassC[class ClassA], int];
-var no: class ClassB[class ClassC[bool], int];
+var a: class ClassB[class ClassC[class ClassA], class ClassA];
+var no: class ClassB[class ClassC[class ClassA], class ClassA];
 var b: int;
 var z: int;
-z = a.b.g;
