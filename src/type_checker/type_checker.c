@@ -355,6 +355,7 @@ bool areTypesEqual(Type *first, Type *second, SymbolTable *symbolTable) {
         } else if (first->kind == typeArrayK) {
             return areTypesEqual(first->val.arrayType.type, second->val.arrayType.type, symbolTable);
         } else if (first->kind == typeRecordK) {
+            return true;
             firstDelList = first->val.recordType.types;
             secondDelList = second->val.recordType.types;
             VarDelList *newHead = NULL;
