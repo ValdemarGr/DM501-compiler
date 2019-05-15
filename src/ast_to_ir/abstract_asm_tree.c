@@ -347,11 +347,12 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
     if (accessId != NULL) {
         metadataBeginAccess->val.varAccess.temp = toReturn;
 
-        metadataBeginAccess = newInstruction();
-        metadataBeginAccess->kind = METADATA_ACCESS_VARIABLE_END;
-        metadataBeginAccess->val.varAccess.accessId = accessId;
-        metadataBeginAccess->val.varAccess.temp = toReturn;
-        appendInstructions(metadataBeginAccess);
+        Instructions *metadataAccessEnd;
+        metadataAccessEnd = newInstruction();
+        metadataAccessEnd->kind = METADATA_ACCESS_VARIABLE_END;
+        metadataAccessEnd->val.varAccess.accessId = accessId;
+        metadataAccessEnd->val.varAccess.temp = toReturn;
+        appendInstructions(metadataAccessEnd);
     }
 
     return toReturn;
