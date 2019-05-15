@@ -606,6 +606,13 @@ Instructions *simpleRegisterAllocation(Instructions *head, int numberRegisters) 
 
                 state->current->val.divZeroTemp = temporaries->reg;
                 break;
+            case INSTRUCTION_LEA_ADD: state->regsInUse = initHeadedSortedSet();
+                handleArithmetic2(colors, state);
+                break;
+            case INSTRUCTION_LEA_ADD_CONST:
+                state->current->val.art2const.temp =
+                        getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
+                break;
         }
 
         freeSortedSet(state->regsInUse);

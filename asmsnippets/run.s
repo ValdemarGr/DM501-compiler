@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 16
+	.space 8
 intprint:
 	.asciz "%i\n"
 charprint:
@@ -763,11 +763,11 @@ outOfBoundsCheck:
 
 # METADATA_BEGIN_BODY_BLOCK
 # METADATA_CREATE_MAIN
-				main:
+	main:
 	push %rbp
 mov %rbp, %rax
 	movq %rsp, %rbp
-					# 20 mb
+		# 20 mb
 
     mov $0, %rdi
     mov $12, %rax
@@ -798,26 +798,82 @@ mov %rbp, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-				subq $32, %rsp
-				popq %rax
-				movq %rax, -8(%rbp)
-				movq $0, -16(%rbp)
-				leaq staticLink, %rax
+	subq $72, %rsp
+	popq %rax
+	movq %rax, -8(%rbp)
+	movq $0, -16(%rbp)
+	leaq staticLink, %rax
 	movq %rbp, (%rax)
+# VAR a
+# METADATA_DEBUG_INFO
+		# 0: {1}
 # INSTRUCTION_CONST
-					mov $55, %rcx
-# INSTRUCTION_WRITE
-					movq %rcx, %rsi
-					movq $intprint, %rdi
-					movq $0, %rax
-					call printf
+		mov $5, %rdx
+# METADATA_DEBUG_INFO
+		# 1: {1}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -24(%rbp)
+# VAR b
+# METADATA_DEBUG_INFO
+		# 2: {2}
 # INSTRUCTION_CONST
-					mov $22, %rdx
+		mov $99, %rdx
+# METADATA_DEBUG_INFO
+		# 3: {2}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -32(%rbp)
+# VAR c
+# METADATA_DEBUG_INFO
+		# 4: {3}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -24(%rbp), %rbx
+# METADATA_DEBUG_INFO
+		# 5: {3, 4}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -32(%rbp), %rdx
+# INSTRUCTION_LEA_ADD
+		leaq (%rbx, %rdx, 1), %rbx
+# METADATA_DEBUG_INFO
+		# 7: {3}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -40(%rbp)
+# VAR d
+# METADATA_DEBUG_INFO
+		# 8: {5}
+# INSTRUCTION_CONST
+		mov $1, %rbx
+# METADATA_DEBUG_INFO
+		# 9: {5, 6}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rdx
+# INSTRUCTION_LEA_ADD
+		leaq (%rbx, %rdx, 1), %rbx
+# METADATA_DEBUG_INFO
+		# 11: {5}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -48(%rbp)
+# METADATA_DEBUG_INFO
+		# 12: {7}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -40(%rbp), %rdx
+# METADATA_DEBUG_INFO
+		# 13: {7}
 # INSTRUCTION_WRITE
-					movq %rdx, %rsi
-					movq $intprint, %rdi
-					movq $0, %rax
-					call printf
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+# METADATA_DEBUG_INFO
+		# 14: {8}
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -48(%rbp), %rdx
+# METADATA_DEBUG_INFO
+		# 15: {8}
+# INSTRUCTION_WRITE
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
 movq $0, %rax
 leave
 ret

@@ -1065,6 +1065,22 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                 fprintf(out, "addq $8, %%rsp\n");
             }
         } break;
+        case INSTRUCTION_LEA_ADD: {
+            fprintf(out, "# INSTRUCTION_LEA_ADD\n");
+            printIndentation(out);
+            fprintf(out, "leaq (%%%s, %%%s, 1), %%%s\n",
+                    getNextRegister(instruction->val.arithmetic2.dest),
+                    getNextRegister(instruction->val.arithmetic2.source),
+                    getNextRegister(instruction->val.arithmetic2.dest));
+        } break;
+        case INSTRUCTION_LEA_ADD_CONST: {
+            fprintf(out, "# INSTRUCTION_LEA_ADD_CONST\n");
+            printIndentation(out);
+            fprintf(out, "leaq (%%%s, %i, 1), %%%s\n",
+                    getNextRegister(instruction->val.art2const.temp),
+                    instruction->val.art2const.constant,
+                    getNextRegister(instruction->val.art2const.temp));
+        } break;
     }
 }
 
