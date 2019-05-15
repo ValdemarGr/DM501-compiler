@@ -562,15 +562,18 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
         }
     } while (dataFlowChanged);
 
-    /*
-    Instructions *debug;
+
     for (int i = 0; i < dataFlowSize; i++) {
         dataFlowEntry = dataFlow[i];
 
         char* buffer = sortedSetToString(sortedSetUnion(sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out), dataFlow[i]->intermediates));
-        prependToInstruction(dataFlowEntry->instruction, makeDebugInstructions(buffer));
+        char *text = malloc(sizeof(char) * 256);
+
+        sprintf(text, "%d: %s", i, buffer);
+
+        prependToInstruction(dataFlowEntry->instruction, makeDebugInstructions(text));
     }
-*/
+
 
     LivenessAnalysisResult *result = NEW(LivenessAnalysisResult);
     result->numberSets = dataFlowSize;
