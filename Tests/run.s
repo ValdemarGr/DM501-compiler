@@ -995,6 +995,6 @@ mov %rbp, %rax
 		movq $intprint, %rdi
 		movq $0, %rax
 		call printf
-movq $0, %rax
+movq $2, %rax
 leave
 ret

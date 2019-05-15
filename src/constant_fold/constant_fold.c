@@ -333,7 +333,20 @@ bool doesTermAffectOutside(Term *term, SymbolTable *symbolTable, int evaluationL
             if (symbol->distanceFromRoot > evaluationLevel) {
                 return true;
             }
-            //If not the decl is inside and the recursive decl checker will get it
+
+            char *baseName = term->val.functionCallD.functionId;
+            int extra = 16;
+            char *buf = (char*)malloc(sizeof(char) * (strlen(baseName) + extra));
+
+            sprintf(buf, "%s__%i", baseName, (int)(symbol->distanceFromRoot));
+
+            Pair *pair = get(constantFunctionEvalutationMap, makeCharKey(buf));
+
+            if (pair == NULL) {
+                return true;
+            } else {
+                return false;
+            }
         } break;
         case parenthesesK: {
             return doesExpressionAffectOutside(term->val.parenthesesD.expression, symbolTable, evaluationLevel);
@@ -376,7 +389,7 @@ bool doesVariableAffectOutside(Variable *variable, SymbolTable *symbolTable, int
     switch (variable->kind) {
         case varIdK: {
             SYMBOL *sym = getSymbol(symbolTable, variable->val.idD.id);
-            if ((sym->distanceFromRoot > evaluationLevel && isLhs) || sym->isArgument) {
+            if (sym->distanceFromRoot < evaluationLevel || sym->isArgument) {
                 return true;
             }
         } break;
@@ -403,20 +416,31 @@ bool doesStatementAffectOutside(Statement *statement, int evaluationLevel) {
             return doesVariableAffectOutside(statement->val.allocateD.var, statement->symbolTable, evaluationLevel, true);
         } break;
         case statAllocateLenK: {
-            return doesVariableAffectOutside(statement->val.allocateLenD.var, statement->symbolTable, evaluationLevel, true);
-        } break;
-        case statIfK: {
-            return doesStatementAffectOutside(statement->val.ifD.statement, evaluationLevel);
-        } break;
-        case statIfElK: {
-            bool r1 = doesStatementAffectOutside(statement->val.ifElD.statement, evaluationLevel);
-            bool r2 = doesStatementAffectOutside(statement->val.ifElD.elseStatement, evaluationLevel);
+            bool r1 = doesVariableAffectOutside(statement->val.allocateLenD.var, statement->symbolTable, evaluationLevel, true);
+            bool r2 = doesExpressionAffectOutside(statement->val.allocateLenD.len, statement->symbolTable, evaluationLevel);
 
             if (r1 == true) return true;
             if (r2 == true) return true;
         } break;
+        case statIfK: {
+            bool r1 = doesStatementAffectOutside(statement->val.ifD.statement, evaluationLevel);
+            bool r2 = doesExpressionAffectOutside(statement->val.ifD.exp, statement->symbolTable, evaluationLevel);
+
+            if (r1 == true) return true;
+            if (r2 == true) return true;
+        } break;
+        case statIfElK: {
+            bool r1 = doesStatementAffectOutside(statement->val.ifElD.statement, evaluationLevel);
+            bool r2 = doesStatementAffectOutside(statement->val.ifElD.elseStatement, evaluationLevel);
+            bool r3 = doesExpressionAffectOutside(statement->val.ifElD.exp, statement->symbolTable, evaluationLevel);
+
+            if (r1 == true) return true;
+            if (r2 == true) return true;
+            if (r3 == true) return true;
+        } break;
         case statWhileK: {
-            return doesStatementAffectOutside(statement->val.whileD.statement, evaluationLevel);
+            //We cannot assume anything about a while loop if we don't do much more complex analysis
+            return true;
         } break;
         case stmListK: {
             StatementList *iter = statement->val.stmListD.statementList;
@@ -428,7 +452,11 @@ bool doesStatementAffectOutside(Statement *statement, int evaluationLevel) {
             }
         } break;
         case assignmentK: {
-            return doesVariableAffectOutside(statement->val.assignmentD.var, statement->symbolTable, evaluationLevel, true);
+            bool r1 = doesVariableAffectOutside(statement->val.assignmentD.var, statement->symbolTable, evaluationLevel, true);
+            bool r2 = doesExpressionAffectOutside(statement->val.assignmentD.exp, statement->symbolTable, evaluationLevel);
+
+            if (r1 == true) return true;
+            if (r2 == true) return true;
         } break;
         case emptyK: {
             return doesExpressionAffectOutside(statement->val.empty.exp, statement->symbolTable, evaluationLevel);
@@ -763,7 +791,7 @@ void constantFoldDeclaration(Declaration *declaration) {
 
             Type *unwrappedReturn = unwrapTypedef(declaration->val.functionD.function->head->returnType, declaration->symbolTable, NULL, true);
 
-            if (unwrappedReturn->kind == typeIntK || unwrappedReturn->kind == typeBoolK) {
+            if (unwrappedReturn->kind == typeIntK || unwrappedReturn->kind == typeBoolK || unwrappedReturn->kind == typeCharK) {
                 if (doesBodyAffectOutside(declaration->val.functionD.function->body, declaration->symbolTable->distanceFromRoot + 1) == false) {
                     //Constant evaluate function
                     Body *dummyBody = NEW(Body);
@@ -787,9 +815,9 @@ void constantFoldDeclaration(Declaration *declaration) {
                     dummyBody->declarationList = dummyDeclList;
                     dummyBody->statementList = dummyStatementList;
 
-                    //int r = sandboxBody(dummyBody);
+                    int r = sandboxBody(dummyBody);
                     int *mr = malloc(sizeof(int));
-                    //*mr = r;
+                    *mr = r;
 
                     char *baseName = declaration->val.functionD.function->head->indentifier;
                     int extra = 16;
@@ -797,9 +825,9 @@ void constantFoldDeclaration(Declaration *declaration) {
 
                     sprintf(buf, "%s__%i", baseName, (int)(getSymbol(declaration->symbolTable, declaration->val.functionD.function->head->indentifier)->distanceFromRoot));
 
-                    //insert(constantFunctionEvalutationMap, makeCharKey(buf), mr);
+                    insert(constantFunctionEvalutationMap, makeCharKey(buf), mr);
 
-                    //declaration->kind = nodecl;
+                    declaration->kind = nodecl;
                 }
             }
         } break;

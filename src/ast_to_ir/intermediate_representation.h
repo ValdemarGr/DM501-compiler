@@ -89,7 +89,12 @@ typedef enum {
     METADATA_END_ARITHMETIC_EVALUATION,
     METADATA_BEGIN_GLOBAL_BLOCK,
     METADATA_END_GLOBAL_BLOCK,
-    METADATA_DEBUG_INFO
+    METADATA_DEBUG_INFO,
+
+    RUNTIME_ARRAY_BOUNDS_CHECK,
+    RUNTIME_NEGATIVE_ALLOC,
+    RUNTIME_NULLPTR_CHECK,
+    RUNTIME_DIV_ZERO
 } InstructionKind;
 
 typedef enum {
@@ -136,7 +141,12 @@ typedef struct Instructions {
         struct { size_t offsetTemp; size_t ptrTemp; size_t tempToLea; } leaToOffset;
         struct { int constant; size_t temp; } art2const;
         struct { size_t offsetTemp; size_t ptrTemp; size_t returnTemp; } dereferenceOffset;
-        struct {size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
+        struct { size_t staticLinkDepth; size_t temporary; } pushPopStaticLink;
+
+        struct {size_t arrPtr; size_t exprTemp; } arrayBounds;
+        size_t divZeroTemp;
+        size_t negLenTemp;
+        size_t nullPtrCheck;
     } val;
 } Instructions;
 

@@ -3,7 +3,7 @@
 
 int currentIndendation = 0;
 extern int initialGcSizeMB;
-
+extern bool TURBOMODE;
 ConstMap *placedBlocks = NULL;
 
 void printIndentation(FILE *file) {
@@ -1003,6 +1003,61 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "addq $%zu, %%rsp\n", instruction->val.toAddStackPtr);
         } break;
+
+        case RUNTIME_ARRAY_BOUNDS_CHECK: {
+            if (!TURBOMODE) {
+                fprintf(out, "# RUNTIME_ARRAY_BOUNDS_CHECK\n");
+                printIndentation(out);
+                fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.arrayBounds.exprTemp));
+                printIndentation(out);
+                fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.arrayBounds.arrPtr));
+
+                printIndentation(out);
+                fprintf(out, "call outOfBoundsCheck\n");
+
+                printIndentation(out);
+                fprintf(out, "addq $16, %%rsp\n");
+            }
+        } break;
+        case RUNTIME_DIV_ZERO: {
+            if (!TURBOMODE) {
+                fprintf(out, "# RUNTIME_DIV_ZERO\n");
+                printIndentation(out);
+                fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.divZeroTemp));
+
+                printIndentation(out);
+                fprintf(out, "call divZeroCheck\n");
+
+                printIndentation(out);
+                fprintf(out, "addq $8, %%rsp\n");
+            }
+        } break;
+        case RUNTIME_NEGATIVE_ALLOC: {
+            if (!TURBOMODE) {
+                fprintf(out, "# RUNTIME_NEGATIVE_ALLOC\n");
+                printIndentation(out);
+                fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.negLenTemp));
+
+                printIndentation(out);
+                fprintf(out, "call negAllocCheck\n");
+
+                printIndentation(out);
+                fprintf(out, "addq $8, %%rsp\n");
+            }
+        } break;
+        case RUNTIME_NULLPTR_CHECK: {
+            if (!TURBOMODE) {
+                fprintf(out, "# RUNTIME_NULLPTR_CHECK\n");
+                printIndentation(out);
+                fprintf(out, "pushq %%%s\n", getNextRegister(instruction->val.nullPtrCheck));
+
+                printIndentation(out);
+                fprintf(out, "call nullPtrCheck\n");
+
+                printIndentation(out);
+                fprintf(out, "addq $8, %%rsp\n");
+            }
+        } break;
     }
 }
 
@@ -1015,38 +1070,17 @@ void generateScopeFrames(FILE *file) {
     fprintf(file, "intprint:\n\t.asciz \"%%i\\n\"\n");
     fprintf(file, "charprint:\n\t.asciz \"%%c\"\n");
     fprintf(file, "nlprint:\n\t.asciz \"\\n\"\n");
+    fprintf(file, "outOfBoundsMsg:\n"
+                  "    .asciz \"Error, out of bounds\\n\"\n");
+    fprintf(file, "divZeroMsg:\n"
+                  "    .asciz \"Error, division by zero\\n\"\n");
+    fprintf(file, "negAllocMsg:\n"
+                  "    .asciz \"Error, negative allocation\\n\"\n");
+    fprintf(file, "nullPtrMsg:\n"
+                  "    .asciz \"Error, nullpointer dereferencec\\n\"\n");
     fprintf(file, GARBAGE_COLLECTOR_CHUNK);
+    fprintf(file, RUNTIME_ERROR_FUNCS);
 }
-/*
-void generateInstructionLLForGlobals(Instructions *afterBegin) {
-    Instructions *iter = afterBegin;
-
-    while (iter != NULL) {
-
-        int beginCounter = 0;
-
-        if (afterBegin->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
-            beginCounter++;
-        }
-
-        while (beginCounter != 0) {
-            if (afterBegin->kind == METADATA_BEGIN_GLOBAL_BLOCK) {
-                beginCounter++;
-            }
-
-            generateInstructionLLForGlobals(iter->next);
-
-            if (afterBegin->kind == METADATA_END_GLOBAL_BLOCK) {
-                beginCounter--;
-            }
-        }
-
-        if (afterBegin->kind == METADATA_END_GLOBAL_BLOCK) {
-            return;
-        }
-
-        iter = iter->next;
-    }*/
 
 void generateForNestedGlobalBlocks(FILE *file, Instructions *iter) {
     if (iter == NULL) {

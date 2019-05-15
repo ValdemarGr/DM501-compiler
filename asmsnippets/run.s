@@ -1,12 +1,20 @@
 .section .data
 staticLink:
-	.space 8
+	.space 16
 intprint:
 	.asciz "%i\n"
 charprint:
 	.asciz "%c"
 nlprint:
 	.asciz "\n"
+outOfBoundsMsg:
+    .asciz "Error, out of bounds\n"
+divZeroMsg:
+    .asciz "Error, division by zero\n"
+negAllocMsg:
+    .asciz "Error, negative allocation\n"
+nullPtrMsg:
+    .asciz "Error, nullpointer dereferencec\n"
 gconeprint:
     .asciz "Gc one\n"
 gctwoprint:
@@ -642,14 +650,124 @@ garbageCollectAllocate:
     mov %rbp,%rsp
     pop %rbp
     ret
+
+.type nullPtrCheck, @function
+nullPtrCheck:
+    push %rbp
+    movq %rsp, %rbp
+
+    cmp $0, 16(%rbp)
+    je nullPtrCheckKill
+    # else
+    jmp nullPtrCheckReturn
+    nullPtrCheckKill:
+    movq $nullPtrMsg, %rdi
+    movq $0, %rax
+    call printf
+
+    movq $60, %rax
+    movq $44, %rdi
+    syscall
+    nullPtrCheckReturn:
+
+    movq %rbp,%rsp
+    pop %rbp
+    ret
+
+
+.type negAllocCheck, @function
+negAllocCheck:
+    push %rbp
+    movq %rsp, %rbp
+
+    cmp $0, 16(%rbp)
+    jl negAllocCheckKill
+    # else
+    jmp negAllocCheckReturn
+    negAllocCheckKill:
+    movq $negAllocMsg, %rdi
+    movq $0, %rax
+    call printf
+
+    movq $60, %rax
+    movq $66, %rdi
+    syscall
+    negAllocCheckReturn:
+
+    movq %rbp,%rsp
+    pop %rbp
+    ret
+
+
+.type divZeroCheck, @function
+divZeroCheck:
+    push %rbp
+    movq %rsp, %rbp
+
+    cmp $0, 16(%rbp)
+    jle divZeroCheckKill
+    # else
+    jmp divZeroCheckReturn
+    divZeroCheckKill:
+    movq $divZeroMsg, %rdi
+    movq $0, %rax
+    call printf
+
+    movq $60, %rax
+    movq $42, %rdi
+    syscall
+    divZeroCheckReturn:
+
+    movq %rbp,%rsp
+    pop %rbp
+    ret
+
+
+.type outOfBoundsCheck, @function
+outOfBoundsCheck:
+    push %rbp
+    movq %rsp, %rbp
+
+    pushq %rax
+
+    # 16 has arr
+    movq 16(%rbp), %rax
+    subq $8, %rax
+    movq (%rax), %rax
+
+    # 24 has index
+    # index must be larger than -1 and excplicitly less than %rax
+    # if index < 0 KILL
+    cmp $0, 24(%rbp)
+    jl outOfBoundsCheckKill
+    # if size <= index KILL
+    cmp 24(%rbp), %rax
+    jle outOfBoundsCheckKill
+    # else
+    jmp outOfBoundsCheckReturn
+    outOfBoundsCheckKill:
+    movq $outOfBoundsMsg, %rdi
+    movq $0, %rax
+    call printf
+
+    movq $60, %rax
+    movq $2, %rdi
+    syscall
+    outOfBoundsCheckReturn:
+
+    popq %rax
+
+    movq %rbp,%rsp
+    pop %rbp
+    ret
+
 # METADATA_BEGIN_BODY_BLOCK
-# VAR sum
 # METADATA_CREATE_MAIN
-	main:
+				main:
 	push %rbp
 mov %rbp, %rax
 	movq %rsp, %rbp
-		# 20 mb
+					# 20 mb
 
     mov $0, %rdi
     mov $12, %rax
@@ -657,10 +775,10 @@ mov %rbp, %rax
     #move heap into one
     leaq gcHeapOne, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $1048576000, 16(%r15)
     movq $0, 8(%r15)
     movq $1, 0(%r15)
-    addq $2097152000, %rax
+    addq $1048576000, %rax
     push %rax
     movq %rax, %rdi
     mov $12, %rax
@@ -672,325 +790,34 @@ mov %rbp, %rax
 
     leaq gcHeapTwo, %r15
     movq %rax, 24(%r15)
-    movq $2097152000, 16(%r15)
+    movq $1048576000, 16(%r15)
     movq $0, 8(%r15)
     movq $0, 0(%r15)
 
-    addq $2097152000, %rax
+    addq $1048576000, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $88, %rsp
-	popq %rax
-	movq %rax, -8(%rbp)
-	movq $1, -16(%rbp)
-	movq $2, -24(%rbp)
-	movq $0, -48(%rbp)
-	leaq staticLink, %rax
+				subq $32, %rsp
+				popq %rax
+				movq %rax, -8(%rbp)
+				movq $0, -16(%rbp)
+				leaq staticLink, %rax
 	movq %rbp, (%rax)
 # INSTRUCTION_CONST
-		mov $5, %rcx
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rcx, %rdx
-# ALLOC_ARR_OF_PTR
-		addq $8, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %rcx, 0(%rax)
-# ALLOC_ARR_OF_PTR
-		subq $0, %rdx
-		movq $-1, (%rax, %rdx, 1)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rax, -48(%rbp)
-# INSTRUCTION_CONST
-		mov $0, %rbx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rbx, -56(%rbp)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rsi
-# INSTRUCTION_CONST
-		mov $-8, %rdi
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-
-# INSTRUCTION_LABEL
-		while_cnd_0:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r8
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %r9
-# INSTRUCTION_CONST
-		mov $-8, %r10
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r9, %r10,1), %r9
-# INSTRUCTION_MINUS
-		sub %r8, %r9
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rdx
-		cmp $0, %r9
-		setg %dl
-		movsx %dl, %r9
-		pop %rdx
-# INSTRUCTION_CONST
-		mov $1, %r11
-# INSTRUCTION_CMP
-		cmp %r9, %r11
-# INSTRUCTION_JE
-		je while_0_begin
-# INSTRUCTION_JMP
-		jmp while_0_end
-# INSTRUCTION_LABEL
-		while_0_begin:
-# INSTRUCTION_CONST
-		mov $5, %r12
-# COMPLEX_ALLOCATE
-		movq $8, %r13
-		imulq %r12, %r13
-# ALLOC_ARR_OF_PRIM
-		addq $16, %r13
-		pushq %r13
-		pushq %rbp
-		call garbageCollectAllocate
-		movq %r12, 0(%rax)
-		subq $8, %r13
-		movq $0, (%rax, %r13, 1)
-		popq %r13
-		popq %r13
-		addq $8, %rax
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %r14
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r15
-# INSTRUCTION_CONST
-		mov $8, %rcx
-# INSTRUCTION_MUL
-		imul %rcx, %r15
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%r14, %r15,1)
-# INSTRUCTION_CONST
-		mov $0, %rdx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_1:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rbx
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rsi
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdi
-# INSTRUCTION_CONST
-		mov $8, %r8
-# INSTRUCTION_MUL
-		imul %r8, %rdi
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rsi, %rdi,1), %rsi
-# INSTRUCTION_CONST
-		mov $-8, %r9
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rsi, %r9,1), %rsi
-# INSTRUCTION_MINUS
-		sub %rbx, %rsi
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rdx
-		cmp $0, %rsi
-		setg %dl
-		movsx %dl, %rsi
-		pop %rdx
-# INSTRUCTION_CONST
-		mov $1, %r10
-# INSTRUCTION_CMP
-		cmp %rsi, %r10
-# INSTRUCTION_JE
-		je while_1_begin
-# INSTRUCTION_JMP
-		jmp while_1_end
-# INSTRUCTION_LABEL
-		while_1_begin:
-
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r13
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %r14
-# INSTRUCTION_ADD
-		add %r14, %r13
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %r15
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rcx
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# INSTRUCTION_MUL
-		imul %rdx, %rcx
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r15, %rcx,1), %r15
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rbx
-# INSTRUCTION_CONST
-		mov $8, %rsi
-# INSTRUCTION_MUL
-		imul %rsi, %rbx
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %r13, (%r15, %rbx,1)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdi
-# INSTRUCTION_CONST
-		mov $1, %r8
-# INSTRUCTION_ADD
-		add %r8, %rdi
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdi, -64(%rbp)
-# INSTRUCTION_JMP
-		jmp while_cnd_1
-# INSTRUCTION_LABEL
-		while_1_end:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r9
-# INSTRUCTION_CONST
-		mov $1, %r10
-# INSTRUCTION_ADD
-		add %r10, %r9
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %r9, -56(%rbp)
-# INSTRUCTION_JMP
-		jmp while_cnd_0
-# INSTRUCTION_LABEL
-		while_0_end:
-# INSTRUCTION_CONST
-		mov $0, %r11
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %r11, -72(%rbp)
-# INSTRUCTION_CONST
-		mov $0, %r12
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %r12, -56(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_2:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r13
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %r14
-# INSTRUCTION_CONST
-		mov $-8, %r15
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r14, %r15,1), %r14
-# INSTRUCTION_MINUS
-		sub %r13, %r14
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rdx
-		cmp $0, %r14
-		setg %dl
-		movsx %dl, %r14
-		pop %rdx
-# INSTRUCTION_CONST
-		mov $1, %rcx
-# INSTRUCTION_CMP
-		cmp %r14, %rcx
-# INSTRUCTION_JE
-		je while_2_begin
-# INSTRUCTION_JMP
-		jmp while_2_end
-# INSTRUCTION_LABEL
-		while_2_begin:
-# INSTRUCTION_CONST
-		mov $0, %rdx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# INSTRUCTION_LABEL
-		while_cnd_3:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rbx
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rsi
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdi
-# INSTRUCTION_CONST
-		mov $8, %r8
-# INSTRUCTION_MUL
-		imul %r8, %rdi
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rsi, %rdi,1), %rsi
-# INSTRUCTION_CONST
-		mov $-8, %r9
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rsi, %r9,1), %rsi
-# INSTRUCTION_MINUS
-		sub %rbx, %rsi
-# COMPLEX_CONSTRAIN_BOOLEAN
-		push %rdx
-		cmp $0, %rsi
-		setg %dl
-		movsx %dl, %rsi
-		pop %rdx
-# INSTRUCTION_CONST
-		mov $1, %r10
-# INSTRUCTION_CMP
-		cmp %rsi, %r10
-# INSTRUCTION_JE
-		je while_3_begin
-# INSTRUCTION_JMP
-		jmp while_3_end
-# INSTRUCTION_LABEL
-		while_3_begin:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -72(%rbp), %r11
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %r12
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %r13
-# INSTRUCTION_CONST
-		mov $8, %r14
-# INSTRUCTION_MUL
-		imul %r14, %r13
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r12, %r13,1), %r12
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %r15
-# INSTRUCTION_CONST
-		mov $8, %rcx
-# INSTRUCTION_MUL
-		imul %rcx, %r15
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%r12, %r15,1), %r12
-# INSTRUCTION_ADD
-		add %r12, %r11
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %r11, -72(%rbp)
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# INSTRUCTION_ADD
-		add %rbx, %rdx
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -64(%rbp)
-# INSTRUCTION_JMP
-		jmp while_cnd_3
-# INSTRUCTION_LABEL
-		while_3_end:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rsi
-# INSTRUCTION_CONST
-		mov $1, %rdi
-# INSTRUCTION_ADD
-		add %rdi, %rsi
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rsi, -56(%rbp)
-# INSTRUCTION_JMP
-		jmp while_cnd_2
-# INSTRUCTION_LABEL
-		while_2_end:
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -72(%rbp), %r8
+					mov $55, %rcx
 # INSTRUCTION_WRITE
-		movq %r8, %rsi
-		movq $intprint, %rdi
-		movq $0, %rax
-		call printf
+					movq %rcx, %rsi
+					movq $intprint, %rdi
+					movq $0, %rax
+					call printf
+# INSTRUCTION_CONST
+					mov $22, %rdx
+# INSTRUCTION_WRITE
+					movq %rdx, %rsi
+					movq $intprint, %rdi
+					movq $0, %rax
+					call printf
 movq $0, %rax
 leave
 ret

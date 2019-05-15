@@ -189,7 +189,18 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
         case arrayIndexK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
 
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = accessTemp;
+            appendInstructions(check);
+
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
+
+            Instructions *arrayBounds = newInstruction();
+            arrayBounds->kind = RUNTIME_ARRAY_BOUNDS_CHECK;
+            arrayBounds->val.arrayBounds.arrPtr = accessTemp;
+            arrayBounds->val.arrayBounds.exprTemp = exprTemp;
+            appendInstructions(arrayBounds);
 
             Instructions *tpeConst = newInstruction();
             tpeConst->kind = INSTRUCTION_CONST;
@@ -217,6 +228,11 @@ size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *sy
         } break;
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
+
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = accessTemp;
+            appendInstructions(check);
 
             Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL, false);
 
@@ -346,7 +362,18 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
         case arrayIndexK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.arrayIndexD.var, symbolTable);
 
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = accessTemp;
+            appendInstructions(check);
+
             size_t exprTemp = generateInstructionsForExpression(variable->val.arrayIndexD.idx, symbolTable);
+
+            Instructions *arrayBounds = newInstruction();
+            arrayBounds->kind = RUNTIME_ARRAY_BOUNDS_CHECK;
+            arrayBounds->val.arrayBounds.arrPtr = accessTemp;
+            arrayBounds->val.arrayBounds.exprTemp = exprTemp;
+            appendInstructions(arrayBounds);
 
             Instructions *constPtrSize = newInstruction();
             constPtrSize->kind = INSTRUCTION_CONST;
@@ -371,6 +398,11 @@ void generateInstructionsForVariableSave(Variable *variable, SymbolTable *symbol
         } break;
         case recordLookupK: {
             size_t accessTemp = generateInstructionsForVariableAccess(variable->val.recordLookupD.var, symbolTable);
+
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = accessTemp;
+            appendInstructions(check);
 
             Type *unwrappedType = unwrapTypedef(unwrapVariable(variable->val.recordLookupD.var, symbolTable), symbolTable, NULL, true);
 
@@ -520,6 +552,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 //Get variable with function ptr
                 size_t fncPtrTemp = generateInstructionsForVariableAccess(tmpVar, symbolTable);
 
+                Instructions *check = newInstruction();
+                check->kind = RUNTIME_NULLPTR_CHECK;
+                check->val.divZeroTemp = fncPtrTemp;
+                appendInstructions(check);
+
                 Instructions *captureOffset = newInstruction();
                 captureOffset->kind = INSTRUCTION_CONST;
                 captureOffset->val.constant.value = POINTER_SIZE;
@@ -647,6 +684,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
                 num->val.constant.temp = currentTemporary;
                 appendInstructions(num);
                 currentTemporary++;
+
+                Instructions *check = newInstruction();
+                check->kind = RUNTIME_NULLPTR_CHECK;
+                check->val.divZeroTemp = tempToAbsOn;
+                appendInstructions(check);
 
                 Instructions *ptrAccess = newInstruction();
                 ptrAccess->kind = COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET;
@@ -944,6 +986,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             size_t variableTemp = generateInstructionsForVariableAccess(term->val.classDowncastD.var, symbolTable);
 
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = variableTemp;
+            appendInstructions(check);
+
             size_t downcastOffset = offsetSymbol->uniqueIdForScope;
 
             Instructions *constOffset = newInstruction();
@@ -966,6 +1013,11 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             //Give arguments on stack
             //For each expression argument, evaluate it and push it to the stack
             size_t fncPtrTemp = generateInstructionsForVariableAccess(term->val.shorthandCallD.var, symbolTable);
+
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NULLPTR_CHECK;
+            check->val.divZeroTemp = fncPtrTemp;
+            appendInstructions(check);
 /*
             //We need to save the current static link pointer
             Instructions *push = newInstruction();
@@ -1098,6 +1150,11 @@ size_t generateInstructionsForExpression(Expression *expression, SymbolTable *sy
                     toReturn = lhsTemp;
                 } break;
                 case opDivK: {
+                    Instructions *check = newInstruction();
+                    check->kind = RUNTIME_DIV_ZERO;
+                    check->val.divZeroTemp = rhsTemp;
+                    appendInstructions(check);
+
                     Instructions *instruction = newInstruction();
                     instruction->kind = INSTRUCTION_DIV;
                     instruction->val.arithmetic2.source = lhsTemp;
@@ -1564,6 +1621,12 @@ void generateInstructionTreeForStatement(Statement *statement) {
         } break;
         case statAllocateLenK: {
             size_t lenExp = generateInstructionsForExpression(statement->val.allocateLenD.len, statement->symbolTable);
+
+            Instructions *check = newInstruction();
+            check->kind = RUNTIME_NEGATIVE_ALLOC;
+            check->val.divZeroTemp = lenExp;
+            appendInstructions(check);
+
 
             SYMBOL *symbol = getSymbolForBaseVariable(statement->val.allocateD.var, statement->symbolTable);
 

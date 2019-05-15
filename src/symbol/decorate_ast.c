@@ -159,6 +159,7 @@ void decorateFunction(char *id, Type *returnType, SymbolTable *symbolTable,
     value->val.typeFunctionD.returnType = returnType;
     value->val.typeFunctionD.isLambda = isLambda;
     value->val.typeFunctionD.lambdaId = lambdaId;
+    value->val.typeFunctionD.body = body;
 
     if (id != NULL) {
         putSymbol(symbolTable,

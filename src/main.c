@@ -47,6 +47,8 @@ extern int lambdaDefineScope;
 extern int lambdaArgCount;
 extern int staticLinkDepth;
 
+bool TURBOMODE = false;
+
 void resetAbstractGenGlobals() {
     instructionHead = NULL;
     currentInstruction = NULL;
@@ -97,6 +99,7 @@ int compile_file(FILE *file) {
     }
 
     constantFoldBody(theexpression);
+    constantFoldBody(theexpression);
 
     resetAbstractGenGlobals();
 
@@ -142,6 +145,10 @@ int main(int argc, char *argv[]) {
                     break;
                 case 'l':
                     dePeephole = false;
+                    break;
+                case 'x':
+                    TURBOMODE = true;
+                    initialGcSizeMB = 1900;
                     break;
                 default:
                     if (strstr(arg, "mem=")) {
