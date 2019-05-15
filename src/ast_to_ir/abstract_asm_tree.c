@@ -334,18 +334,24 @@ char *generateVariableUniqueId(Variable* variable, SymbolTable *symbolTable) {
 size_t generateInstructionsForVariableAccess(Variable *variable, SymbolTable *symbolTable) {
     char *accessId = generateVariableUniqueId(variable, symbolTable);
 
+    Instructions *metadataBeginAccess;
     if (accessId != NULL) {
-        Instructions *metadataBeginAccess = newInstruction();
+        metadataBeginAccess = newInstruction();
         metadataBeginAccess->kind = METADATA_ACCESS_VARIABLE_START;
-        metadataBeginAccess->val.accessId = accessId;
+        metadataBeginAccess->val.varAccess.accessId = accessId;
+        appendInstructions(metadataBeginAccess);
     }
 
     size_t toReturn = generateInstructionsForVariableAccessInternal(variable, symbolTable);
 
     if (accessId != NULL) {
-        Instructions *metadataBeginAccess = newInstruction();
+        metadataBeginAccess->val.varAccess.temp = toReturn;
+
+        metadataBeginAccess = newInstruction();
         metadataBeginAccess->kind = METADATA_ACCESS_VARIABLE_END;
-        metadataBeginAccess->val.accessId = accessId;
+        metadataBeginAccess->val.varAccess.accessId = accessId;
+        metadataBeginAccess->val.varAccess.temp = toReturn;
+        appendInstructions(metadataBeginAccess);
     }
 
     return toReturn;

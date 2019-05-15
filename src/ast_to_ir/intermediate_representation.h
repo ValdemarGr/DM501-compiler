@@ -163,7 +163,7 @@ typedef struct Instructions {
         size_t negLenTemp;
         size_t nullPtrCheck;
 
-        char *accessId;
+        struct {char* accessId; size_t temp} varAccess;
     } val;
 } Instructions;
 

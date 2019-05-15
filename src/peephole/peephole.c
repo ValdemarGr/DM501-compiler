@@ -258,7 +258,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = INSTRUCTION_ADD_CONST;
         registerTrackerForBlock++;
 
-        addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
+        //addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
     }
 
     {
@@ -268,7 +268,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = INSTRUCTION_ADD;
         registerTrackerForBlock++;
 
-        addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
+        //addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
     }
 
     {

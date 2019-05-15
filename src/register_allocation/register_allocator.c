@@ -6,6 +6,7 @@
 #include "liveness_analysis.h"
 #include "graph_coloring.h"
 #include "../ast_to_ir/intermediate_representation.h"
+#include "simplify_loads.h"
 
 ConstMap *currentRegisterContext = NULL;
 size_t timestamp = 0;
@@ -85,11 +86,13 @@ int getTemporary(int *colors, int temporary, RaState *state) {
     Instructions *pushInstruction = newInstruction();
     pushInstruction->kind = INSTRUCTION_PUSH;
     pushInstruction->val.tempToPush = reg;
+    pushInstruction->dataFlowEntry = state->current->dataFlowEntry;
     appendToInstruction(state->previous, pushInstruction);
 
     Instructions *popInstruction = newInstruction();
     popInstruction->kind = INSTRUCTION_POP;
     popInstruction->val.tempToPopInto = reg;
+    popInstruction->dataFlowEntry = state->current->dataFlowEntry;
     appendToInstruction(state->current, popInstruction);
 
     if (!state->hasAddedPop) {
@@ -134,6 +137,7 @@ void readFromStack(int* colors, int temporary, int reg, RaState *state) {
     RaVariableLocation *location = getLocation(temporary, state);
 
     Instructions *read = newInstruction();
+    read->dataFlowEntry = state->current->dataFlowEntry;
 
     if (location->useScope) {
         read->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE;
@@ -159,6 +163,7 @@ void writeToStack(int* colors, int temporary, int reg, RaState *state) {
     RaVariableLocation *location = getLocation(temporary, state);
 
     Instructions *write = newInstruction();
+    write->dataFlowEntry = state->current->dataFlowEntry;
 
     if (location->useScope) {
         write->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE;
@@ -276,6 +281,7 @@ int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
     int reg = sortedSetFirst(regs);
 
     Instructions *pushInstruction = newInstruction();
+    pushInstruction->dataFlowEntry = state->current->dataFlowEntry;
     pushInstruction->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
     pushInstruction->val.tempIntoStack.tempToMove = reg;
     pushInstruction->val.tempIntoStack.offset = offset;
@@ -283,6 +289,7 @@ int getTemporaryNoPushPop(int *colors, int temporary, RaState *state) {
     appendToInstruction(state->current, pushInstruction);
 
     Instructions *popInstruction = newInstruction();
+    popInstruction->dataFlowEntry = state->current->dataFlowEntry;
     popInstruction->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
     popInstruction->val.tempFromStack.inputTemp = reg;
     popInstruction->val.tempFromStack.offset = offset;
@@ -639,6 +646,13 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
                 state->current->val.art2const.temp =
                         getReadWriteTemporary(colors, state->current->val.art2const.temp, state);
                 break;
+            case INSTRUCTION_LOAD_STACK_PTR:
+                state->current->val.loadStackPtr.temp =
+                        getWriteTemporary(colors, state->current->val.loadStackPtr.temp, state);
+                break;
+            case METADATA_ACCESS_VARIABLE_START:break;
+            case METADATA_ACCESS_VARIABLE_END:break;
+            case NOOP:break;
         }
 
         freeSortedSet(state->regsInUse);
@@ -647,5 +661,6 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
         state->current = nextInstruction;
     }
 
+    //simplifyLoads(head, livenessAnalysisResult);
     return colors;
 }

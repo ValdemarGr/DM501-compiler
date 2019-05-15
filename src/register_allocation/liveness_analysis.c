@@ -62,6 +62,7 @@ DataFlowEntry *initDataFlowEntry() {
     dataFlowEntry->function = NULL;
     dataFlowEntry->out = NULL;
     dataFlowEntry->in = NULL;
+    dataFlowEntry->accessId = NULL;
 
     dataFlowEntry->uses = initHeadedSortedSet();
     dataFlowEntry->defines = initHeadedSortedSet();
@@ -95,6 +96,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_VAR: break;
             case INSTRUCTION_MOVE: break;
             case INSTRUCTION_PROGRAM_BEGIN: break;
+            case NOOP: break;
             case INSTRUCTION_LABEL: {
                 insert(labels, makeCharKey(iter->val.label), makeIntBox(count));
             }
@@ -544,6 +546,24 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
 
                 dataFlowEntry->successors = makeLineList(line + 1);
             } break;
+            case INSTRUCTION_LOAD_STACK_PTR:
+                dataFlowEntry = initDataFlowEntry();
+
+                insertSortedSet(dataFlowEntry->defines, (int) iter->val.loadStackPtr.temp);
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case METADATA_ACCESS_VARIABLE_START:
+                dataFlowEntry = initDataFlowEntry();
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case METADATA_ACCESS_VARIABLE_END:
+                dataFlowEntry = initDataFlowEntry();
+
+                dataFlowEntry->successors = makeLineList(line + 1);
+                break;
+            case NOOP:break;
         }
 
         iter = iter->next;
@@ -609,6 +629,8 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
     LivenessAnalysisResult *result = NEW(LivenessAnalysisResult);
     result->numberSets = dataFlowSize;
     result->sets = malloc(sizeof(SortedSet) * dataFlowSize);
+    result->dataFlow = dataFlow;
+    result->dataFlowSize = dataFlowSize;
     for (int i = 0; i < dataFlowSize; ++i) {
         result->sets[i] = sortedSetUnion(sortedSetUnion(dataFlow[i]->in, dataFlow[i]->out), dataFlow[i]->intermediates);
     }

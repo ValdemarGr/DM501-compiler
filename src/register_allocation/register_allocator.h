@@ -20,6 +20,8 @@ typedef struct AbstractRegister{
 typedef struct LivenessAnalysisResult {
     int numberSets;
     SortedSet **sets;
+    struct DataFlowEntry **dataFlow;
+    int dataFlowSize;
 } LivenessAnalysisResult;
 
 typedef enum { RaRead, RaWrite, RaReadWrite, RaIntermidiate } RaTemporariesKind;
@@ -38,6 +40,14 @@ typedef struct RaVariableLocation {
     bool useScope;
 } RaVariableLocation;
 
+typedef struct RaVariable {
+    char *accessId;
+    int line;
+    int reg;
+    Instructions *instructionStart;
+    Instructions *instructionEnd;
+} RaVariable;
+
 typedef struct RaState {
     Instructions *previous;
     Instructions *current;
@@ -47,6 +57,8 @@ typedef struct RaState {
     SortedSet *regsInUse;
     SortedSet *tempsInUse;
     ConstMap *stackLocation;
+    ConstMap *loadedVariables;
+    RaVariable *currentVariable;
 } RaState;
 
 void appendToInstruction(Instructions* i1, Instructions *i2);
