@@ -283,7 +283,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
                 dataFlowEntry = initDataFlowEntry();
 
                 dataFlowEntry->successors = makeLineList(line + 1);
-                int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.function))->v)->value;
+                int targetLine = ((IntBox *) get(labels, makeCharKey(iter->val.functionCall.function))->v)->value;
                 dataFlowEntry->function = makeIntBox(targetLine);
             }
                 break;
@@ -305,7 +305,7 @@ LivenessAnalysisResult *livenessAnalysis(Instructions *instructions) {
             case INSTRUCTION_JMP: {
                 dataFlowEntry = initDataFlowEntry();
 
-                Pair *target = get(labels, makeCharKey(iter->val.function));
+                Pair *target = get(labels, makeCharKey(iter->val.functionCall.function));
 
                 if (target != NULL) {
                     int targetLine = ((IntBox *) target->v)->value;

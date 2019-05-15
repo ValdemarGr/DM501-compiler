@@ -322,7 +322,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             fprintf(out, "# INSTRUCTION_FUNCTION_CALL\n");
             printIndentation(out);
             fprintf(out, "call %s\n",
-                    instruction->val.function);
+                    instruction->val.functionCall.function);
         } break;
         case COMPLEX_CONSTRAIN_BOOLEAN: {
             fprintf(out, "# COMPLEX_CONSTRAIN_BOOLEAN\n");
@@ -976,6 +976,17 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         case COMPLEX_SAVE_ALL: {
             fprintf(out, "# COMPLEX_SAVE_ALL\n");
 
+/*            SortedSet *ss = instruction->val.restoreSave;
+            for (int i = 0; i < 16; i++) {
+                if (exists(ss, i)) {
+                    printIndentation(out);
+                    fprintf(out, "pushq %%%s\n",
+                            getNextRegister(i));
+                }
+            }*/
+
+
+
             printIndentation(out);
             fprintf(out, "pushq %%rcx\n");
             printIndentation(out);
@@ -1006,6 +1017,16 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_RESTORE_ALL: {
             fprintf(out, "# COMPLEX_RESTORE_ALL\n");
+
+/*            SortedSet *ss = instruction->val.restoreSave;
+            for (int i = 16; i < 0; i++) {
+                if (exists(ss, i)) {
+                    printIndentation(out);
+                    fprintf(out, "pushq %%%s\n",
+                            getNextRegister(i));
+                }
+            }*/
+
 
             printIndentation(out);
             fprintf(out, "popq %%r15\n");
@@ -1111,6 +1132,15 @@ void generateInstruction(FILE *out, Instructions* instruction) {
                     getNextRegister(instruction->val.art2const.temp),
                     getNextRegister(instruction->val.art2const.temp));
         } break;
+        case INSTRUCTION_LOAD_STACK_PTR: {
+            fprintf(out, "# INSTRUCTION_LOAD_STACK_PTR\n");
+            printIndentation(out);
+            fprintf(out, "movq %i(%%rsp), %%%s\n",
+                    instruction->val.loadStackPtr.offset,
+                    getNextRegister(instruction->val.loadStackPtr.temp));
+        } break;
+        case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
+        case NOOP:break;
     }
 }
 

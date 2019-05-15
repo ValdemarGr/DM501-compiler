@@ -281,6 +281,16 @@ PeepholeTemplates *generateRulesetsForSize() {
         //addInstructionTemplate(peepholeTemplates, add, ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK, 1);
     }
 
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
+        SimpleInstruction *add = NEW(SimpleInstruction);
+        add->kind = INSTRUCTION_PUSH;
+        registerTrackerForBlock++;
+
+        //addInstructionTemplate(peepholeTemplates, add, POP_PUSH_STACK_PTR_LOAD, 1);
+    }
+
     return peepholeTemplates;
 }
 
@@ -411,6 +421,25 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                         templateApplied = true;
                     }
                 }
+            }
+        } break;
+        case POP_PUSH_STACK_PTR_LOAD: {
+            size_t temp = instructionsIter->val.tempToPush;
+
+            Instructions *instr = NULL; //FIND INSTRUCTION THAT POPS TEMPORARY
+
+            size_t amountOfPushesBetween = 0;
+            size_t amountOfPopsBetween = 0;
+
+            int stackOffset = amountOfPushesBetween - amountOfPopsBetween;
+
+            if (true) { //Correct condition
+                instructionHead = newInstruction();
+                instructionHead->kind = INSTRUCTION_LOAD_STACK_PTR;
+                instructionHead->val.loadStackPtr.offset = stackOffset * POINTER_SIZE;
+                instructionHead->val.loadStackPtr.temp = instructionsIter->val.tempToPush;
+                currentInstruction = instructionHead;
+                templateApplied = true;
             }
         } break;
         default: break;

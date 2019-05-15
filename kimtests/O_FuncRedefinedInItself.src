@@ -3,17 +3,13 @@ func b(d : int) : int
   func b(e : bool) : int
     if (e == true) then
     {
-        write 1;
       return 1;
     }
     else
     {
-        write 0;
       return 0;
     }
   end b
-  write b(true);
-  write d;
   return d + b(true);
 end b
 
