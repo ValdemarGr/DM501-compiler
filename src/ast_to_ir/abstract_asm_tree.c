@@ -654,8 +654,14 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             appendInstructions(popLink);
             currentTemporary++;
 
+            Instructions *cpy = newInstruction();
+            cpy->kind = INSTRUCTION_COPY;
+            cpy->val.arithmetic2.source = 0;
+            cpy->val.arithmetic2.dest = currentTemporary;
+            appendInstructions(cpy);
+            currentTemporary++;
 
-            return 0;
+            return currentTemporary - 1;
         } break;
         case parenthesesK: {
             return generateInstructionsForExpression(term->val.parenthesesD.expression, symbolTable);
@@ -1122,7 +1128,15 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
             popLink->val.pushPopStaticLink.temporary = currentTemporary;
             appendInstructions(popLink);
             currentTemporary++;
-            return 0;
+
+            Instructions *cpy = newInstruction();
+            cpy->kind = INSTRUCTION_COPY;
+            cpy->val.arithmetic2.source = 0;
+            cpy->val.arithmetic2.dest = currentTemporary;
+            appendInstructions(cpy);
+            currentTemporary++;
+
+            return currentTemporary - 1;
         } break;
     }
 }

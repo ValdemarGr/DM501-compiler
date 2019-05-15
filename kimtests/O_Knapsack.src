@@ -104,7 +104,7 @@ func partition(f : int, l : int) : int
 var p_elem : int, w_elem : int, i : int, j : int, dummy : bool;
 {
   p_elem = p[l];
-  w_elem = w[l];  
+  w_elem = w[l];
   i = f-1;
   j = f;
   while (j <= l-1) do
@@ -132,24 +132,20 @@ fp = 0-1; (* Final profit *)
 fw = 0; (* Final weight *)
 fe = 0; (* Final elements *)
 
-write |w|;
-write |p|;
-write |x|;
-
 (* Initialisering til pseudorandom generator *)
 rand = 1;
 a = 40;
 b = 3641;
 modulo = 729;
 
-(* L�g pseudorandom data i arrays *)
+(* Læg pseudorandom data i arrays *)
 counter = 0;
 while(counter < n) do
 {
   rand = NextRand(rand, a, b, modulo);
   w[counter] = rand/20+10;
   rand = NextRand(rand, a, b, modulo);
-  p[counter] = rand/90+1; 
+  p[counter] = rand/90+1;
   x[counter] = 0;
   y[counter] = 0;
 (*
@@ -186,4 +182,3 @@ while(counter < n) do
 write(fe);
 write(fp);
 write(fw);
-

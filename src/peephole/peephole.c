@@ -7,6 +7,148 @@
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions);
 
+Instructions *lookForDupFetches(Instructions *original, Instructions *current, InstructionKind ik) {
+    if (current->kind != ik) {
+        return lookForDupFetches(original, current->previous, ik);
+    }
+
+    switch (ik) {
+        case INSTRUCTION_RETURN:
+        case INSTRUCTION_FUNCTION_END:
+        case INSTRUCTION_FUNCTION_CALL:
+        case INSTRUCTION_LABEL:
+        case INSTRUCTION_JE:
+        case INSTRUCTION_JMP:
+        case INSTRUCTION_REGISTER_CALL:
+        case COMPLEX_RIP_LAMBDA_LOAD:
+        case METADATA_BEGIN_BODY_BLOCK:
+        case METADATA_END_BODY_BLOCK:
+        case COMPLEX_RESTORE_ALL:
+        case METADATA_CREATE_MAIN:
+        case COMPLEX_SAVE_ALL:
+        case INSTRUCTION_FUNCTION_LABEL: return NULL;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
+            if (
+                    current->val.tempFromStack.offset == original->val.tempFromStack.offset &&
+                    current->val.tempFromStack.inputTemp == original->val.tempFromStack.inputTemp
+                    ) {
+                return current;
+            }
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: {
+            if (
+                    current->val.tempFromStackScope.offset == original->val.tempFromStackScope.offset &&
+                    current->val.tempFromStackScope.inputTemp == original->val.tempFromStackScope.inputTemp &&
+                    current->val.tempFromStackScope.scopeToFindFrame == original->val.tempFromStackScope.scopeToFindFrame
+                    ) {
+                return current;
+            }
+        } break;
+        case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: {
+            if (
+                    current->val.dereferenceOffset.offsetTemp == original->val.dereferenceOffset.offsetTemp &&
+                    current->val.dereferenceOffset.ptrTemp == original->val.dereferenceOffset.ptrTemp
+                    ) {
+                return current;
+            }
+        } break;
+    }
+
+    return lookForDupFetches(original, current->previous, ik);
+}
+
+Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current, size_t regToLookFor) {
+    switch (current->kind) {
+        case INSTRUCTION_RETURN:
+        case INSTRUCTION_FUNCTION_END:
+        case INSTRUCTION_FUNCTION_CALL:
+        case INSTRUCTION_LABEL:
+        case INSTRUCTION_JE:
+        case INSTRUCTION_JMP:
+        case INSTRUCTION_REGISTER_CALL:
+        case COMPLEX_RIP_LAMBDA_LOAD:
+        case METADATA_BEGIN_BODY_BLOCK:
+        case METADATA_END_BODY_BLOCK:
+        case COMPLEX_RESTORE_ALL:
+        case METADATA_CREATE_MAIN:
+        case COMPLEX_SAVE_ALL:
+        case INSTRUCTION_FUNCTION_LABEL: return NULL;
+        case INSTRUCTION_PROGRAM_BEGIN:
+        case INSTRUCTION_VAR:
+        case INSTRUCTION_WRITE:
+        case INSTRUCTION_WRITE_CHAR:
+        case INSTRUCTION_WRITE_NL:
+        case INSTRUCTION_PUSH:
+        case INSTRUCTION_PUSH_STACK:
+        case INSTRUCTION_LEA_TO_OFFSET:
+        case INSTRUCTION_ADD_STACK_PTR:
+        case COMPLEX_ALLOCATE_END:
+        case METADATA_END_ARITHMETIC_EVALUATION:
+        case METADATA_BEGIN_ARITHMETIC_EVALUATION:
+        case METADATA_BEGIN_GLOBAL_BLOCK:
+        case METADATA_END_GLOBAL_BLOCK:
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK:
+        case RUNTIME_ARRAY_BOUNDS_CHECK:
+        case RUNTIME_NEGATIVE_ALLOC:
+        case RUNTIME_NULLPTR_CHECK:
+        case RUNTIME_DIV_ZERO:
+        case METADATA_DEBUG_INFO:
+        case COMPLEX_GARBAGE_COLLECT:
+        case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:
+        case INSTRUCTION_POP_STACK:break;
+        case INSTRUCTION_DIV:
+        case INSTRUCTION_MINUS:
+        case INSTRUCTION_MUL:
+        case INSTRUCTION_AND:
+        case INSTRUCTION_OR:
+        case INSTRUCTION_XOR:
+        case INSTRUCTION_COPY:
+        case INSTRUCTION_CMP:
+        case INSTRUCTION_MOVE:
+        case INSTRUCTION_LEA_ADD:
+        case INSTRUCTION_ADD: if (current->val.arithmetic2.dest == regToLookFor) return current; break;
+        case INSTRUCTION_CONST: if (current->val.constant.temp == regToLookFor) return current; break;
+        case INSTRUCTION_POP: if (current->val.tempToPopInto == regToLookFor) return current; break;
+        case INSTRUCTION_NEGATE: if (current->val.tempToNegate == regToLookFor) return current; break;
+        case INSTRUCTION_RIGHT_SHIFT: if (current->val.rightShift.temp == regToLookFor) return current; break;
+        case INSTRUCTION_MUL_CONST:
+        case INSTRUCTION_LEA_ADD_CONST:
+        case INSTRUCTION_ADD_CONST: if (current->val.art2const.temp == regToLookFor) return current; break;
+        case INSTRUCTION_MOVE_TO_OFFSET: if (current->val.moveToOffset.ptrTemp == regToLookFor) return current; break;
+        case INSTRUCTION_SET_ZERO: if (current->val.tempToSetZero == regToLookFor) return current; break;
+        case COMPLEX_ALLOCATE: if (current->val.allocate.intermediate == regToLookFor) return NULL; break;
+        case COMPLEX_CONSTRAIN_BOOLEAN: if (current->val.tempToConstrain == regToLookFor) return current; break;
+        case COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE:{
+            if (current->val.tempIntoStackScope.intermediate == regToLookFor ||
+                    current->val.tempIntoStackScope.intermediate2 == regToLookFor) {
+                return NULL;
+            }
+        } break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK: if (current->val.tempFromStack.inputTemp == regToLookFor) return current; break;
+        case COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE: {
+            if (current->val.tempFromStackScope.intermediate == regToLookFor ||
+                current->val.tempFromStackScope.intermediate2 == regToLookFor) {
+                return NULL;
+            } else if (current->val.tempFromStackScope.inputTemp == regToLookFor) {
+                return current;
+            }
+        } break;
+        case COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET: if (current->val.dereferenceOffset.ptrTemp == regToLookFor) return current; break;
+        case COMPLEX_SAVE_STATIC_LINK: if (current->val.pushPopStaticLink.temporary == regToLookFor) return current; break;
+        case COMPLEX_RESTORE_STATIC_LINK: if (current->val.pushPopStaticLink.temporary == regToLookFor) return current; break;
+        case COMPLEX_ABS_VALUE: {
+            if (current->val.arithmetic2.dest == regToLookFor ||
+            current->val.arithmetic2.source == regToLookFor) {
+                return NULL;
+            }
+        } break;
+        case METADATA_FUNCTION_ARGUMENT: if (current->val.args.moveReg == regToLookFor) return current; break;
+        case INSTRUCTION_ABS:break;
+    }
+
+    return fetchPreviousInstructionThatModifiesRegister(current->previous, regToLookFor);
+}
+
 void addInstructionTemplate(PeepholeTemplates *peepholeTemplates, SimpleInstruction *simpleInstruction, PeepholeApplyType apply, int size) {
     PeepholeTemplates *last = peepholeTemplates->last;
 
@@ -127,6 +269,16 @@ PeepholeTemplates *generateRulesetsForSize() {
         addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
     }
 
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
+        SimpleInstruction *add = NEW(SimpleInstruction);
+        add->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+        registerTrackerForBlock++;
+
+        addInstructionTemplate(peepholeTemplates, add, ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK, 1);
+    }
+
     return peepholeTemplates;
 }
 
@@ -237,6 +389,19 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
             currentInstruction = instructionHead;
             templateApplied = true;
         } break;
+        case ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK: {
+            Instructions *instr = fetchPreviousInstructionThatModifiesRegister(instructionsIter, instructionsIter->val.tempFromStackScope.inputTemp);
+            if (instr != NULL) {
+                if (instr->kind == instructionsIter->kind) {
+                    Instructions *matching = lookForDupFetches(instructionsIter, instructionsIter->next, instructionsIter->kind);
+                    if (instr == matching) {
+                        instructionHead = newInstruction();
+                        instructionHead->kind = NOOP;
+                        templateApplied = true;
+                    }
+                }
+            }
+        } break;
         default: break;
     }
 
@@ -345,10 +510,11 @@ void peephole(Instructions *instructions) {
 
     int amountOfTimesIterPeepholed = 0;
     while (iter != NULL) {
-        if (amountOfTimesIterPeepholed > 20) {
-            iter = iter->next;
-            continue;
-        }
+    //    if (amountOfTimesIterPeepholed > 20) {
+    //       amountOfTimesIterPeepholed = 0;
+    //       iter = iter->next;
+    //       continue;
+    //    }
         PeepholeTemplates *templateIter = peepholeTemplates;
 
         while (templateIter != NULL) {
