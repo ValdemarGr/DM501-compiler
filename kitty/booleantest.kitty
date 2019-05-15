@@ -4,18 +4,42 @@ var b: int;
 var c: int;
 var d: int;
 
+var p: array of int;
+val cp = 2;
+val k = 42;
+val fp = 102;
+val k = 77;
+val n = 78;
+
+allocate p of length 100;
+p[k] = 103;
+
+# all passes for positives
+
 a = 4;
 b = 5;
 c = 0-4;
 d = 0-5;
 
-# all passes for positives
+
+if ((cp+p[k] > fp) && (k == n-1)) then {
+    write 22;
+} else {
+    write 0;
+}
+
+if (375 >= 0-1) then {
+    write 23;
+} else {
+    write 0;
+}
 
 if (a < b) then {
     write 1;
 } else {
     write 0;
 }
+
 
 if (b <= b) then {
     write 2;
