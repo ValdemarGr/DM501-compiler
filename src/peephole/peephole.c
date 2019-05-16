@@ -494,6 +494,9 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
 }
 
 Instructions *skipToNextImportantInstruction(Instructions *instructions) {
+    if (instructions == NULL) {
+        return NULL;
+    }
     switch (instructions->kind) {
         case INSTRUCTION_ADD: { return instructions; } break;
         case INSTRUCTION_MINUS: { return instructions; } break;

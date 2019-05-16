@@ -1,6 +1,6 @@
 .section .data
 staticLink:
-	.space 24
+	.space 16
 intprint:
 	.asciz "%i\n"
 charprint:
@@ -762,8 +762,9 @@ outOfBoundsCheck:
     ret
 
 # METADATA_BEGIN_BODY_BLOCK
-# VAR opt
-# VAR boxedInteger
+# VAR y
+# VAR mybool
+# VAR modulo
 # METADATA_CREATE_MAIN
 	main:
 	push %rbp
@@ -777,10 +778,10 @@ mov %rbp, %rax
     #move heap into one
     leaq gcHeapOne, %r15
     movq %rax, 24(%r15)
-    movq $1048576000, 16(%r15)
+    movq $2097152000, 16(%r15)
     movq $0, 8(%r15)
     movq $1, 0(%r15)
-    addq $1048576000, %rax
+    addq $2097152000, %rax
     push %rax
     movq %rax, %rdi
     mov $12, %rax
@@ -792,1892 +793,1243 @@ mov %rbp, %rax
 
     leaq gcHeapTwo, %r15
     movq %rax, 24(%r15)
-    movq $1048576000, 16(%r15)
+    movq $2097152000, 16(%r15)
     movq $0, 8(%r15)
     movq $0, 0(%r15)
 
-    addq $1048576000, %rax
+    addq $2097152000, %rax
     movq %rax, %rdi
     mov $12, %rax
     syscall
-	subq $88, %rsp
+	subq $208, %rsp
 	popq %rax
 	movq %rax, -8(%rbp)
-	movq $3, -16(%rbp)
-	movq $0, -24(%rbp)
-	movq $0, -48(%rbp)
-	movq $1, -32(%rbp)
-	movq $0, -56(%rbp)
-	movq $2, -40(%rbp)
+	movq $4, -16(%rbp)
+	movq $1, -24(%rbp)
 	movq $0, -64(%rbp)
+	movq $2, -32(%rbp)
+	movq $0, -72(%rbp)
+	movq $3, -40(%rbp)
+	movq $0, -80(%rbp)
+	movq $4, -48(%rbp)
+	movq $0, -88(%rbp)
 	leaq staticLink, %rax
 	movq %rbp, (%rax)
-# VAR showwer
-# METADATA_DEBUG_INFO
-		# 122: {0}
-# COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
-# METADATA_DEBUG_INFO
-		# 123: {0}
-# INSTRUCTION_FUNCTION_CALL
-		call a__0
-# METADATA_DEBUG_INFO
-		# 124: {0}
-# INSTRUCTION_ADD_STACK_PTR
-		addq $0, %rsp
-# METADATA_DEBUG_INFO
-		# 125: {0}
-# COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
-# METADATA_DEBUG_INFO
-		# 126: {0, 11}
-# COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rdx
-movq %rbp, 0(%rdx)
-# METADATA_DEBUG_INFO
-		# 127: {0, 12}
-# INSTRUCTION_COPY
-		mov %rax, %rdx
-# METADATA_DEBUG_INFO
-		# 128: {0, 12}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rdx, -48(%rbp)
-# METADATA_DEBUG_INFO
-		# ALLOC
-# METADATA_DEBUG_INFO
-		# boxedInteger
-# METADATA_DEBUG_INFO
-		# 129: {0, 13}
 # INSTRUCTION_CONST
-		mov $1, %rbx
-# METADATA_DEBUG_INFO
-		# 130: {0, 13, 14}
+		mov $1000, %rdx
 # COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_RECORD_CLASS
-		addq $16, %rdx
-		pushq %rdx
+		movq $8, %r8
+		imulq %rdx, %r8
+# ALLOC_ARR_OF_PRIM
+		addq $16, %r8
+		pushq %r8
 		pushq %rbp
 		call garbageCollectAllocate
-		movq %rbx, 0(%rax)
-# ALLOC_RECORD_CLASS
-		subq $8, %rdx
-		movq $0, (%rax, %rdx, 1)
-		popq %rdx
-		popq %rdx
+		movq %rdx, 0(%rax)
+		subq $8, %r8
+		movq $0, (%rax, %r8, 1)
+		popq %r8
+		popq %r8
 		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 131: {0}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 132: {0}
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
 		mov %rax, -64(%rbp)
-# METADATA_DEBUG_INFO
-		# 133: {15}
-# INSTRUCTION_SET_ZERO
-		xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-		# 134: {15, 16}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 135: {15, 16}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 136: {15, 16, 17}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 137: {15, 16, 17}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 138: {0}
-# INSTRUCTION_POP
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 139: {0}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 140: {0, 18}
 # INSTRUCTION_CONST
-		mov $42, %rdi
-# METADATA_DEBUG_INFO
-		# 141: {0, 18}
-# INSTRUCTION_PUSH
-		push %rdi
-# METADATA_DEBUG_INFO
-		# 142: {0}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 143: {0}
-# INSTRUCTION_FUNCTION_CALL
-		call IntBox_constructor
-# METADATA_DEBUG_INFO
-		# 144: {}
-# INSTRUCTION_ADD_STACK_PTR
-		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 145: {0}
-# INSTRUCTION_POP
-		pop %rax
-# METADATA_DEBUG_INFO
-		# ALLOC
-# METADATA_DEBUG_INFO
-		# opt
-# METADATA_DEBUG_INFO
-		# 146: {0, 19}
-# INSTRUCTION_CONST
-		mov $3, %rbx
-# METADATA_DEBUG_INFO
-		# 147: {0, 19, 20}
+		mov $1000, %rsi
 # COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_RECORD_CLASS
-		addq $32, %rdx
-		pushq %rdx
+		movq $8, %rbx
+		imulq %rsi, %rbx
+# ALLOC_ARR_OF_PRIM
+		addq $16, %rbx
+		pushq %rbx
 		pushq %rbp
 		call garbageCollectAllocate
-		movq %rbx, 0(%rax)
-# ALLOC_RECORD_CLASS
-		subq $24, %rdx
-		movq $2, (%rax, %rdx, 1)
-		movq $0, 8(%rax, %rdx, 1)
-		movq $2, 16(%rax, %rdx, 1)
-		popq %rdx
-		popq %rdx
+		movq %rsi, 0(%rax)
+		subq $8, %rbx
+		movq $0, (%rax, %rbx, 1)
+		popq %rbx
+		popq %rbx
 		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 148: {0}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 149: {0}
 # COMPLEX_MOVE_TEMPORARY_INTO_STACK
-		mov %rax, -56(%rbp)
-# METADATA_DEBUG_INFO
-		# 150: {0, 21}
-# INSTRUCTION_SET_ZERO
-		xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-		# 151: {0, 21, 22}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 152: {0, 21, 22}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 153: {0, 21, 22, 23}
+		mov %rax, -72(%rbp)
 # INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 154: {0, 21, 22, 23}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 155: {0, 24}
-# COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_0(%rip), %rsi
-# METADATA_DEBUG_INFO
-		# 156: {0, 24, 25}
-# INSTRUCTION_CONST
-		mov $1, %rdx
-# METADATA_DEBUG_INFO
-		# 157: {0, 24, 25, 26}
+		mov $1000, %rdx
 # COMPLEX_ALLOCATE
 		movq $8, %rbx
 		imulq %rdx, %rbx
-# ALLOC_LAMBDA
-		addq $32, %rbx
+# ALLOC_ARR_OF_PRIM
+		addq $16, %rbx
 		pushq %rbx
 		pushq %rbp
 		call garbageCollectAllocate
-		movq $2, 0(%rax)
-		movq $1, 24(%rax)
-		movq $1, 32(%rax)
+		movq %rdx, 0(%rax)
+		subq $8, %rbx
+		movq $0, (%rax, %rbx, 1)
 		popq %rbx
 		popq %rbx
 		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 158: {0, 24, 27}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, -80(%rbp)
+# INSTRUCTION_CONST
+		mov $1000, %rdx
+# COMPLEX_ALLOCATE
+		movq $8, %rsi
+		imulq %rdx, %rsi
+# ALLOC_ARR_OF_PRIM
+		addq $16, %rsi
+		pushq %rsi
+		pushq %rbp
+		call garbageCollectAllocate
+		movq %rdx, 0(%rax)
+		subq $8, %rsi
+		movq $0, (%rax, %rsi, 1)
+		popq %rsi
+		popq %rsi
+		addq $8, %rax
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rax, -88(%rbp)
+# INSTRUCTION_CONST
+		mov $1000, %rdi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdi, -120(%rbp)
+# INSTRUCTION_CONST
+		mov $600, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -112(%rbp)
+# INSTRUCTION_CONST
+		mov $-1, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -128(%rbp)
+# INSTRUCTION_SET_ZERO
+		xorq %rsi, %rsi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rsi, -136(%rbp)
+# INSTRUCTION_SET_ZERO
+		xorq %r8, %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %r8, -144(%rbp)
+# INSTRUCTION_CONST
+		mov $1, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -160(%rbp)
+# INSTRUCTION_CONST
+		mov $40, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -168(%rbp)
+# INSTRUCTION_CONST
+		mov $3641, %rdi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdi, -176(%rbp)
+# INSTRUCTION_CONST
+		mov $729, %rsi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rsi, -184(%rbp)
 # INSTRUCTION_SET_ZERO
 		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 159: {0, 24, 27}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -104(%rbp)
+# INSTRUCTION_LABEL
+		while_cnd_4:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -120(%rbp), %r11
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+		sub %rbx, %r11
+# COMPLEX_CONSTRAIN_BOOLEAN
+		push %rax
+		cmp $0, %r11
+		setg %al
+		movsx %al, %r11
+		pop %rax
+# INSTRUCTION_CONST
+		mov $1, %r8
+# INSTRUCTION_CMP
+		cmp %r11, %r8
+# INSTRUCTION_JE
+		je while_4_begin
+# INSTRUCTION_JMP
+		jmp while_4_end
+# INSTRUCTION_LABEL
+		while_4_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -160(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -168(%rbp), %r10
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %r10
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -176(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -184(%rbp), %r9
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %r9
+# INSTRUCTION_FUNCTION_CALL
+		call NextRand__0
+# INSTRUCTION_ADD_STACK_PTR
+		addq $32, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+		leaq staticLink, %rdi
+movq %rbp, 0(%rdi)
+# INSTRUCTION_COPY
+		mov %rax, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -160(%rbp)
+# INSTRUCTION_COPY
+		mov %rdx, %rsi
+# INSTRUCTION_CONST
+		mov $20, %r8
+# INSTRUCTION_DIV
+		movq %rsi, %rax
+		pushq %r10
+		movq %r8, %r10
+		pushq %rdx
+		cqto
+		idiv %r10
+		popq %rdx
+		popq %r10
+		movq %rax, %r8
+# INSTRUCTION_LEA_ADD_CONST
+		leaq 10(%r8), %r8
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -64(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+		imul $8, %rsi
 # INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rax, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 160: {0, 28}
+		mov %r8, (%rdi, %rsi,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -160(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %rbx
+# INSTRUCTION_COPY
+		mov %r10, %rdx
+# INSTRUCTION_PUSH
+		push %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -176(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+		push %rdi
+# INSTRUCTION_COPY
+		mov %r9, %rsi
+# INSTRUCTION_PUSH
+		push %rsi
+# INSTRUCTION_FUNCTION_CALL
+		call NextRand__0
+# INSTRUCTION_ADD_STACK_PTR
+		addq $32, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+		leaq staticLink, %rbx
+movq %rbp, 0(%rbx)
 # INSTRUCTION_COPY
 		mov %rax, %rsi
-# METADATA_DEBUG_INFO
-		# 161: {28, 29}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rsi, -160(%rbp)
+# INSTRUCTION_COPY
+		mov %rsi, %r8
 # INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 162: {0, 28, 29}
-# INSTRUCTION_POP
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 163: {0, 28, 29}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rax, (%rsi, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 164: {0, 28}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 165: {28, 30}
+		mov $90, %rdi
+# INSTRUCTION_DIV
+		movq %r8, %rax
+		pushq %r10
+		movq %rdi, %r10
+		pushq %rdx
+		cqto
+		idiv %r10
+		popq %rdx
+		popq %r10
+		movq %rax, %rdi
+# INSTRUCTION_LEA_ADD_CONST
+		leaq 1(%rdi), %rdi
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 166: {28, 30}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 167: {28, 30, 31}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 168: {28, 30, 31}
+		mov -72(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+		imul $8, %rsi
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rdi, (%rdx, %rsi,1)
+# INSTRUCTION_SET_ZERO
+		xorq %rdx, %rdx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -80(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+		imul $8, %rdi
+# INSTRUCTION_MOVE_TO_OFFSET
+		mov %rdx, (%r8, %rdi,1)
+# INSTRUCTION_SET_ZERO
+		xorq %rsi, %rsi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -88(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+		imul $8, %rdx
 # INSTRUCTION_MOVE_TO_OFFSET
 		mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 169: {0}
-# INSTRUCTION_POP
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 170: {0}
-# INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 171: {0, 32}
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -64(%rbp), %rdx
-# METADATA_DEBUG_INFO
-		# 172: {0, 32}
+		mov -104(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+		leaq 1(%rdx), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -104(%rbp)
+# INSTRUCTION_JMP
+		jmp while_cnd_4
+# INSTRUCTION_LABEL
+		while_4_end:
+# INSTRUCTION_SET_ZERO
+		xorq %rsi, %rsi
 # INSTRUCTION_PUSH
-		push %rdx
-# METADATA_DEBUG_INFO
-		# 173: {0}
+		push %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -120(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+		sub $1, %rbx
 # INSTRUCTION_PUSH
-		push %rax
-# METADATA_DEBUG_INFO
-		# 174: {0}
+		push %rbx
 # INSTRUCTION_FUNCTION_CALL
-		call Optional_constructor
-# METADATA_DEBUG_INFO
-		# 175: {}
+		call quicksort__0
 # INSTRUCTION_ADD_STACK_PTR
 		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 176: {0}
-# INSTRUCTION_POP
-		pop %rax
-# METADATA_DEBUG_INFO
-		# 177: {0, 33}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdi
-# METADATA_DEBUG_INFO
-		# 178: {0, 33}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 179: {0, 33, 34}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 180: {0, 33, 34}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# 181: {0, 33}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 182: {0, 33}
-# COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
-# METADATA_DEBUG_INFO
-		# 183: {0, 33, 35}
-# COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_1(%rip), %rsi
-# METADATA_DEBUG_INFO
-		# 184: {0, 33, 35, 36}
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# METADATA_DEBUG_INFO
-		# 185: {0, 33, 35, 36, 37}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_LAMBDA
-		addq $32, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq $2, 0(%rax)
-		movq $1, 24(%rax)
-		movq $1, 32(%rax)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 186: {0, 33, 35, 38}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 187: {0, 33, 35, 38}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rax, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 196: {0, 33, 41}
-# INSTRUCTION_COPY
-		mov %rax, %rbx
-# METADATA_DEBUG_INFO
-		# 197: {0, 33, 41}
-# INSTRUCTION_PUSH
-		push %rbx
-# METADATA_DEBUG_INFO
-		# 198: {0, 33, 42}
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 199: {0, 33, 42}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# CAPTURE PUSH
-# METADATA_DEBUG_INFO
-		# 200: {0, 33}
-# INSTRUCTION_PUSH
-		push %rdi
-# METADATA_DEBUG_INFO
-		# 201: {0, 43}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 202: {0, 43}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 203: {0, 43, 44}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 204: {0, 43, 44}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 205: {0, 43, 45}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 206: {0, 43, 45}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 207: {0, 43}
-# INSTRUCTION_REGISTER_CALL
-		call *%rbx
-# METADATA_DEBUG_INFO
-		# 208: {0}
-# INSTRUCTION_ADD_STACK_PTR
-		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 209: {0}
-# COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
-# METADATA_DEBUG_INFO
-		# 210: {0, 46}
 # COMPLEX_RESTORE_STATIC_LINK
 		leaq staticLink, %rdx
 movq %rbp, 0(%rdx)
-# METADATA_DEBUG_INFO
-		# 211: {0}
 # INSTRUCTION_COPY
 		mov %rax, %rdx
-# COMPLEX_GARBAGE_COLLECT
-		pushq %rbp
-		call garbageCollect
-		popq %rbp
-# METADATA_DEBUG_INFO
-		# 212: {0, 48}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdi
-# METADATA_DEBUG_INFO
-		# 213: {0, 48}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 214: {0, 48, 49}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 215: {0, 48, 49}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# 216: {0, 48}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 217: {0, 48}
-# COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
-# METADATA_DEBUG_INFO
-		# 218: {0, 48, 50}
-# COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_2(%rip), %rsi
-# METADATA_DEBUG_INFO
-		# 219: {0, 48, 50, 51}
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# METADATA_DEBUG_INFO
-		# 220: {0, 48, 50, 51, 52}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_LAMBDA
-		addq $32, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq $2, 0(%rax)
-		movq $1, 24(%rax)
-		movq $1, 32(%rax)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 221: {0, 48, 50, 53}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -152(%rbp)
 # INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 222: {0, 48, 50, 53}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rax, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 231: {0, 48, 56}
-# INSTRUCTION_COPY
-		mov %rax, %rbx
-# METADATA_DEBUG_INFO
-		# 232: {0, 48, 56}
+		xorq %rbx, %rbx
 # INSTRUCTION_PUSH
 		push %rbx
-# METADATA_DEBUG_INFO
-		# 233: {0, 48, 57}
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 234: {0, 48, 57}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# CAPTURE PUSH
-# METADATA_DEBUG_INFO
-		# 235: {0, 48}
-# INSTRUCTION_PUSH
-		push %rdi
-# METADATA_DEBUG_INFO
-		# 236: {0, 58}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 237: {0, 58}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 238: {0, 58, 59}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 239: {0, 58, 59}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 240: {0, 58, 60}
 # INSTRUCTION_SET_ZERO
 		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 241: {0, 58, 60}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 242: {0, 58}
-# INSTRUCTION_REGISTER_CALL
-		call *%rbx
-# METADATA_DEBUG_INFO
-		# 243: {0}
-# INSTRUCTION_ADD_STACK_PTR
-		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 244: {0}
-# COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
-# METADATA_DEBUG_INFO
-		# 245: {0, 61}
-# COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rdx
-movq %rbp, 0(%rdx)
-# METADATA_DEBUG_INFO
-		# 246: {0}
-# INSTRUCTION_COPY
-		mov %rax, %rdx
-# METADATA_DEBUG_INFO
-		# 247: {0, 63}
-# INSTRUCTION_CONST
-		mov $99, %rsi
-# METADATA_DEBUG_INFO
-		# 248: {0, 63, 64}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 249: {0, 63, 64}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 250: {0, 63, 64, 65}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 251: {0, 63, 64, 65}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 252: {0, 63, 64}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 253: {0, 63, 64, 66}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 254: {0, 63, 64, 66}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 255: {0, 67}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rdi
-# METADATA_DEBUG_INFO
-		# 256: {0, 67}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 257: {0, 67, 68}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 258: {0, 67, 68}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# 259: {0, 67}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rdi
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 260: {0, 67}
-# COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
-# METADATA_DEBUG_INFO
-		# 261: {0, 67, 69}
-# COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_3(%rip), %rsi
-# METADATA_DEBUG_INFO
-		# 262: {0, 67, 69, 70}
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# METADATA_DEBUG_INFO
-		# 263: {0, 67, 69, 70, 71}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_LAMBDA
-		addq $32, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq $2, 0(%rax)
-		movq $1, 24(%rax)
-		movq $1, 32(%rax)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 264: {0, 67, 69, 72}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 265: {0, 67, 69, 72}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rax, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 274: {0, 67, 75}
-# INSTRUCTION_COPY
-		mov %rax, %rbx
-# METADATA_DEBUG_INFO
-		# 275: {0, 67, 75}
-# INSTRUCTION_PUSH
-		push %rbx
-# METADATA_DEBUG_INFO
-		# 276: {0, 67, 76}
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 277: {0, 67, 76}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rdi, %rdx, 1), %rdi
-# METADATA_DEBUG_INFO
-		# CAPTURE PUSH
-# METADATA_DEBUG_INFO
-		# 278: {0, 67}
-# INSTRUCTION_PUSH
-		push %rdi
-# METADATA_DEBUG_INFO
-		# 279: {0, 77}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -56(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 280: {0, 77}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 281: {0, 77, 78}
-# INSTRUCTION_CONST
-		mov $16, %rdx
-# METADATA_DEBUG_INFO
-		# 282: {0, 77, 78}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 283: {0, 77, 79}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 284: {0, 77, 79}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 285: {0, 77}
-# INSTRUCTION_REGISTER_CALL
-		call *%rbx
-# METADATA_DEBUG_INFO
-		# 286: {0}
-# INSTRUCTION_ADD_STACK_PTR
-		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 287: {0}
-# COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
-# METADATA_DEBUG_INFO
-		# 288: {0, 80}
-# COMPLEX_RESTORE_STATIC_LINK
-		leaq staticLink, %rdx
-movq %rbp, 0(%rdx)
-# METADATA_DEBUG_INFO
-		# 289: {0}
-# INSTRUCTION_COPY
-		mov %rax, %rdx
-# METADATA_DEBUG_INFO
-		# 290: {0}
-# COMPLEX_SAVE_ALL
-		pushq %rcx
-		pushq %rdx
-		pushq %rbx
-		pushq %rsi
-		pushq %rdi
-		pushq %r8
-		pushq %r9
-		pushq %r10
-		pushq %r11
-		pushq %r12
-		pushq %r13
-		pushq %r14
-		pushq %r15
-# METADATA_DEBUG_INFO
-		# 291: {0, 82}
-# COMPLEX_RIP_LAMBDA_LOAD
-		leaq lambda_4(%rip), %rsi
-# METADATA_DEBUG_INFO
-		# 292: {0, 82, 83}
-# INSTRUCTION_CONST
-		mov $1, %rbx
-# METADATA_DEBUG_INFO
-		# 293: {0, 82, 83, 84}
-# COMPLEX_ALLOCATE
-		movq $8, %rdx
-		imulq %rbx, %rdx
-# ALLOC_LAMBDA
-		addq $32, %rdx
-		pushq %rdx
-		pushq %rbp
-		call garbageCollectAllocate
-		movq $2, 0(%rax)
-		movq $1, 24(%rax)
-		movq $1, 32(%rax)
-		popq %rdx
-		popq %rdx
-		addq $8, %rax
-# METADATA_DEBUG_INFO
-		# 294: {0, 82, 85}
-# INSTRUCTION_SET_ZERO
-		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 295: {0, 82, 85}
-# INSTRUCTION_MOVE_TO_OFFSET
-		mov %rsi, (%rax, %rdx,1)
-# METADATA_DEBUG_INFO
-		# 304: {0, 88}
-# INSTRUCTION_COPY
-		mov %rax, %rdx
-# METADATA_DEBUG_INFO
-		# 305: {0, 88}
 # INSTRUCTION_PUSH
 		push %rdx
-# METADATA_DEBUG_INFO
-		# 306: {0, 89}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 307: {0, 89}
-# RUNTIME_NULLPTR_CHECK
-		pushq %rbx
-		call nullPtrCheck
-		addq $8, %rsp
-# METADATA_DEBUG_INFO
-		# 308: {0, 89, 90}
-# INSTRUCTION_CONST
-		mov $8, %rdx
-# METADATA_DEBUG_INFO
-		# 309: {0, 89, 90}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# CAPTURE PUSH
-# METADATA_DEBUG_INFO
-		# 310: {0, 89}
-# INSTRUCTION_PUSH
-		push %rbx
-# METADATA_DEBUG_INFO
-		# 311: {0, 91}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-		mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-		# 312: {0, 91, 92}
 # INSTRUCTION_SET_ZERO
 		xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-		# 313: {0, 91, 92}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-		mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-		# 314: {0, 91}
-# INSTRUCTION_REGISTER_CALL
-		call *%rbx
-# METADATA_DEBUG_INFO
-		# 315: {0}
+# INSTRUCTION_PUSH
+		push %rdx
+# INSTRUCTION_FUNCTION_CALL
+		call BKnap__0
 # INSTRUCTION_ADD_STACK_PTR
-		addq $16, %rsp
-# METADATA_DEBUG_INFO
-		# 316: {0}
-# COMPLEX_RESTORE_ALL
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		popq %r11
-		popq %r10
-		popq %r9
-		popq %r8
-		popq %rdi
-		popq %rsi
-		popq %rbx
-		popq %rdx
-		popq %rcx
-# METADATA_DEBUG_INFO
-		# 317: {0, 93}
+		addq $24, %rsp
 # COMPLEX_RESTORE_STATIC_LINK
 		leaq staticLink, %rdx
 movq %rbp, 0(%rdx)
-# METADATA_DEBUG_INFO
-		# 318: {0}
 # INSTRUCTION_COPY
-		mov %rax, %rdx
+		mov %rax, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rbx, -96(%rbp)
+# INSTRUCTION_SET_ZERO
+		xorq %rdx, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -104(%rbp)
+# INSTRUCTION_LABEL
+		while_cnd_5:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -120(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+		sub %rdx, %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+		push %rax
+		cmp $0, %rdi
+		setg %al
+		movsx %al, %rdi
+		pop %rax
+# INSTRUCTION_CONST
+		mov $1, %rdx
+# INSTRUCTION_CMP
+		cmp %rdi, %rdx
+# INSTRUCTION_JE
+		je while_5_begin
+# INSTRUCTION_JMP
+		jmp while_5_end
+# INSTRUCTION_LABEL
+		while_5_begin:
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -80(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+		imul $8, %rdx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+		mov (%rbx, %rdx, 1), %rbx
+# INSTRUCTION_CONST
+		mov $1, %rsi
+# INSTRUCTION_MINUS
+		sub %rbx, %rsi
+# COMPLEX_ABS_VALUE
+		movq %rsi, %rdx
+		sar $63, %rdx
+		addq %rdx, %rsi
+		xor %rsi, %rdx
+# COMPLEX_CONSTRAIN_BOOLEAN
+		push %rax
+		cmp $0, %rdx
+		setg %al
+		movsx %al, %rdx
+		pop %rax
+# INSTRUCTION_CONST
+		mov $1, %rbx
+# INSTRUCTION_MINUS
+		sub %rdx, %rbx
+# INSTRUCTION_CONST
+		mov $1, %rdx
+# INSTRUCTION_CMP
+		cmp %rbx, %rdx
+# INSTRUCTION_JE
+		je if_9_begin
+# INSTRUCTION_JMP
+		jmp if_9_end
+# INSTRUCTION_LABEL
+		if_9_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -144(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+		leaq 1(%rdx), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -144(%rbp)
+# INSTRUCTION_LABEL
+		if_9_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -104(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+		leaq 1(%rdx), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+		mov %rdx, -104(%rbp)
+# INSTRUCTION_JMP
+		jmp while_cnd_5
+# INSTRUCTION_LABEL
+		while_5_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -144(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_WRITE
+		pushq %rsi
+		pushq %rdi
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+		popq %rdi
+		popq %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -128(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_WRITE
+		pushq %rsi
+		pushq %rdi
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+		popq %rdi
+		popq %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+		mov -136(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_WRITE
+		pushq %rsi
+		pushq %rdi
+		movq %rdx, %rsi
+		movq $intprint, %rdi
+		movq $0, %rax
+		call printf
+		popq %rdi
+		popq %rsi
 movq $0, %rax
 leave
 ret
-# METADATA_DEBUG_INFO
-		# 0: {0, 1}
 # INSTRUCTION_FUNCTION_LABEL
-.type Optional_constructor, @function
-Optional_constructor:
+.type BKnap__0, @function
+BKnap__0:
 push %rbp
 mov %rbp, %rax
 mov %rsp,%rbp
-		subq $48, %rsp
+		subq $80, %rsp
 		movq %rax, -8(%rbp)
 		movq $0, -16(%rbp)
+		pushq %rdx
 		leaq staticLink, %rdx
 		movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 1: {0, 2}
+		popq %rdx
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
 # METADATA_FUNCTION_ARGUMENT
 			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 2: {0, 2}
+			mov %rdx, -40(%rbp)
 # METADATA_FUNCTION_ARGUMENT
 			mov 24(%rbp), %rdx
+			mov %rdx, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 32(%rbp), %rdx
 			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 3: {0, 3}
+# VAR counter
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -24(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rsi, %rbx, 1), %rsi
+# INSTRUCTION_LEA_ADD
+			leaq (%r8, %rsi, 1), %r8
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -72(%rsi, %rdx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %r8, %rdi
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdi), %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdi
+			setg %al
+			movsx %al, %rdi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rdi, %rdx
+# INSTRUCTION_JE
+			je if_0_begin
+# INSTRUCTION_JMP
+			jmp if_0_end
+# INSTRUCTION_LABEL
+			if_0_begin:
+# INSTRUCTION_CONST
+			mov $1, %r8
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -48(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %r8, (%rsi, %rbx,1)
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rsi
-# METADATA_DEBUG_INFO
-			# CLASS LOAD
-# METADATA_DEBUG_INFO
-			# 4: {0, 3, 4}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -32(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 5: {0, 3, 4, 5}
-# INSTRUCTION_SET_ZERO
-			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 6: {0, 3, 4, 5}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-			# 7: {0, 6}
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -80(%rbx, %rdx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rdi
+# INSTRUCTION_MINUS
+			sub %rsi, %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdi
+			setg %al
+			movsx %al, %rdi
+			pop %rax
 # INSTRUCTION_CONST
-			mov $1, %rsi
-# METADATA_DEBUG_INFO
-			# CLASS LOAD
-# METADATA_DEBUG_INFO
-			# 8: {0, 6, 7}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -32(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 9: {0, 6, 7, 8}
-# INSTRUCTION_CONST
-			mov $8, %rdx
-# METADATA_DEBUG_INFO
-			# 10: {0, 6, 7, 8}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rsi, (%rbx, %rdx,1)
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 11: {0, 3}
-# INSTRUCTION_FUNCTION_LABEL
-.type IntBox_constructor, @function
-IntBox_constructor:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $48, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rsi
-		movq %rbp, 8(%rsi)
-# METADATA_DEBUG_INFO
-			# 12: {0, 4}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rbx
-			mov %rbx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 13: {0, 4}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rbx
-			mov %rbx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 14: {0, 5}
+			mov $1, %r8
+# INSTRUCTION_CMP
+			cmp %rdi, %r8
+# INSTRUCTION_JE
+			je if_1_begin
+# INSTRUCTION_JMP
+			jmp if_1_end
+# INSTRUCTION_LABEL
+			if_1_begin:
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rdx
-# METADATA_DEBUG_INFO
-			# CLASS LOAD
-# METADATA_DEBUG_INFO
-			# 15: {0, 5, 6}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -32(%rbp), %rsi
-# METADATA_DEBUG_INFO
-			# 16: {0, 5, 6, 7}
-# INSTRUCTION_SET_ZERO
-			xorq %rbx, %rbx
-# METADATA_DEBUG_INFO
-			# 17: {0, 5, 6, 7}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rdx, (%rsi, %rbx,1)
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 18: {0, 5}
-# INSTRUCTION_FUNCTION_LABEL
-.type c__0, @function
-c__0:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $72, %rsp
-		movq %rax, -8(%rbp)
-		movq $2, -16(%rbp)
-		movq $0, -24(%rbp)
-		movq $0, -32(%rbp)
-		movq $1, -32(%rbp)
-		movq $0, -40(%rbp)
-		leaq staticLink, %rdx
-		movq %rbp, 8(%rdx)
-# VAR internalOpt
-# VAR internalIntBox
-# METADATA_DEBUG_INFO
-			# ALLOC
-# METADATA_DEBUG_INFO
-			# internalIntBox
-# METADATA_DEBUG_INFO
-			# 19: {0, 7}
-# INSTRUCTION_CONST
-			mov $1, %rbx
-# METADATA_DEBUG_INFO
-			# 20: {0, 7, 8}
-# COMPLEX_ALLOCATE
-			movq $8, %rdx
-			imulq %rbx, %rdx
-# ALLOC_RECORD_CLASS
-			addq $16, %rdx
-			pushq %rdx
-			pushq %rbp
-			call garbageCollectAllocate
-			movq %rbx, 0(%rax)
-# ALLOC_RECORD_CLASS
-			subq $8, %rdx
-			movq $0, (%rax, %rdx, 1)
-			popq %rdx
-			popq %rdx
-			addq $8, %rax
-# METADATA_DEBUG_INFO
-			# 21: {0}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 22: {0}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-			mov %rax, -48(%rbp)
-# METADATA_DEBUG_INFO
-			# 23: {9}
-# INSTRUCTION_SET_ZERO
-			xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-			# 24: {9, 10}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -48(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 25: {9, 10}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 26: {9, 10, 11}
-# INSTRUCTION_SET_ZERO
-			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 27: {9, 10, 11}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-			# 28: {0}
-# INSTRUCTION_POP
-			pop %rax
-# METADATA_DEBUG_INFO
-			# 29: {0}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 30: {0, 12}
-# INSTRUCTION_CONST
-			mov $13, %rdx
-# METADATA_DEBUG_INFO
-			# 31: {0, 12}
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
 # INSTRUCTION_PUSH
 			push %rdx
-# METADATA_DEBUG_INFO
-			# 32: {0}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 33: {0}
-# INSTRUCTION_FUNCTION_CALL
-			call IntBox_constructor
-# METADATA_DEBUG_INFO
-			# 34: {}
-# INSTRUCTION_ADD_STACK_PTR
-			addq $16, %rsp
-# METADATA_DEBUG_INFO
-			# 35: {0}
-# INSTRUCTION_POP
-			pop %rax
-# METADATA_DEBUG_INFO
-			# ALLOC
-# METADATA_DEBUG_INFO
-			# internalOpt
-# METADATA_DEBUG_INFO
-			# 36: {0, 13}
-# INSTRUCTION_CONST
-			mov $3, %rbx
-# METADATA_DEBUG_INFO
-			# 37: {0, 13, 14}
-# COMPLEX_ALLOCATE
-			movq $8, %rdx
-			imulq %rbx, %rdx
-# ALLOC_RECORD_CLASS
-			addq $32, %rdx
-			pushq %rdx
-			pushq %rbp
-			call garbageCollectAllocate
-			movq %rbx, 0(%rax)
-# ALLOC_RECORD_CLASS
-			subq $24, %rdx
-			movq $2, (%rax, %rdx, 1)
-			movq $0, 8(%rax, %rdx, 1)
-			movq $2, 16(%rax, %rdx, 1)
-			popq %rdx
-			popq %rdx
-			addq $8, %rax
-# METADATA_DEBUG_INFO
-			# 38: {0}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 39: {0}
-# COMPLEX_MOVE_TEMPORARY_INTO_STACK
-			mov %rax, -40(%rbp)
-# METADATA_DEBUG_INFO
-			# 40: {0, 15}
-# INSTRUCTION_SET_ZERO
-			xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-			# 41: {0, 15, 16}
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -40(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 42: {0, 15, 16}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 43: {0, 15, 16, 17}
-# INSTRUCTION_CONST
-			mov $8, %rdx
-# METADATA_DEBUG_INFO
-			# 44: {0, 15, 16, 17}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-			# 45: {0, 18}
-# COMPLEX_RIP_LAMBDA_LOAD
-			leaq lambda_0(%rip), %rdi
-# METADATA_DEBUG_INFO
-			# 46: {0, 18, 19}
-# INSTRUCTION_CONST
-			mov $1, %rbx
-# METADATA_DEBUG_INFO
-			# 47: {0, 18, 19, 20}
-# COMPLEX_ALLOCATE
-			movq $8, %rdx
-			imulq %rbx, %rdx
-# ALLOC_LAMBDA
-			addq $32, %rdx
-			pushq %rdx
-			pushq %rbp
-			call garbageCollectAllocate
-			movq $2, 0(%rax)
-			movq $1, 24(%rax)
-			movq $1, 32(%rax)
-			popq %rdx
-			popq %rdx
-			addq $8, %rax
-# METADATA_DEBUG_INFO
-			# 48: {0, 18, 21}
-# INSTRUCTION_SET_ZERO
-			xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-			# 49: {0, 18, 21}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rdi, (%rax, %rsi,1)
-# METADATA_DEBUG_INFO
-			# 84: {0, 24}
-# INSTRUCTION_COPY
-			mov %rax, %rsi
-# METADATA_DEBUG_INFO
-			# 85: {24, 25}
-# INSTRUCTION_CONST
-			mov $8, %rdx
-# METADATA_DEBUG_INFO
-			# 86: {0, 24, 25}
-# INSTRUCTION_POP
-			pop %rax
-# METADATA_DEBUG_INFO
-			# 87: {0, 24, 25}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rax, (%rsi, %rdx,1)
-# METADATA_DEBUG_INFO
-			# 88: {0, 24}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 89: {24, 26}
+			mov -32(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -32(%rdx, %rbx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -40(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 90: {24, 26}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 91: {24, 26, 27}
-# INSTRUCTION_CONST
-			mov $16, %rdx
-# METADATA_DEBUG_INFO
-			# 92: {24, 26, 27}
-# INSTRUCTION_MOVE_TO_OFFSET
-			mov %rsi, (%rbx, %rdx,1)
-# METADATA_DEBUG_INFO
-			# 93: {0}
-# INSTRUCTION_POP
-			pop %rax
-# METADATA_DEBUG_INFO
-			# 94: {0}
+			mov -24(%rbp), %r11
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %r11
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rsi, %r11, 1), %rsi
+# INSTRUCTION_LEA_ADD
+			leaq (%rdi, %rsi, 1), %rdi
 # INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 95: {0, 28}
+			push %rdi
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -48(%rbp), %rsi
-# METADATA_DEBUG_INFO
-			# 96: {0, 28}
+			mov -40(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %r9
+			addq $1, %r9
+			imul $-1, %r9
+			mov -24(%rdx, %r9, 8), %r10
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%r10, %rdi, 1), %r10
+# INSTRUCTION_LEA_ADD
+			leaq (%rsi, %r10, 1), %rsi
 # INSTRUCTION_PUSH
 			push %rsi
-# METADATA_DEBUG_INFO
-			# 97: {0}
-# INSTRUCTION_PUSH
-			push %rax
-# METADATA_DEBUG_INFO
-			# 98: {0}
 # INSTRUCTION_FUNCTION_CALL
-			call Optional_constructor
-# METADATA_DEBUG_INFO
-			# 99: {}
+			call BKnap__0
 # INSTRUCTION_ADD_STACK_PTR
-			addq $16, %rsp
-# METADATA_DEBUG_INFO
-			# 100: {}
-# INSTRUCTION_POP
-			pop %rax
-# METADATA_DEBUG_INFO
-			# 101: {29}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -40(%rbp), %rdx
-# METADATA_DEBUG_INFO
-			# 102: {29}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rdx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 103: {29, 30}
-# INSTRUCTION_CONST
-			mov $16, %rbx
-# METADATA_DEBUG_INFO
-			# 104: {29, 30}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rdx, %rbx, 1), %rdx
-# METADATA_DEBUG_INFO
-			# 105: {29}
-# INSTRUCTION_RETURN
-			mov %rdx, %rax
-			mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 106: {0, 7}
-# INSTRUCTION_FUNCTION_LABEL
-.type b__0, @function
-b__0:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $40, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rbx
-		movq %rbp, 8(%rbx)
-# METADATA_DEBUG_INFO
-			# 107: {0}
-# COMPLEX_SAVE_ALL
-			pushq %rcx
-			pushq %rdx
-			pushq %rbx
-			pushq %rsi
-			pushq %rdi
-			pushq %r8
-			pushq %r9
-			pushq %r10
-			pushq %r11
-			pushq %r12
-			pushq %r13
-			pushq %r14
-			pushq %r15
-# METADATA_DEBUG_INFO
-			# 108: {0}
-# INSTRUCTION_FUNCTION_CALL
-			call c__0
-# METADATA_DEBUG_INFO
-			# 109: {0}
-# INSTRUCTION_ADD_STACK_PTR
-			addq $0, %rsp
-# METADATA_DEBUG_INFO
-			# 110: {0}
-# COMPLEX_RESTORE_ALL
-			popq %r15
-			popq %r14
-			popq %r13
-			popq %r12
-			popq %r11
-			popq %r10
-			popq %r9
-			popq %r8
-			popq %rdi
-			popq %rsi
-			popq %rbx
-			popq %rdx
-			popq %rcx
-# METADATA_DEBUG_INFO
-			# 111: {0, 9}
+			addq $24, %rsp
 # COMPLEX_RESTORE_STATIC_LINK
 			leaq staticLink, %rsi
 movq %rbp, 8(%rsi)
-# METADATA_DEBUG_INFO
-			# 112: {0, 10}
 # INSTRUCTION_COPY
-			mov %rax, %rbx
-# METADATA_DEBUG_INFO
-			# 113: {10}
-# INSTRUCTION_RETURN
-			mov %rbx, %rax
-			mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 114: {0, 9}
-# INSTRUCTION_FUNCTION_LABEL
-.type a__0, @function
-a__0:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $40, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rsi
-		movq %rbp, 8(%rsi)
-# METADATA_DEBUG_INFO
-			# 115: {0}
-# COMPLEX_SAVE_ALL
-			pushq %rcx
-			pushq %rdx
-			pushq %rbx
-			pushq %rsi
-			pushq %rdi
-			pushq %r8
-			pushq %r9
-			pushq %r10
-			pushq %r11
-			pushq %r12
-			pushq %r13
-			pushq %r14
-			pushq %r15
-# METADATA_DEBUG_INFO
-			# 116: {0}
-# INSTRUCTION_FUNCTION_CALL
-			call b__0
-# METADATA_DEBUG_INFO
-			# 117: {0}
-# INSTRUCTION_ADD_STACK_PTR
-			addq $0, %rsp
-# METADATA_DEBUG_INFO
-			# 118: {0}
-# COMPLEX_RESTORE_ALL
-			popq %r15
-			popq %r14
-			popq %r13
-			popq %r12
-			popq %r11
-			popq %r10
-			popq %r9
-			popq %r8
-			popq %rdi
-			popq %rsi
-			popq %rbx
-			popq %rdx
-			popq %rcx
-# METADATA_DEBUG_INFO
-			# 119: {0, 11}
-# COMPLEX_RESTORE_STATIC_LINK
-			leaq staticLink, %rdx
-movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 120: {0, 12}
-# INSTRUCTION_COPY
-			mov %rax, %rdx
-# METADATA_DEBUG_INFO
-			# 121: {12}
-# INSTRUCTION_RETURN
-			mov %rdx, %rax
-			mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 188: {0, 33, 39}
-# INSTRUCTION_FUNCTION_LABEL
-.type lambda_1, @function
-lambda_1:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $56, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rdx
-		movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 189: {0, 33, 40}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 190: {0, 33, 40}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rdx
-			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 191: {0, 33, 41}
+			mov %rax, %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %r8, -48(%rbp)
+# INSTRUCTION_LABEL
+			if_1_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %r8
+			addq $1, %r8
+			imul $-1, %r8
+			mov -32(%rsi, %r8, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 192: {0, 33, 41}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 193: {0, 33, 41, 42}
-# INSTRUCTION_SET_ZERO
-			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 194: {0, 33, 41, 42}
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-			# 195: {0, 33, 41}
-# INSTRUCTION_WRITE
-			pushq %rsi
-			pushq %rdi
-			movq %rbx, %rsi
-			movq $intprint, %rdi
-			movq $0, %rax
-			call printf
-			popq %rdi
-			popq %rsi
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 223: {0, 48, 54}
-# INSTRUCTION_FUNCTION_LABEL
-.type lambda_2, @function
-lambda_2:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $56, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rdx
-		movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 224: {0, 48, 55}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 225: {0, 48, 55}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rdx
-			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 226: {0, 48, 56}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -24(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 227: {0, 48, 56}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 228: {0, 48, 56, 57}
-# INSTRUCTION_SET_ZERO
-			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 229: {0, 48, 56, 57}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-			# 230: {0, 48, 56}
-# INSTRUCTION_WRITE
-			pushq %rsi
-			pushq %rdi
-			movq %rbx, %rsi
-			movq $intprint, %rdi
-			movq $0, %rax
-			call printf
-			popq %rdi
-			popq %rsi
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 266: {0, 67, 73}
-# INSTRUCTION_FUNCTION_LABEL
-.type lambda_3, @function
-lambda_3:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $56, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rdx
-		movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 267: {0, 67, 74}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 268: {0, 67, 74}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rdx
-			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 269: {0, 67, 75}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -24(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 270: {0, 67, 75}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rbx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 271: {0, 67, 75, 76}
-# INSTRUCTION_SET_ZERO
-			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 272: {0, 67, 75, 76}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-			# 273: {0, 67, 75}
-# INSTRUCTION_WRITE
-			pushq %rsi
-			pushq %rdi
-			movq %rbx, %rsi
-			movq $intprint, %rdi
-			movq $0, %rax
-			call printf
-			popq %rdi
-			popq %rsi
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 296: {0, 86}
-# INSTRUCTION_FUNCTION_LABEL
-.type lambda_4, @function
-lambda_4:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $56, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rdx
-		movq %rbp, 8(%rdx)
-# METADATA_DEBUG_INFO
-			# 297: {0, 87}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 298: {0, 87}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rdx
-			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# 299: {0, 88}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -24(%rbp), %rdx
-# METADATA_DEBUG_INFO
-			# 300: {0, 88}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rdx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 301: {0, 88, 89}
-# INSTRUCTION_SET_ZERO
-			xorq %rbx, %rbx
-# METADATA_DEBUG_INFO
-			# 302: {0, 88, 89}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rdx, %rbx, 1), %rdx
-# METADATA_DEBUG_INFO
-			# 303: {0, 88}
-# INSTRUCTION_WRITE
-			pushq %rsi
-			pushq %rdi
-			movq %rdx, %rsi
-			movq $intprint, %rdi
-			movq $0, %rax
-			call printf
-			popq %rdi
-			popq %rsi
-# METADATA_END_BODY_BLOCK
-mov %rbp,%rsp
-pop %rbp
-ret
-# METADATA_DEBUG_INFO
-		# 50: {0, 22}
-# INSTRUCTION_FUNCTION_LABEL
-.type lambda_0, @function
-lambda_0:
-push %rbp
-mov %rbp, %rax
-mov %rsp,%rbp
-		subq $56, %rsp
-		movq %rax, -8(%rbp)
-		movq $0, -16(%rbp)
-		leaq staticLink, %rbx
-		movq %rbp, 16(%rbx)
-# METADATA_DEBUG_INFO
-			# 51: {0, 23}
-# METADATA_FUNCTION_ARGUMENT
-			mov 16(%rbp), %rdx
-			mov %rdx, -32(%rbp)
-# METADATA_DEBUG_INFO
-			# 52: {0, 23}
-# METADATA_FUNCTION_ARGUMENT
-			mov 24(%rbp), %rdx
-			mov %rdx, -24(%rbp)
-# METADATA_DEBUG_INFO
-			# CLASS LOAD
-# METADATA_DEBUG_INFO
-			# 53: {0, 24}
-# COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -32(%rbp), %rsi
-# METADATA_DEBUG_INFO
-			# 54: {0, 24, 25}
-# INSTRUCTION_CONST
-			mov $8, %rdx
-# METADATA_DEBUG_INFO
-			# 55: {0, 24, 25}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rsi, %rdx, 1), %rsi
-# METADATA_DEBUG_INFO
-			# 56: {0, 24, 26}
-# INSTRUCTION_CONST
-			mov $1, %rbx
-# METADATA_DEBUG_INFO
-			# 57: {0, 24, 26}
+			mov (%rdi, %rbx, 1), %rdi
+# INSTRUCTION_LEA_ADD
+			leaq (%rdx, %rdi, 1), %rdx
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -88(%rsi, %rbx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_END
 # INSTRUCTION_MINUS
-			sub %rsi, %rbx
-# METADATA_DEBUG_INFO
-			# 58: {0, 26, 27}
-# COMPLEX_ABS_VALUE
-			movq %rbx, %rdx
-			sar $63, %rdx
-			addq %rdx, %rbx
-			xor %rbx, %rdx
-# METADATA_DEBUG_INFO
-			# 59: {0, 27}
+			sub %rdi, %rdx
 # COMPLEX_CONSTRAIN_BOOLEAN
 			push %rax
 			cmp $0, %rdx
 			setg %al
 			movsx %al, %rdx
 			pop %rax
-# METADATA_DEBUG_INFO
-			# 60: {0, 27, 28}
-# INSTRUCTION_CONST
-			mov $1, %rsi
-# METADATA_DEBUG_INFO
-			# 61: {0, 27, 28}
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdi
+			mov 0(%rdi), %rdi
+			movq -16(%rdi), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -80(%rdi, %rbx, 8), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %r8
 # INSTRUCTION_MINUS
-			sub %rdx, %rsi
-# METADATA_DEBUG_INFO
-			# 62: {0, 28, 29}
+			sub %rsi, %r8
+# COMPLEX_ABS_VALUE
+			movq %r8, %rsi
+			sar $63, %rsi
+			addq %rsi, %r8
+			xor %r8, %rsi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rsi
+			setg %al
+			movsx %al, %rsi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rbx
+# INSTRUCTION_MINUS
+			sub %rsi, %rbx
+# INSTRUCTION_AND
+			and %rdx, %rbx
 # INSTRUCTION_CONST
 			mov $1, %rdx
-# METADATA_DEBUG_INFO
-			# 63: {0, 28, 29}
 # INSTRUCTION_CMP
-			cmp %rsi, %rdx
-# METADATA_DEBUG_INFO
-			# 64: {0}
+			cmp %rbx, %rdx
 # INSTRUCTION_JE
-			je if_0_begin
-# METADATA_DEBUG_INFO
-			# 65: {0}
+			je if_2_begin
 # INSTRUCTION_JMP
-			jmp if_0_end
+			jmp if_2_end
 # INSTRUCTION_LABEL
-			if_0_begin:
-# METADATA_DEBUG_INFO
-			# 66: {0}
-# COMPLEX_SAVE_ALL
-			pushq %rcx
-			pushq %rdx
-			pushq %rbx
-			pushq %rsi
-			pushq %rdi
-			pushq %r8
-			pushq %r9
-			pushq %r10
-			pushq %r11
-			pushq %r12
-			pushq %r13
-			pushq %r14
-			pushq %r15
-# METADATA_DEBUG_INFO
-			# CLASS LOAD
-# METADATA_DEBUG_INFO
-			# 67: {0, 30}
+			if_2_begin:
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -32(%rbp), %rbx
-# METADATA_DEBUG_INFO
-			# 68: {0, 30, 31}
+			mov -32(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rsi
+			addq $1, %rsi
+			imul $-1, %rsi
+			mov -32(%rdx, %rsi, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdi, %rbx, 1), %rdi
+# INSTRUCTION_LEA_ADD
+			leaq (%r8, %rdi, 1), %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov %r8, -88(%rbx, %rdx, 8)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -24(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rsi, %rdx, 1), %rsi
+# INSTRUCTION_LEA_ADD
+			leaq (%rdi, %rsi, 1), %rdi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov %rdi, -96(%rbx, %rdx, 8)
 # INSTRUCTION_SET_ZERO
 			xorq %rdx, %rdx
-# METADATA_DEBUG_INFO
-			# 69: {0, 30, 31}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rbx, %rdx, 1), %rbx
-# METADATA_DEBUG_INFO
-			# 70: {0, 30}
-# INSTRUCTION_PUSH
-			push %rbx
-# METADATA_DEBUG_INFO
-			# 71: {0, 32}
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# INSTRUCTION_LABEL
+			while_cnd_0:
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
-			mov -24(%rbp), %rdx
-# METADATA_DEBUG_INFO
-			# 72: {0, 32}
-# RUNTIME_NULLPTR_CHECK
-			pushq %rdx
-			call nullPtrCheck
-			addq $8, %rsp
-# METADATA_DEBUG_INFO
-			# 73: {0, 32, 33}
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rbx), %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rbx
+			setg %al
+			movsx %al, %rbx
+			pop %rax
 # INSTRUCTION_CONST
-			mov $8, %rdi
-# METADATA_DEBUG_INFO
-			# 74: {0, 32, 33}
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# INSTRUCTION_JE
+			je while_0_begin
+# INSTRUCTION_JMP
+			jmp while_0_end
+# INSTRUCTION_LABEL
+			while_0_begin:
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -48(%rdx, %rbx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
 # COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rdx, %rdi, 1), %rdx
-# METADATA_DEBUG_INFO
-			# CAPTURE PUSH
-# METADATA_DEBUG_INFO
-			# 75: {0, 32}
+			mov (%rdi, %rdx, 1), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -40(%rdx, %rbx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %rdi, (%rsi, %rdx,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# INSTRUCTION_JMP
+			jmp while_cnd_0
+# INSTRUCTION_LABEL
+			while_0_end:
+# INSTRUCTION_LABEL
+			if_2_end:
+# INSTRUCTION_LABEL
+			if_0_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
 # INSTRUCTION_PUSH
 			push %rdx
-# METADATA_DEBUG_INFO
-			# 76: {0, 34}
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdx
+# METADATA_ACCESS_VARIABLE_START
 # COMPLEX_MOVE_TEMPORARY_FROM_STACK
 			mov -24(%rbp), %rdx
-# METADATA_DEBUG_INFO
-			# 77: {0, 34, 35}
-# INSTRUCTION_SET_ZERO
-			xorq %rsi, %rsi
-# METADATA_DEBUG_INFO
-			# 78: {0, 34, 35}
-# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
-			mov (%rdx, %rsi, 1), %rdx
-# METADATA_DEBUG_INFO
-			# 79: {0, 34}
-# INSTRUCTION_REGISTER_CALL
-			call *%rdx
-# METADATA_DEBUG_INFO
-			# 80: {0}
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdx
+# INSTRUCTION_FUNCTION_CALL
+			call Bound__0
 # INSTRUCTION_ADD_STACK_PTR
-			addq $16, %rsp
-# METADATA_DEBUG_INFO
-			# 81: {0}
-# COMPLEX_RESTORE_ALL
+			addq $24, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rdx
+movq %rbp, 8(%rdx)
+# INSTRUCTION_COPY
+			mov %rax, %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -88(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rsi, %rdi
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdi), %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdi
+			setg %al
+			movsx %al, %rdi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rdi, %rdx
+# INSTRUCTION_JE
+			je if_3_begin
+# INSTRUCTION_JMP
+			jmp if_3_end
+# INSTRUCTION_LABEL
+			if_3_begin:
+# INSTRUCTION_SET_ZERO
+			xorq %rdi, %rdi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -48(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %rdi, (%rsi, %rdx,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -80(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rsi
+# INSTRUCTION_MINUS
+			sub %rdi, %rsi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rsi
+			setg %al
+			movsx %al, %rsi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rsi, %rdx
+# INSTRUCTION_JE
+			je if_4_begin
+# INSTRUCTION_JMP
+			jmp if_4_end
+# INSTRUCTION_LABEL
+			if_4_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
+# INSTRUCTION_PUSH
+			push %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdx
+# INSTRUCTION_FUNCTION_CALL
+			call BKnap__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $24, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rdx
+movq %rbp, 8(%rdx)
+# INSTRUCTION_COPY
+			mov %rax, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -48(%rbp)
+# INSTRUCTION_LABEL
+			if_4_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -88(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rsi, %r8
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %r8
+			setg %al
+			movsx %al, %r8
+			pop %rax
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -80(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rsi
+# INSTRUCTION_MINUS
+			sub %rdi, %rsi
+# COMPLEX_ABS_VALUE
+			movq %rsi, %rdx
+			sar $63, %rdx
+			addq %rdx, %rsi
+			xor %rsi, %rdx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdx
+			setg %al
+			movsx %al, %rdx
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rbx
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# INSTRUCTION_AND
+			and %r8, %rbx
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# INSTRUCTION_JE
+			je if_5_begin
+# INSTRUCTION_JMP
+			jmp if_5_end
+# INSTRUCTION_LABEL
+			if_5_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov %rsi, -88(%rbx, %rdx, 8)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov %rsi, -96(%rbx, %rdx, 8)
+# INSTRUCTION_SET_ZERO
+			xorq %rdx, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# INSTRUCTION_LABEL
+			while_cnd_1:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rbx), %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rbx
+			setg %al
+			movsx %al, %rbx
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# INSTRUCTION_JE
+			je while_1_begin
+# INSTRUCTION_JMP
+			jmp while_1_end
+# INSTRUCTION_LABEL
+			while_1_begin:
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -48(%rbx, %rdx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdi, %rdx, 1), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -40(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %rdi, (%rsi, %rdx,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# INSTRUCTION_JMP
+			jmp while_cnd_1
+# INSTRUCTION_LABEL
+			while_1_end:
+# INSTRUCTION_LABEL
+			if_5_end:
+# INSTRUCTION_LABEL
+			if_3_end:
+# INSTRUCTION_SET_ZERO
+			xorq %rdx, %rdx
+# INSTRUCTION_RETURN
+			mov %rdx, %rax
 			popq %r15
 			popq %r14
 			popq %r13
@@ -2691,17 +2043,1029 @@ mov %rsp,%rbp
 			popq %rbx
 			popq %rdx
 			popq %rcx
-# METADATA_DEBUG_INFO
-			# 82: {0, 36}
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_FUNCTION_LABEL
+.type Bound__0, @function
+Bound__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $88, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		pushq %r8
+		leaq staticLink, %r8
+		movq %rbp, 8(%r8)
+		popq %r8
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rsi
+			mov %rsi, -40(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 24(%rbp), %rsi
+			mov %rsi, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 32(%rbp), %rsi
+			mov %rsi, -24(%rbp)
+# VAR counter
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -48(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rbx), %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -64(%rbp)
+# INSTRUCTION_LABEL
+			while_cnd_2:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -80(%rdx, %rbx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rdi, %rsi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rsi
+			setg %al
+			movsx %al, %rsi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rsi, %rdx
+# INSTRUCTION_JE
+			je while_2_begin
+# INSTRUCTION_JMP
+			jmp while_2_end
+# INSTRUCTION_LABEL
+			while_2_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -24(%rbx, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rsi, %rbx, 1), %rsi
+# INSTRUCTION_LEA_ADD
+			leaq (%r8, %rsi, 1), %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %r8, -56(%rbp)
+# INSTRUCTION_COPY
+			mov %r8, %rsi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -72(%rbx, %rdx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rsi, %rdi
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rdi
+			setg %al
+			movsx %al, %rdi
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rsi
+# INSTRUCTION_CMP
+			cmp %rdi, %rsi
+# INSTRUCTION_JE
+			je if_6_begin
+# INSTRUCTION_JMP
+			jmp el_6_begin
+# INSTRUCTION_LABEL
+			if_6_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %rdi
+			addq $1, %rdi
+			imul $-1, %rdi
+			mov -32(%rbx, %rdi, 8), %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rsi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdx, %rsi, 1), %rdx
+# INSTRUCTION_LEA_ADD
+			leaq (%r8, %rdx, 1), %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %r8, -48(%rbp)
+# INSTRUCTION_JMP
+			jmp ifel_6_end
+# INSTRUCTION_LABEL
+			el_6_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_CONST
+			mov $1, %r11
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %r10
+			mov 0(%r10), %r10
+			movq -16(%r10), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -72(%r10, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rsi, %r8
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdi
+			mov 0(%rdi), %rdi
+			movq -16(%rdi), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -24(%rdi, %rdx, 8), %r9
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rsi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%r9, %rsi, 1), %r9
+# INSTRUCTION_DIV
+			movq %r8, %rax
+			pushq %r10
+			movq %r9, %r10
+			pushq %rdx
+			cqto
+			idiv %r10
+			popq %rdx
+			popq %r10
+			movq %rax, %r9
+# INSTRUCTION_MINUS
+			sub %r9, %r11
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdi
+			mov 0(%rdi), %rdi
+			movq -16(%rdi), %rsi
+			addq $1, %rsi
+			imul $-1, %rsi
+			mov -32(%rdi, %rsi, 8), %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %r8
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdx, %r8, 1), %rdx
+# INSTRUCTION_MUL
+			imul %rdx, %r11
+# INSTRUCTION_LEA_ADD
+			leaq (%rbx, %r11, 1), %rbx
+# INSTRUCTION_RETURN
+			mov %rbx, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_LABEL
+			ifel_6_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdi), %rdi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdi, -64(%rbp)
+# INSTRUCTION_JMP
+			jmp while_cnd_2
+# INSTRUCTION_LABEL
+			while_2_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_RETURN
+			mov %rbx, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_FUNCTION_LABEL
+.type NextRand__0, @function
+NextRand__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $80, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		pushq %rbx
+		leaq staticLink, %rbx
+		movq %rbp, 8(%rbx)
+		popq %rbx
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rdx
+			mov %rdx, -48(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 24(%rbp), %rdx
+			mov %rdx, -40(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 32(%rbp), %rdx
+			mov %rdx, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 40(%rbp), %rdx
+			mov %rdx, -24(%rbp)
+# VAR temp
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL
+			imul %rdx, %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD
+			leaq (%rbx, %rdi, 1), %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -56(%rbp)
+# INSTRUCTION_COPY
+			mov %rbx, %rsi
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_DIV
+			movq %rdx, %rax
+			pushq %r10
+			movq %rbx, %r10
+			pushq %rdx
+			cqto
+			idiv %r10
+			popq %rdx
+			popq %r10
+			movq %rax, %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL
+			imul %rdx, %rbx
+# INSTRUCTION_MINUS
+			sub %rbx, %rsi
+# INSTRUCTION_RETURN
+			mov %rsi, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_FUNCTION_LABEL
+.type exchange__0, @function
+exchange__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $72, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		pushq %rbx
+		leaq staticLink, %rbx
+		movq %rbp, 8(%rbx)
+		popq %rbx
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rdx
+			mov %rdx, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 24(%rbp), %rdx
+			mov %rdx, -24(%rbp)
+# VAR w_temp
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -32(%rsi, %rdx, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdi, %rbx, 1), %rdi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdi, -40(%rbp)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -32(%rsi, %rbx, 8), %r8
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%r8, %rdx, 1), %r8
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rsi
+			mov 0(%rsi), %rsi
+			movq -16(%rsi), %rdi
+			addq $1, %rdi
+			imul $-1, %rdi
+			mov -32(%rsi, %rdi, 8), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %r8, (%rdx, %rbx,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rbx
+			addq $1, %rbx
+			imul $-1, %rbx
+			mov -32(%rdx, %rbx, 8), %r8
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdi
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %rsi, (%r8, %rdi,1)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rbx
+			mov 0(%rbx), %rbx
+			movq -16(%rbx), %r11
+			addq $1, %r11
+			imul $-1, %r11
+			mov -24(%rbx, %r11, 8), %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %r8
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdx, %r8, 1), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -48(%rbp)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %r9
+			addq $1, %r9
+			imul $-1, %r9
+			mov -24(%rdx, %r9, 8), %r10
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%r10, %rdi, 1), %r10
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %r8
+			mov 0(%r8), %r8
+			movq -16(%r8), %rdx
+			addq $1, %rdx
+			imul $-1, %rdx
+			mov -24(%r8, %rdx, 8), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdi
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %r10, (%rsi, %rdi,1)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rdi
+			addq $1, %rdi
+			imul $-1, %rdi
+			mov -24(%rdx, %rdi, 8), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rsi
+# INSTRUCTION_MOVE_TO_OFFSET
+			mov %r8, (%rbx, %rsi,1)
+# INSTRUCTION_CONST
+			mov $1, %rsi
+# INSTRUCTION_RETURN
+			mov %rsi, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_FUNCTION_LABEL
+.type quicksort__0, @function
+quicksort__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $72, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		pushq %rdi
+		leaq staticLink, %rdi
+		movq %rbp, 8(%rdi)
+		popq %rdi
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rsi
+			mov %rsi, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 24(%rbp), %rsi
+			mov %rsi, -24(%rbp)
+# VAR dummy
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rbx
+			setg %al
+			movsx %al, %rbx
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# INSTRUCTION_JE
+			je if_7_begin
+# INSTRUCTION_JMP
+			jmp if_7_end
+# INSTRUCTION_LABEL
+			if_7_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %r8
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rsi
+# INSTRUCTION_FUNCTION_CALL
+			call partition__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $16, %rsp
 # COMPLEX_RESTORE_STATIC_LINK
 			leaq staticLink, %rbx
-movq %rbp, 16(%rbx)
-# METADATA_DEBUG_INFO
-			# 83: {0}
+movq %rbp, 8(%rbx)
 # INSTRUCTION_COPY
 			mov %rax, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -40(%rbp)
+# INSTRUCTION_COPY
+			mov %r8, %rbx
+# INSTRUCTION_PUSH
+			push %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rdx
+# INSTRUCTION_PUSH
+			push %rdx
+# INSTRUCTION_FUNCTION_CALL
+			call quicksort__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $16, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rdi
+movq %rbp, 8(%rdi)
+# INSTRUCTION_COPY
+			mov %rax, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -48(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
+# INSTRUCTION_PUSH
+			push %rdx
+# INSTRUCTION_COPY
+			mov %rsi, %r8
+# INSTRUCTION_PUSH
+			push %r8
+# INSTRUCTION_FUNCTION_CALL
+			call quicksort__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $16, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rdx
+movq %rbp, 8(%rdx)
+# INSTRUCTION_COPY
+			mov %rax, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -48(%rbp)
 # INSTRUCTION_LABEL
-			if_0_end:
+			if_7_end:
+# INSTRUCTION_CONST
+			mov $1, %rdi
+# INSTRUCTION_RETURN
+			mov %rdi, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
+# METADATA_END_BODY_BLOCK
+mov %rbp,%rsp
+pop %rbp
+ret
+# INSTRUCTION_FUNCTION_LABEL
+.type partition__0, @function
+partition__0:
+push %rbp
+mov %rbp, %rax
+mov %rsp,%rbp
+		subq $96, %rsp
+		movq %rax, -8(%rbp)
+		movq $0, -16(%rbp)
+		pushq %rdx
+		leaq staticLink, %rdx
+		movq %rbp, 8(%rdx)
+		popq %rdx
+		pushq %rcx
+		pushq %rdx
+		pushq %rbx
+		pushq %rsi
+		pushq %rdi
+		pushq %r8
+		pushq %r9
+		pushq %r10
+		pushq %r11
+		pushq %r12
+		pushq %r13
+		pushq %r14
+		pushq %r15
+# METADATA_FUNCTION_ARGUMENT
+			mov 16(%rbp), %rbx
+			mov %rbx, -32(%rbp)
+# METADATA_FUNCTION_ARGUMENT
+			mov 24(%rbp), %rbx
+			mov %rbx, -24(%rbp)
+# VAR dummy
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %r8
+			mov 0(%r8), %r8
+			movq -16(%r8), %rsi
+			addq $1, %rsi
+			imul $-1, %rsi
+			mov -32(%r8, %rsi, 8), %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rbx
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdx, %rbx, 1), %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -40(%rbp)
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rsi
+			addq $1, %rsi
+			imul $-1, %rsi
+			mov -24(%rdx, %rsi, 8), %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rdi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rbx, %rdi, 1), %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -48(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rdx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rdx, -56(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -24(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %r8, -64(%rbp)
+# INSTRUCTION_LABEL
+			while_cnd_3:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rbx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_SUB_CONST
+			sub $1, %rbx
+# INSTRUCTION_MINUS
+			sub %rdx, %rbx
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rbx), %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rbx
+			setg %al
+			movsx %al, %rbx
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rdx
+# INSTRUCTION_CMP
+			cmp %rbx, %rdx
+# INSTRUCTION_JE
+			je while_3_begin
+# INSTRUCTION_JMP
+			jmp while_3_end
+# INSTRUCTION_LABEL
+			while_3_begin:
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %r11
+			mov 0(%r11), %r11
+			movq -16(%r11), %r8
+			addq $1, %r8
+			imul $-1, %r8
+			mov -32(%r11, %r8, 8), %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %rsi
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rbx, %rsi, 1), %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -48(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL
+			imul %rdx, %rbx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -40(%rbp), %r9
+# METADATA_ACCESS_VARIABLE_END
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK_IN_SCOPE
+			leaq staticLink, %rdx
+			mov 0(%rdx), %rdx
+			movq -16(%rdx), %rsi
+			addq $1, %rsi
+			imul $-1, %rsi
+			mov -24(%rdx, %rsi, 8), %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_MUL_CONST
+			imul $8, %r8
+# COMPLEX_DEREFERENCE_POINTER_WITH_OFFSET
+			mov (%rdi, %r8, 1), %rdi
+# INSTRUCTION_MUL
+			imul %rdi, %r9
+# INSTRUCTION_MINUS
+			sub %r9, %rbx
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rbx), %rbx
+# COMPLEX_CONSTRAIN_BOOLEAN
+			push %rax
+			cmp $0, %rbx
+			setg %al
+			movsx %al, %rbx
+			pop %rax
+# INSTRUCTION_CONST
+			mov $1, %rsi
+# INSTRUCTION_CMP
+			cmp %rbx, %rsi
+# INSTRUCTION_JE
+			je if_8_begin
+# INSTRUCTION_JMP
+			jmp if_8_end
+# INSTRUCTION_LABEL
+			if_8_begin:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %r8
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%r8), %r8
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %r8, -56(%rbp)
+# INSTRUCTION_COPY
+			mov %r8, %rdx
+# INSTRUCTION_PUSH
+			push %rdx
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdi
+# INSTRUCTION_FUNCTION_CALL
+			call exchange__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $16, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rsi
+movq %rbp, 8(%rsi)
+# INSTRUCTION_COPY
+			mov %rax, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -72(%rbp)
+# INSTRUCTION_LABEL
+			if_8_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -64(%rbp), %rsi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rsi), %rsi
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rsi, -64(%rbp)
+# INSTRUCTION_JMP
+			jmp while_cnd_3
+# INSTRUCTION_LABEL
+			while_3_end:
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdi
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdi), %rdi
+# INSTRUCTION_PUSH
+			push %rdi
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -32(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_PUSH
+			push %rdx
+# INSTRUCTION_FUNCTION_CALL
+			call exchange__0
+# INSTRUCTION_ADD_STACK_PTR
+			addq $16, %rsp
+# COMPLEX_RESTORE_STATIC_LINK
+			leaq staticLink, %rsi
+movq %rbp, 8(%rsi)
+# INSTRUCTION_COPY
+			mov %rax, %rbx
+# COMPLEX_MOVE_TEMPORARY_INTO_STACK
+			mov %rbx, -72(%rbp)
+# METADATA_ACCESS_VARIABLE_START
+# COMPLEX_MOVE_TEMPORARY_FROM_STACK
+			mov -56(%rbp), %rdx
+# METADATA_ACCESS_VARIABLE_END
+# INSTRUCTION_LEA_ADD_CONST
+			leaq 1(%rdx), %rdx
+# INSTRUCTION_RETURN
+			mov %rdx, %rax
+			popq %r15
+			popq %r14
+			popq %r13
+			popq %r12
+			popq %r11
+			popq %r10
+			popq %r9
+			popq %r8
+			popq %rdi
+			popq %rsi
+			popq %rbx
+			popq %rdx
+			popq %rcx
+			mov %rbp,%rsp
+pop %rbp
+ret
 # METADATA_END_BODY_BLOCK
 mov %rbp,%rsp
 pop %rbp

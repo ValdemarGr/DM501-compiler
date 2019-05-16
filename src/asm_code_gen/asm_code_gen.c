@@ -1179,6 +1179,12 @@ void generateInstruction(FILE *out, Instructions* instruction) {
         } break;
         case COMPLEX_LOAD_POINTER_TO_STATIC_LINK_FRAME:break;
         case NOOP:break;
+        case METADATA_ACCESS_VARIABLE_START: {
+            fprintf(out, "# METADATA_ACCESS_VARIABLE_START\n");
+        } break;
+        case METADATA_ACCESS_VARIABLE_END: {
+            fprintf(out, "# METADATA_ACCESS_VARIABLE_END\n");
+        } break;
     }
 }
 

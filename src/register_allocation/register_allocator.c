@@ -7,10 +7,12 @@
 #include "graph_coloring.h"
 #include "../ast_to_ir/intermediate_representation.h"
 #include "simplify_loads.h"
+#include "../peephole/peephole.h"
 
 ConstMap *currentRegisterContext = NULL;
 size_t timestamp = 0;
 
+void smartLoader(Instructions *curr);
 
 SymbolTable *currentSymbolTable = NULL;
 
@@ -666,5 +668,53 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
     }
 
     //simplifyLoads(head, livenessAnalysisResult);
+    smartLoader(head);
     return colors;
+}
+
+void smartLoader(Instructions *curr) {
+    if (curr == NULL) {
+        return;
+    }
+
+    if (curr->kind == METADATA_ACCESS_VARIABLE_START) {
+        //Look for parent
+        Instructions *iter = curr->previous;
+
+        while (iter != NULL) {
+
+            if (iter->kind == METADATA_ACCESS_VARIABLE_END) {
+                if (strcmp(iter->val.varAccess.accessId, curr->val.varAccess.accessId) == 0) {
+                    Instructions *colliding = fetchPreviousInstructionThatModifiesRegister(curr->previous, iter->val.varAccess.temp);
+
+                    if (colliding == iter && colliding->val.varAccess.temp != -1) {
+                        Instructions *begin = curr->previous;
+
+                        Instructions *end = curr;
+
+                        while (end->kind != METADATA_ACCESS_VARIABLE_END) {
+
+                            end = end->next;
+                        }
+                        end = end->next;
+
+                        Instructions *cpy = newInstruction();
+                        cpy->kind = INSTRUCTION_COPY;
+                        cpy->val.arithmetic2.source = colliding->val.varAccess.temp;
+                        cpy->val.arithmetic2.dest = curr->val.varAccess.temp;
+
+                        cpy->previous = begin;
+                        cpy->next = end;
+
+                        end->previous = cpy;
+                        begin->next = cpy;
+                    }
+                }
+            }
+
+            iter = iter->previous;
+        }
+    }
+
+    smartLoader(curr->next);
 }
