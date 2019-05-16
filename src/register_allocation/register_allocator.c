@@ -665,6 +665,6 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
         state->current = nextInstruction;
     }
 
-    simplifyLoads(head, livenessAnalysisResult);
+    //simplifyLoads(head, livenessAnalysisResult);
     return colors;
 }
