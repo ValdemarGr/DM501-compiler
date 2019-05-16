@@ -17,7 +17,7 @@ bool followTemp(const struct DataFlowEntry *dataFlowEntry,
     const DataFlowEntry *iter = dataFlowEntry;
 
     while (iter != NULL) {
-        successor = dataFlowEntry->successors;
+        successor = iter->successors;
         if (successor != NULL) {
             if (successor->line < dataFlowSize) {
                 iter = dataFlow[successor->line];
@@ -30,7 +30,7 @@ bool followTemp(const struct DataFlowEntry *dataFlowEntry,
                     return false;
                 }
 
-                if (exists(iter->out, temp)) {
+                if (!exists(iter->out, temp)) {
                     return false;
                 }
             } else {

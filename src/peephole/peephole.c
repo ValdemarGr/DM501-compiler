@@ -261,7 +261,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = INSTRUCTION_ADD_CONST;
         registerTrackerForBlock++;
 
-        //addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
+        addInstructionTemplate(peepholeTemplates, add, CONST_ADD_TO_LEA, 1);
     }
 
     {
@@ -271,27 +271,7 @@ PeepholeTemplates *generateRulesetsForSize() {
         add->kind = INSTRUCTION_ADD;
         registerTrackerForBlock++;
 
-        //addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
-    }
-
-    {
-        size_t registerTrackerForBlock = ANY + 1;
-
-        SimpleInstruction *add = NEW(SimpleInstruction);
-        add->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
-        registerTrackerForBlock++;
-
-        //addInstructionTemplate(peepholeTemplates, add, ALREADY_COMPLEX_MOVE_TEMPORARY_FROM_STACK, 1);
-    }
-
-    {
-        size_t registerTrackerForBlock = ANY + 1;
-
-        SimpleInstruction *add = NEW(SimpleInstruction);
-        add->kind = INSTRUCTION_PUSH;
-        registerTrackerForBlock++;
-
-        //addInstructionTemplate(peepholeTemplates, add, POP_PUSH_STACK_PTR_LOAD, 1);
+        addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
     }
 
     return peepholeTemplates;
