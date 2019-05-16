@@ -115,6 +115,7 @@ Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current
         case INSTRUCTION_RIGHT_SHIFT: if (current->val.rightShift.temp == regToLookFor) return current; break;
         case INSTRUCTION_MUL_CONST:
         case INSTRUCTION_LEA_ADD_CONST:
+        case INSTRUCTION_SUB_CONST:
         case INSTRUCTION_ADD_CONST: if (current->val.art2const.temp == regToLookFor) return current; break;
         case INSTRUCTION_MOVE_TO_OFFSET: if (current->val.moveToOffset.ptrTemp == regToLookFor) return current; break;
         case INSTRUCTION_SET_ZERO: if (current->val.tempToSetZero == regToLookFor) return current; break;
@@ -145,7 +146,9 @@ Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current
             }
         } break;
         case METADATA_FUNCTION_ARGUMENT: if (current->val.args.moveReg == regToLookFor) return current; break;
-        case INSTRUCTION_ABS:break;
+        case METADATA_ACCESS_VARIABLE_START:break;
+        case METADATA_ACCESS_VARIABLE_END: if (current->val.varAccess.temp == regToLookFor) return current; break;
+        case NOOP:break;
     }
 
     return fetchPreviousInstructionThatModifiesRegister(current->previous, regToLookFor);
