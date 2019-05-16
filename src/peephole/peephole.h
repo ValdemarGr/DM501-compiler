@@ -60,6 +60,7 @@ typedef struct PeepholeTemplateList{
     struct PeepholeTemplateList *next;
 } PeepholeTemplateList;
 
+Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current, size_t regToLookFor);
 bool peephole(Instructions *instructions);
 
 #endif //HELLO_PEEPHOLE_H

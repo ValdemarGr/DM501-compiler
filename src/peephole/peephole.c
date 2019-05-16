@@ -60,10 +60,12 @@ Instructions *lookForDupFetches(Instructions *original, Instructions *current, I
 }
 
 Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current, size_t regToLookFor) {
+    if (current == NULL) {
+        return NULL;
+    }
+
     switch (current->kind) {
-        case INSTRUCTION_RETURN:
         case INSTRUCTION_FUNCTION_END:
-        case INSTRUCTION_FUNCTION_CALL:
         case INSTRUCTION_LABEL:
         case INSTRUCTION_JE:
         case INSTRUCTION_JMP:
@@ -71,10 +73,12 @@ Instructions *fetchPreviousInstructionThatModifiesRegister(Instructions *current
         case COMPLEX_RIP_LAMBDA_LOAD:
         case METADATA_BEGIN_BODY_BLOCK:
         case METADATA_END_BODY_BLOCK:
-        case COMPLEX_RESTORE_ALL:
         case METADATA_CREATE_MAIN:
-        case COMPLEX_SAVE_ALL:
+        case COMPLEX_RESTORE_ALL:
         case INSTRUCTION_FUNCTION_LABEL: return NULL;
+        case COMPLEX_SAVE_ALL:
+        case INSTRUCTION_RETURN:
+        case INSTRUCTION_FUNCTION_CALL:
         case INSTRUCTION_PROGRAM_BEGIN:
         case INSTRUCTION_VAR:
         case INSTRUCTION_WRITE:

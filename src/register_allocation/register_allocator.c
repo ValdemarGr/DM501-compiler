@@ -653,7 +653,9 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
             case METADATA_ACCESS_VARIABLE_START:
                 state->current->val.varAccess.temp = getAssigned(colors, state->current->val.varAccess.temp);
                 break;
-            case METADATA_ACCESS_VARIABLE_END:break;
+            case METADATA_ACCESS_VARIABLE_END:
+                state->current->val.varAccess.temp = getAssigned(colors, state->current->val.varAccess.temp);
+                break;
             case NOOP:break;
         }
 

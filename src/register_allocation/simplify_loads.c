@@ -6,11 +6,12 @@
 #include "../ast_to_ir/intermediate_representation.h"
 #include "register_allocator.h"
 #include "liveness_analysis.h"
+#include "../peephole/peephole.h"
 
 bool followTemp(const struct DataFlowEntry *dataFlowEntry,
-        const struct DataFlowEntry *start,
-        const struct DataFlowEntry *targetDataFlowEntry,
-        size_t temp, LivenessAnalysisResult *livenessAnalysisResult) {
+                const struct DataFlowEntry *start,
+                const struct DataFlowEntry *targetDataFlowEntry,
+                size_t temp, LivenessAnalysisResult *livenessAnalysisResult) {
     DataFlowEntry **dataFlow = livenessAnalysisResult->dataFlow;
     int dataFlowSize = livenessAnalysisResult->dataFlowSize;
     LineList *successor;
@@ -22,7 +23,7 @@ bool followTemp(const struct DataFlowEntry *dataFlowEntry,
             if (successor->line < dataFlowSize) {
                 iter = dataFlow[successor->line];
                 if (iter == dataFlowEntry || iter == targetDataFlowEntry ||
-                        iter == start) {
+                    iter == start) {
                     return true;
                 }
 
@@ -31,6 +32,7 @@ bool followTemp(const struct DataFlowEntry *dataFlowEntry,
                 }
 
                 if (!exists(iter->out, temp)) {
+                    Instructions *it = fetchPreviousInstructionThatModifiesRegister(iter->instruction, temp);
                     return false;
                 }
             } else {
@@ -49,38 +51,24 @@ bool followTemp(const struct DataFlowEntry *dataFlowEntry,
 
 void simplifyLoads(Instructions *head, LivenessAnalysisResult *livenessAnalysisResult) {
     Instructions *iter = head;
-    RaVariable *currentVariable = NULL;
-    ConstMap *loadedVariables = initMap(128);
-    SymbolTable *currentSymbolTable = NULL;
 
     while (iter != NULL) {
-        if (iter->kind == INSTRUCTION_FUNCTION_LABEL) {
-            currentSymbolTable = iter->val.functionHead.tableForFunction;
-        }
-        else if (iter->kind == METADATA_CREATE_MAIN) {
-            currentSymbolTable = iter->val.mainHeader.tableForFunction;
-        }
-        else if (iter->kind == METADATA_ACCESS_VARIABLE_START) {
+        if (iter->kind == METADATA_ACCESS_VARIABLE_START) {
             if (iter->val.varAccess.temp == -1) {
                 iter = iter->next;
                 continue;
             }
 
-            Pair *pair = get(loadedVariables, makeIntKey((long) currentSymbolTable));
-            ConstMap *map;
-            RaVariable *variable;
-            if (pair != NULL) {
-                map = pair->v;
-                Pair *var = get(map, makeCharKey(iter->val.varAccess.accessId));
-                if (var != NULL) {
-                    variable = var->v;
+            Instructions *it = fetchPreviousInstructionThatModifiesRegister(iter, iter->val.varAccess.temp);
 
-                    bool isSafe = followTemp(variable->instructionEnd->dataFlowEntry,
-                               variable->instructionStart->dataFlowEntry,
-                               iter->dataFlowEntry,variable->reg,
-                               livenessAnalysisResult);
+            if (it == NULL) {
+                iter = iter->next;
+                continue;
+            }
 
-                    if (!isSafe) {
+            if (it->kind == METADATA_ACCESS_VARIABLE_END) {
+                if (strcmp(it->val.varAccess.accessId, iter->val.varAccess.accessId) == 0) {
+                    if (it->val.varAccess.temp == -1) {
                         iter = iter->next;
                         continue;
                     }
@@ -102,28 +90,14 @@ void simplifyLoads(Instructions *head, LivenessAnalysisResult *livenessAnalysisR
                     Instructions *newInstructions = newInstruction();
                     newInstructions->kind = INSTRUCTION_COPY;
                     newInstructions->val.arithmetic2.dest = iter->val.varAccess.temp;
-                    newInstructions->val.arithmetic2.source = variable->reg;
+                    newInstructions->val.arithmetic2.source = it->val.varAccess.temp;
                     newInstructions->next = removeTo;
                     newInstructions->previous = iter;
                     removeTo->previous = newInstructions;
                     iter->next = newInstructions;
                     newInstructions->dataFlowEntry = mergeDataFlowEntries(iter->dataFlowEntry, removeTo->dataFlowEntry);
                 }
-            } else {
-                map = initMap(128);
-                insert(loadedVariables, makeIntKey((long) currentSymbolTable), map);
             }
-
-            variable = NEW(RaVariable);
-            variable->accessId = iter->val.varAccess.accessId;
-            variable->instructionStart = iter;
-            variable->reg = iter->val.varAccess.temp;
-
-            currentVariable = variable;
-            insert(map, makeCharKey(iter->val.varAccess.accessId), variable);
-        }
-        else if (iter->kind == METADATA_ACCESS_VARIABLE_END) {
-            currentVariable->instructionEnd = iter;
         }
         iter = iter->next;
     }
