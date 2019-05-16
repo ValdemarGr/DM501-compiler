@@ -571,7 +571,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             Instructions *saveall = newInstruction();
             saveall->kind = COMPLEX_SAVE_ALL;
-            appendInstructions(saveall);
+            //appendInstructions(saveall);
 
             ExpressionList *expressionList = term->val.functionCallD.expressionList;
 
@@ -693,7 +693,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             Instructions *restoreall = newInstruction();
             restoreall->kind = COMPLEX_RESTORE_ALL;
-            appendInstructions(restoreall);
+            //appendInstructions(restoreall);
 
             call->val.functionCall.restore = restoreall;
             call->val.functionCall.save = saveall;
@@ -1097,7 +1097,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             Instructions *saveall = newInstruction();
             saveall->kind = COMPLEX_SAVE_ALL;
-            appendInstructions(saveall);
+            //appendInstructions(saveall);
 
             ExpressionList *expressionList = term->val.shorthandCallD.expressionList;
 
@@ -1181,7 +1181,7 @@ size_t generateInstructionsForTerm(Term *term, SymbolTable *symbolTable) {
 
             Instructions *restoreall = newInstruction();
             restoreall->kind = COMPLEX_RESTORE_ALL;
-            appendInstructions(restoreall);
+            //appendInstructions(restoreall);
 
             call->val.functionCall.restore = restoreall;
             call->val.functionCall.save = saveall;

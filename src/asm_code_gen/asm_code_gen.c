@@ -123,12 +123,47 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             }
 
             printIndentation(out);
+            fprintf(out, "pushq %%%s\n",
+                    getNextRegister(instruction->val.functionHead.temporary));
+            printIndentation(out);
             fprintf(out, "leaq staticLink, %%%s\n",
                     getNextRegister(instruction->val.functionHead.temporary));
             printIndentation(out);
             fprintf(out, "movq %%rbp, %zu(%%%s)\n",
                     instruction->val.functionHead.distance * POINTER_SIZE,
                     getNextRegister(instruction->val.functionHead.temporary));
+
+            printIndentation(out);
+            fprintf(out, "popq %%%s\n",
+                    getNextRegister(instruction->val.functionHead.temporary));
+
+            printIndentation(out);
+            fprintf(out, "pushq %%rcx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rbx\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r8\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r9\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r10\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r11\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r12\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r13\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r14\n");
+            printIndentation(out);
+            fprintf(out, "pushq %%r15\n");
+
             currentIndendation++;
             break;
         case INSTRUCTION_VAR:{
@@ -145,6 +180,34 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             printIndentation(out);
             fprintf(out, "mov %%%s, %%rax\n",
                     getNextRegister(instruction->val.tempToReturn));
+
+            printIndentation(out);
+            fprintf(out, "popq %%r15\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r14\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r13\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r12\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r11\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r10\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r9\n");
+            printIndentation(out);
+            fprintf(out, "popq %%r8\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rsi\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rbx\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rdx\n");
+            printIndentation(out);
+            fprintf(out, "popq %%rcx\n");
+
             printIndentation(out);
             fprintf(out, "mov %%rbp,%%rsp\npop %%rbp\nret\n");
         } break;
@@ -1028,32 +1091,7 @@ void generateInstruction(FILE *out, Instructions* instruction) {
             }*/
 
 
-            printIndentation(out);
-            fprintf(out, "popq %%r15\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r14\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r13\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r12\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r11\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r10\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r9\n");
-            printIndentation(out);
-            fprintf(out, "popq %%r8\n");
-            printIndentation(out);
-            fprintf(out, "popq %%rdi\n");
-            printIndentation(out);
-            fprintf(out, "popq %%rsi\n");
-            printIndentation(out);
-            fprintf(out, "popq %%rbx\n");
-            printIndentation(out);
-            fprintf(out, "popq %%rdx\n");
-            printIndentation(out);
-            fprintf(out, "popq %%rcx\n");
+
 
         } break;
         case INSTRUCTION_ADD_STACK_PTR: {
