@@ -650,7 +650,9 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
                 state->current->val.loadStackPtr.temp =
                         getWriteTemporary(colors, state->current->val.loadStackPtr.temp, state);
                 break;
-            case METADATA_ACCESS_VARIABLE_START:break;
+            case METADATA_ACCESS_VARIABLE_START:
+                state->current->val.varAccess.temp = getAssigned(colors, state->current->val.varAccess.temp);
+                break;
             case METADATA_ACCESS_VARIABLE_END:break;
             case NOOP:break;
         }
@@ -661,6 +663,6 @@ int *simpleRegisterAllocation(Instructions *head, int numberRegisters) {
         state->current = nextInstruction;
     }
 
-    //simplifyLoads(head, livenessAnalysisResult);
+    simplifyLoads(head, livenessAnalysisResult);
     return colors;
 }

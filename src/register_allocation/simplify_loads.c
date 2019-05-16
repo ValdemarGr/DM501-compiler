@@ -61,6 +61,11 @@ void simplifyLoads(Instructions *head, LivenessAnalysisResult *livenessAnalysisR
             currentSymbolTable = iter->val.mainHeader.tableForFunction;
         }
         else if (iter->kind == METADATA_ACCESS_VARIABLE_START) {
+            if (iter->val.varAccess.temp == -1) {
+                iter = iter->next;
+                continue;
+            }
+
             Pair *pair = get(loadedVariables, makeIntKey((long) currentSymbolTable));
             ConstMap *map;
             RaVariable *variable;

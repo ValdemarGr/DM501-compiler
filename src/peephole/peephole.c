@@ -542,6 +542,9 @@ Instructions *skipToNextImportantInstruction(Instructions *instructions) {
         case INSTRUCTION_LEA_ADD_CONST:{ return instructions; } break;
         case INSTRUCTION_SUB_CONST:{ return instructions; } break;
         case NOOP:{ return skipToNextImportantInstruction(instructions->next); } break;
+        case INSTRUCTION_LOAD_STACK_PTR: { return  instructions; } break;
+        case METADATA_ACCESS_VARIABLE_START:{ return skipToNextImportantInstruction(instructions->next); } break;
+        case METADATA_ACCESS_VARIABLE_END:{ return skipToNextImportantInstruction(instructions->next); } break;
     }
 }
 
