@@ -278,6 +278,20 @@ PeepholeTemplates *generateRulesetsForSize() {
         addInstructionTemplate(peepholeTemplates, add, ADD_TO_LEA, 1);
     }
 
+    {
+        size_t registerTrackerForBlock = ANY + 1;
+
+        SimpleInstruction *into = NEW(SimpleInstruction);
+        into->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
+        registerTrackerForBlock++;
+
+        SimpleInstruction *from = NEW(SimpleInstruction);
+        from->kind = COMPLEX_MOVE_TEMPORARY_FROM_STACK;
+        registerTrackerForBlock++;
+        appendInstruction(into, from);
+        addInstructionTemplate(peepholeTemplates, into, SIMPLIFY_NEIGHBOUR_INTO_FROM_STACK, 2);
+    }
+
     return peepholeTemplates;
 }
 
@@ -429,6 +443,28 @@ Instructions *applyTemplate(SimpleInstruction *simpleHead, Instructions *instrHe
                 templateApplied = true;
             }
         } break;
+        case SIMPLIFY_NEIGHBOUR_INTO_FROM_STACK: {
+            Instructions *into = instructionsIter;
+            Instructions *from = skipToNextImportantInstruction(instructionsIter->next);
+            if (into->val.tempIntoStack.offset == from->val.tempFromStack.offset) {
+                instructionHead = newInstruction();
+                instructionHead->kind = COMPLEX_MOVE_TEMPORARY_INTO_STACK;
+                instructionHead->val.tempIntoStack.tempToMove = into->val.tempIntoStack.tempToMove;
+                instructionHead->val.tempIntoStack.offset = into->val.tempIntoStack.offset;
+                instructionHead->dataFlowEntry = into->dataFlowEntry;
+                currentInstruction = newInstruction();
+                currentInstruction->kind = INSTRUCTION_COPY;
+                currentInstruction->val.arithmetic2.source = into->val.tempIntoStack.tempToMove;
+                currentInstruction->val.arithmetic2.dest = from->val.tempFromStack.inputTemp;
+                currentInstruction->dataFlowEntry = from->dataFlowEntry;
+                if (from->dataFlowEntry != NULL) {
+                    insertSortedSet(from->dataFlowEntry->uses, into->val.tempIntoStack.tempToMove);
+                }
+                instructionHead->next = currentInstruction;
+                currentInstruction->previous = instructionHead;
+                templateApplied = true;
+            }
+        } break;
         default: break;
     }
 
@@ -568,7 +604,7 @@ bool peephole(Instructions *instructions) {
             }
 
             //Null test
-            if (simpleInstructionIter != NULL || notEqual) {
+            if (simpleInstructionIter != NULL || realInstructionIter == NULL || notEqual) {
                 templateIter = templateIter->next;
                 continue;
             }
