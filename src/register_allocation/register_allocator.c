@@ -716,5 +716,5 @@ void smartLoader(Instructions *curr) {
         }
     }
 
-    smartLoader(curr->next);
+    //smartLoader(curr->next);
 }
